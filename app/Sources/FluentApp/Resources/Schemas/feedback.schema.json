@@ -1,0 +1,107 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["graded", "sessionNotes"],
+  "description": "What the teacher returns after a finished lesson. It carries only what requires judgement: the app already knows every measurable fact (which auto-graded answers were right, how long the lesson took, which skills it touched) and does not ask for those back.",
+  "properties": {
+    "graded": {
+      "type": "array",
+      "description": "One entry per exercise the app could not grade locally (translation, freeResponse). Do not include auto-graded exercises.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["exerciseId", "score", "comment"],
+        "properties": {
+          "exerciseId": { "type": "string" },
+          "score": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10,
+            "description": "0-10. The app derives SM-2 quality as floor(score / 2)."
+          },
+          "comment": {
+            "type": "string",
+            "description": "Markdown. Follow the fluent-feedback-formatter shape: celebrate what worked, correct each mistake with category and a brief why, then the full correct version."
+          },
+          "correctVersion": { "type": "string" }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "description": "Distinct mistakes worth tracking, from ANY exercise including auto-graded ones. Collapse duplicates: one entry per pattern.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["patternId", "category", "yourAnswer", "correctAnswer", "severity"],
+        "properties": {
+          "patternId": {
+            "type": "string",
+            "description": "snake_case, stable across sessions so frequency accumulates. Reuse an existing id from mistakes-db when the mistake is the same one."
+          },
+          "category": {
+            "type": "string",
+            "enum": ["grammar", "vocabulary", "spelling", "pronunciation", "syntax", "formal_informal", "prepositions", "articles", "missing"]
+          },
+          "subcategory": { "type": "string" },
+          "yourAnswer": { "type": "string" },
+          "correctAnswer": { "type": "string" },
+          "context": { "type": "string" },
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "moderate", "minor"]
+          },
+          "difficultyScore": { "type": "number", "minimum": 0, "maximum": 1 },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "newVocabulary": {
+      "type": "array",
+      "description": "Items met for the first time in this lesson that should enter spaced repetition.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["itemId", "itemType", "content", "answer"],
+        "properties": {
+          "itemId": { "type": "string" },
+          "itemType": {
+            "type": "string",
+            "enum": ["vocabulary", "grammar_rule", "error_pattern"]
+          },
+          "content": { "type": "string" },
+          "answer": { "type": "string" },
+          "category": { "type": "string" },
+          "difficulty": { "type": "string" },
+          "initialQuality": { "type": "integer", "minimum": 0, "maximum": 5 },
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          }
+        }
+      }
+    },
+    "breakthroughs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Genuine progress worth naming. Empty is an honest answer."
+    },
+    "focusNextSession": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "sessionNotes": {
+      "type": "string",
+      "description": "A few sentences of diagnosis for the tutor's own records: what is consolidating, what is lagging, what the numbers do or do not support."
+    },
+    "milestones": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Only for genuinely notable firsts. Usually empty."
+    },
+    "overallComment": {
+      "type": "string",
+      "description": "Markdown shown to the learner as the lesson debrief."
+    }
+  }
+}

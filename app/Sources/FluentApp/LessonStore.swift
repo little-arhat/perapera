@@ -1,0 +1,104 @@
+import Foundation
+import FluentCore
+
+/// Lessons on disk: one JSON file per lesson, holding its whole life.
+///
+/// JSON files are authoritative. They sit beside Fluent's own databases, are
+/// readable without the app, and survive it. A lesson is a value that accretes
+/// answers and then feedback -- never a row that gets overwritten -- so the
+/// archive can always show what actually happened.
+@MainActor
+final class LessonStore {
+    private let directory: URL
+    private let encoder: JSONEncoder = {
+        let e = JSONEncoder()
+        e.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        e.dateEncodingStrategy = .iso8601
+        return e
+    }()
+    private let decoder: JSONDecoder = {
+        let d = JSONDecoder()
+        d.dateDecodingStrategy = .iso8601
+        return d
+    }()
+
+    init(dataDirectory: URL) {
+        self.directory = dataDirectory.appending(path: "lessons")
+    }
+
+    func prepare() throws {
+        try FileManager.default.createDirectory(
+            at: directory, withIntermediateDirectories: true)
+    }
+
+    private func url(for id: String) -> URL {
+        directory.appending(path: "\(id).json")
+    }
+
+    /// Writes via a temp file and an atomic replace, matching what `update-db.py`
+    /// does: a crash mid-write must not leave a half-written lesson.
+    func save(_ record: LessonRecord) throws {
+        try prepare()
+        let data = try encoder.encode(record)
+        let target = url(for: record.id)
+        let temp = target.appendingPathExtension("tmp")
+        try data.write(to: temp, options: .atomic)
+        _ = try FileManager.default.replaceItemAt(target, withItemAt: temp)
+    }
+
+    func load(id: String) throws -> LessonRecord {
+        try decoder.decode(LessonRecord.self, from: Data(contentsOf: url(for: id)))
+    }
+
+    /// Every lesson, newest first. Unreadable files are reported rather than
+    /// skipped silently -- a lesson that vanishes from the archive without
+    /// explanation is worse than one that shows up broken.
+    func loadAll() throws -> (records: [LessonRecord], unreadable: [String]) {
+        try prepare()
+        let files = try FileManager.default.contentsOfDirectory(
+            at: directory, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "json" }
+
+        var records: [LessonRecord] = []
+        var unreadable: [String] = []
+        for file in files {
+            do {
+                records.append(try decoder.decode(
+                    LessonRecord.self, from: Data(contentsOf: file)))
+            } catch {
+                unreadable.append(file.lastPathComponent)
+            }
+        }
+        records.sort { $0.lesson.generatedAt > $1.lesson.generatedAt }
+        return (records, unreadable)
+    }
+
+    // MARK: - Saved items
+    //
+    // One file beside the lessons, for the same reasons: readable without the
+    // app, and outliving it.
+
+    private var savedItemsURL: URL {
+        directory.deletingLastPathComponent().appending(path: "saved-items.json")
+    }
+
+    func loadSavedItems() throws -> SavedItems {
+        guard FileManager.default.fileExists(atPath: savedItemsURL.path) else {
+            return SavedItems()
+        }
+        return try decoder.decode(
+            SavedItems.self, from: Data(contentsOf: savedItemsURL))
+    }
+
+    func saveSavedItems(_ items: SavedItems) throws {
+        try prepare()
+        let data = try encoder.encode(items)
+        let temp = savedItemsURL.appendingPathExtension("tmp")
+        try data.write(to: temp, options: .atomic)
+        _ = try FileManager.default.replaceItemAt(savedItemsURL, withItemAt: temp)
+    }
+
+    func delete(id: String) throws {
+        try FileManager.default.removeItem(at: url(for: id))
+    }
+}

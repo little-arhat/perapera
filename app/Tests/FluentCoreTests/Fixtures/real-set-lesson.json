@@ -1,0 +1,213 @@
+{
+  "estimatedMinutes": 15,
+  "focus": "Particles は/を/に/で and the noun+を+number+counter+ください pattern, drilled in sets",
+  "title": "At the ticket window: particles and counters",
+  "preamble": "Two threads today, mixed on purpose so you have to choose, not autopilot.\n\n**Particles** mark the *role* a word plays in the sentence:\n- **は** — topic (\"as for X…\")\n- **を** — direct object (the thing acted on)\n- **に** — destination you arrive at\n- **で** — *where* an action happens, or *how* (means) you do it\n\n**Counters** attach to a number, and the number phrase floats **after** the noun and its を:\n\n> 切符[きっぷ]を二枚[にまい]ください。 — Two tickets, please.\n\nThe one thing that never happens: を after the counter. ✗ 切符[きっぷ]二枚[にまい]をください。 Dropping を entirely (切符[きっぷ]二枚[にまい]ください) is fine and very natural at a counter.",
+  "exercises": [
+    {
+      "id": "ex-01",
+      "kind": "set",
+      "skill": "grammar",
+      "prompt": "You're travelling for the day: buying things, catching trains, introducing yourself. Fill each gap with one particle.",
+      "instruction": "Type only the particle, in hiragana — one character.",
+      "reviewItemIds": [
+        "particle_de_location",
+        "particle_de_means",
+        "particle_ni_destination"
+      ],
+      "items": [
+        {
+          "prompt": "コンビニ＿＿水[みず]を買[か]います。",
+          "hint": "where the buying happens",
+          "acceptedAnswers": [
+            "で"
+          ],
+          "explanation": "で marks the place an action is performed. The convenience store isn't a destination here — you're not going to it, you're doing something in it. に would wrongly make it an arrival point."
+        },
+        {
+          "prompt": "東京[とうきょう]＿＿行[い]きます。",
+          "hint": "the place you arrive at",
+          "acceptedAnswers": [
+            "に",
+            "へ"
+          ],
+          "explanation": "に marks the destination you arrive at with a motion verb. へ is also acceptable and means 'toward' — it emphasises direction rather than arrival."
+        },
+        {
+          "prompt": "新幹線[しんかんせん]＿＿京都[きょうと]に行[い]きます。",
+          "hint": "the means of transport",
+          "acceptedAnswers": [
+            "で"
+          ],
+          "explanation": "The same で also marks means or method: 電車[でんしゃ]で / バスで / はしで食[た]べます. One particle, two jobs — place of action and instrument. Notice this sentence already has に for the destination, so the remaining slot must be the 'how'."
+        },
+        {
+          "prompt": "駅[えき]で切符[きっぷ]＿＿買[か]います。",
+          "hint": "the thing being bought",
+          "acceptedAnswers": [
+            "を",
+            "お"
+          ],
+          "explanation": "を marks the direct object — the thing the verb acts on. It's written を but pronounced 'o'. The place already has で, so the ticket takes を."
+        },
+        {
+          "prompt": "私[わたし]＿＿ロマです。",
+          "hint": "'as for me…'",
+          "acceptedAnswers": [
+            "は",
+            "わ"
+          ],
+          "explanation": "は marks the topic: 'as for me, (I'm) Roma'. It's written は but pronounced 'wa'. In real conversation Japanese usually drops 私[わたし]は once it's obvious who you mean — 「ロマです」 alone is more natural."
+        }
+      ]
+    },
+    {
+      "id": "ex-02",
+      "kind": "multipleChoice",
+      "skill": "grammar",
+      "prompt": "You're in a department store and want two shirts. Which request is correct Japanese?",
+      "instruction": "Choose the one correct sentence.",
+      "options": [
+        "シャツを二枚[にまい]ください。",
+        "シャツ二枚[にまい]をください。",
+        "二枚[にまい]シャツをください。",
+        "シャツをふたつまいください。"
+      ],
+      "correctIndex": 0,
+      "reviewItemIds": [
+        "grammar_wo_placement_counters",
+        "counter_placement",
+        "grammar_counter_word_order"
+      ],
+      "explanation": "を attaches directly to the noun it marks: シャツを. The number+counter then floats after it. Once を has done its job, nothing may follow the counter before ください — so シャツ二枚[にまい]を… is out. Putting the number in front (二枚[にまい]シャツ) is an English word order, not a Japanese one. And ふたつまい mixes two counting systems: it's either 二枚[にまい] or the fallback ふたつ, never both."
+    },
+    {
+      "id": "ex-03",
+      "kind": "set",
+      "skill": "grammar",
+      "prompt": "You're at a kiosk. For each item, complete the request. The shape is always the same — only the counter changes.",
+      "instruction": "Type only the missing part that fills ＿＿, nothing else.",
+      "reviewItemIds": [
+        "counter_mai",
+        "counter_hon",
+        "counter_ko",
+        "counter_tsu",
+        "grammar_counter_word_order",
+        "counter_choice_mai",
+        "counter_placement"
+      ],
+      "items": [
+        {
+          "prompt": "はがき＿＿ください。",
+          "hint": "postcards × 3 — flat and thin",
+          "acceptedAnswers": [
+            "を三枚",
+            "を3枚",
+            "三枚",
+            "3枚",
+            "をさんまい",
+            "さんまい"
+          ],
+          "explanation": "枚[まい] counts flat thin things: postcards, tickets, paper, stamps, shirts, plates. 三枚[さんまい] is regular — no sound change. Both はがきを三枚[さんまい]ください and the shorter はがき三枚[さんまい]ください are natural."
+        },
+        {
+          "prompt": "切符[きっぷ]＿＿ください。",
+          "hint": "tickets × 2",
+          "acceptedAnswers": [
+            "を二枚",
+            "を2枚",
+            "二枚",
+            "2枚",
+            "をにまい",
+            "にまい"
+          ],
+          "explanation": "Tickets are flat and thin, so 枚[まい], not the fallback つ. 二枚[にまい] — again regular. 切符[きっぷ] is written with 切 (cut) + 符 (tally); the small っ is essential: きっぷ, not きぷ."
+        },
+        {
+          "prompt": "水[みず]＿＿ください。",
+          "hint": "bottles of water × 1 — long and cylindrical",
+          "acceptedAnswers": [
+            "を一本",
+            "を1本",
+            "一本",
+            "1本",
+            "をいっぽん",
+            "いっぽん"
+          ],
+          "explanation": "本[ほん] counts long cylindrical things: bottles, umbrellas, pens, bananas. Watch the sound change — 一[いち]+本[ほん] geminates and shifts to いっぽん, not いちほん. Same family as 六[ろく]本[ほん]→ろっぽん and 八[はち]本[ほん]→はっぽん."
+        },
+        {
+          "prompt": "りんご＿＿ください。",
+          "hint": "apples × 4 — small and round",
+          "acceptedAnswers": [
+            "を四個",
+            "を4個",
+            "四個",
+            "4個",
+            "をよんこ",
+            "よんこ",
+            "を四つ",
+            "四つ",
+            "をよっつ",
+            "よっつ"
+          ],
+          "explanation": "個[こ] counts small round objects: apples, eggs, croquettes. 四個[よんこ] uses よん, not し. The universal fallback 四[よっ]つ is also understood and won't get you a wrong apple — but 個[こ] is what the greengrocer will say back to you."
+        },
+        {
+          "prompt": "傘[かさ]＿＿ください。",
+          "hint": "umbrellas × 2 — long and cylindrical",
+          "acceptedAnswers": [
+            "を二本",
+            "を2本",
+            "二本",
+            "2本",
+            "をにほん",
+            "にほん"
+          ],
+          "explanation": "An umbrella is long and thin, so 本[ほん]: 二本[にほん], regular reading. The choice of counter follows the *shape* of the object, not its category — which is why a ticket (flat) and an umbrella (long) take different counters in the same identical sentence frame."
+        }
+      ]
+    },
+    {
+      "id": "ex-04",
+      "kind": "reorder",
+      "skill": "grammar",
+      "prompt": "A friend asks about your plans. Build the sentence: 'Tomorrow I'm going to Tokyo by train.'",
+      "instruction": "Tap the tokens to put them in natural Japanese order.",
+      "tokens": [
+        "東京[とうきょう]に",
+        "明日[あした]",
+        "電車[でんしゃ]で",
+        "行[い]きます"
+      ],
+      "correctOrder": [
+        1,
+        2,
+        0,
+        3
+      ],
+      "reviewItemIds": [
+        "word_order_means_before_destination",
+        "particle_ni_destination",
+        "particle_de_means"
+      ],
+      "explanation": "The default Japanese order is Time → Means (で) → Destination (に) → Verb, with the verb always last. Putting the destination before the means (東京[とうきょう]に電車[でんしゃ]で) is understandable but marked — it sounds like you're contrasting train with some other way of getting there. Also note there's no 私[わたし]は token: when it's obvious you're the one going, Japanese simply drops the pronoun."
+    },
+    {
+      "id": "ex-05",
+      "kind": "translation",
+      "skill": "writing",
+      "prompt": "You're at the ticket window at Tokyo Station. Ask the clerk for two tickets as far as Kyoto.",
+      "instruction": "Write the whole request in Japanese, one sentence.",
+      "referenceAnswer": "京都[きょうと]までの切符[きっぷ]を二枚[にまい]ください。",
+      "reviewItemIds": [
+        "vocab_made",
+        "grammar_made_no_noun",
+        "vocab_kippu",
+        "counter_mai",
+        "grammar_counter_word_order"
+      ],
+      "explanation": "まで means 'as far as' and marks the end point of travel. To hang it on a noun you need の: 京都[きょうと]までの切符[きっぷ] = 'a ticket as far as Kyoto'. Without の, まで can only attach to a verb phrase. Then the familiar frame: noun を + number + counter + ください, so 切符[きっぷ]を二枚[にまい]ください. Dropping を (京都[きょうと]までの切符[きっぷ]二枚[にまい]ください) is what you'll actually hear at the window."
+    }
+  ]
+}

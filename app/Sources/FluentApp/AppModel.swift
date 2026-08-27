@@ -1,0 +1,280 @@
+import Foundation
+import Observation
+import SwiftUI
+import FluentCore
+
+/// The app's single piece of mutable state.
+///
+/// One identity, one succession of values. Views read it and send it intents;
+/// nothing else in the app holds mutable state, which is what keeps "what is
+/// true right now" answerable in one place.
+@MainActor
+@Observable
+final class AppModel {
+    enum Screen: Equatable {
+        case home
+        case lesson(id: String)
+        case archive
+        case debrief(id: String)
+        case lists
+    }
+
+    // Settings, persisted in UserDefaults -- per-machine preferences, not
+    // learning state. Learning state belongs to Fluent's databases.
+    var pluginRoot: URL {
+        didSet { UserDefaults.standard.set(pluginRoot.path, forKey: "pluginRoot") }
+    }
+    var claudePath: String {
+        didSet { UserDefaults.standard.set(claudePath, forKey: "claudePath") }
+    }
+    var model: String {
+        didSet { UserDefaults.standard.set(model, forKey: "model") }
+    }
+
+    /// Readings hidden by default: seeing them every time means never learning
+    /// to read the kanji. Persisted, because it is a working preference.
+    var showFurigana: Bool {
+        didSet { UserDefaults.standard.set(showFurigana, forKey: "showFurigana") }
+    }
+
+    var savedItems = SavedItems()
+
+    var screen: Screen = .home
+    var snapshot: FluentStore.Snapshot?
+    var records: [LessonRecord] = []
+    var unreadableLessons: [String] = []
+
+    var isGenerating = false
+    var isSubmitting = false
+    var statusMessage: String?
+    /// Live detail while the model works: what it is doing, how long it has
+    /// taken, and the answer as it is written.
+    var progressPhase: String?
+    var progressText: String = ""
+    var progressStartedAt: Date?
+    var error: String?
+
+    private func beginProgress(_ message: String) {
+        statusMessage = message
+        progressPhase = nil
+        progressText = ""
+        progressStartedAt = Date()
+    }
+
+    private func endProgress() {
+        statusMessage = nil
+        progressPhase = nil
+        progressText = ""
+        progressStartedAt = nil
+    }
+
+    /// Handed to `ClaudeClient`; called from the subprocess reader thread.
+    nonisolated private func progressSink() -> @Sendable (ClaudeClient.Progress) -> Void {
+        { [weak self] update in
+            Task { @MainActor in
+                guard let self else { return }
+                self.progressPhase = update.phase.label
+                if !update.text.isEmpty { self.progressText = update.text }
+            }
+        }
+    }
+
+    private(set) var lessonStore: LessonStore
+    private var lessons: LessonService?
+
+    init() {
+        let defaults = UserDefaults.standard
+        let root = defaults.string(forKey: "pluginRoot").map(URL.init(fileURLWithPath:))
+            ?? Paths.defaultPluginRoot()
+        self.pluginRoot = root
+        self.claudePath = defaults.string(forKey: "claudePath")
+            ?? Subprocess.which("claude", extraPaths: Paths.toolSearchPaths)
+            ?? ""
+        self.model = defaults.string(forKey: "model") ?? "opus"
+        self.showFurigana = defaults.bool(forKey: "showFurigana")
+        self.lessonStore = LessonStore(
+            dataDirectory: Paths.dataDirectory(pluginRoot: root))
+    }
+
+    var dataDirectory: URL { Paths.dataDirectory(pluginRoot: pluginRoot) }
+
+    /// BCP-47 code for speech, derived from the profile rather than configured:
+    /// the learner already told Fluent what they are learning.
+    var voiceLanguage: String? {
+        guard let language = snapshot?.databases.learner_profile.learner.target_language
+        else { return nil }
+        return Speech.voiceCode(for: language)
+    }
+
+    /// Rebuilds the services that depend on settings. Called at launch and
+    /// whenever a setting changes, so a corrected path takes effect without a
+    /// restart.
+    func rebuildServices() {
+        lessonStore = LessonStore(dataDirectory: dataDirectory)
+        lessons = LessonService(
+            claude: ClaudeClient(config: .init(
+                executable: claudePath,
+                model: model,
+                workingDirectory: pluginRoot)),
+            store: FluentStore(config: .init(pluginRoot: pluginRoot)),
+            lessons: lessonStore,
+            resources: ResourceLoader(pluginRoot: pluginRoot)
+        )
+    }
+
+    func start() async {
+        rebuildServices()
+        await refresh()
+    }
+
+    func refresh() async {
+        savedItems = (try? lessonStore.loadSavedItems()) ?? SavedItems()
+        do {
+            let loaded = try lessonStore.loadAll()
+            records = loaded.records
+            unreadableLessons = loaded.unreadable
+        } catch {
+            self.error = "Couldn't read the lesson archive: \(error.localizedDescription)"
+        }
+        do {
+            snapshot = try await FluentStore(config: .init(pluginRoot: pluginRoot)).load()
+        } catch {
+            self.error = "Couldn't read Fluent's databases: \(error.localizedDescription)"
+        }
+    }
+
+    // MARK: - Intents
+
+    func generate(
+        mode: LessonSpec.Mode, size: LessonSpec.Size,
+        depth: LessonSpec.Depth = .standard, focus: String
+    ) async {
+        guard let lessons else { return }
+        guard !claudePath.isEmpty else {
+            error = "Set the path to `claude` in Settings first."
+            return
+        }
+        isGenerating = true
+        beginProgress("Building a \(size.rawValue) \(mode.rawValue)…")
+        defer { isGenerating = false; endProgress() }
+
+        do {
+            let record = try await lessons.generate(
+                spec: LessonSpec(mode: mode, size: size, depth: depth, focus: focus),
+                progress: progressSink())
+            records.insert(record, at: 0)
+            screen = .lesson(id: record.id)
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    // MARK: - Saved items
+
+    func save(content: String, gloss: String, kind: SavedItem.Kind, lessonId: String?) {
+        savedItems.add(SavedItem(content: content, gloss: gloss, kind: kind,
+                                 sourceLessonId: lessonId))
+        persistSavedItems()
+    }
+
+    func unsave(id: String) {
+        savedItems.remove(id: id)
+        persistSavedItems()
+    }
+
+    private func persistSavedItems() {
+        do { try lessonStore.saveSavedItems(savedItems) }
+        catch { self.error = "Couldn't save your list: \(error.localizedDescription)" }
+    }
+
+    /// Generates a lesson built from specific saved items.
+    ///
+    /// Deliberate practice, so it drills them regardless of due date -- but the
+    /// results still feed SM-2, so the schedule stays the single authority on
+    /// when they come back on their own.
+    func practice(
+        items: [SavedItem], size: LessonSpec.Size,
+        depth: LessonSpec.Depth = .standard
+    ) async {
+        guard let lessons, !items.isEmpty else { return }
+        isGenerating = true
+        beginProgress("Building a lesson from \(items.count) saved item(s)…")
+        defer { isGenerating = false; endProgress() }
+
+        do {
+            let record = try await lessons.generate(
+                spec: LessonSpec(mode: .lesson, size: size, depth: depth,
+                                 focus: "these specific saved items"),
+                seedItems: items, progress: progressSink())
+            records.insert(record, at: 0)
+            screen = .lesson(id: record.id)
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    /// Opens a lesson where its remaining work actually is.
+    ///
+    /// A lesson that is finished but ungraded must not reopen at question one —
+    /// the learner would have to click through every exercise again to reach
+    /// the Finish button.
+    func open(_ record: LessonRecord) {
+        screen = record.state == .generated || record.state == .inProgress
+            ? .lesson(id: record.id)
+            : .debrief(id: record.id)
+    }
+
+    func record(id: String) -> LessonRecord? {
+        records.first { $0.id == id }
+    }
+
+    func update(_ record: LessonRecord) {
+        if let index = records.firstIndex(where: { $0.id == record.id }) {
+            records[index] = record
+        }
+        do { try lessonStore.save(record) }
+        catch { self.error = "Couldn't save your answers: \(error.localizedDescription)" }
+    }
+
+    func submit(id: String) async {
+        guard let lessons, var record = record(id: id) else { return }
+        isSubmitting = true
+        beginProgress(record.feedback == nil
+                      ? "Your teacher is reading your answers…"
+                      : "Saving to Fluent…")
+        defer { isSubmitting = false; endProgress() }
+
+        do {
+            record = try await lessons.submit(record, saved: savedItems.pending,
+                                              progress: progressSink())
+            // Saved items ride along with the session report, so they enter
+            // spaced repetition through Fluent rather than a parallel schedule.
+            savedItems.markPromoted(ids: Set(savedItems.pending.map(\.id)))
+            persistSavedItems()
+            update(record)
+            screen = .debrief(id: record.id)
+            await refresh()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    /// Removes files the archive could not parse. Explicit and learner-driven:
+    /// the app never quietly deletes something it failed to understand.
+    func deleteUnreadableLessons() {
+        let directory = dataDirectory.appending(path: "lessons")
+        for name in unreadableLessons {
+            try? FileManager.default.removeItem(at: directory.appending(path: name))
+        }
+        unreadableLessons = []
+    }
+
+    func delete(id: String) {
+        do {
+            try lessonStore.delete(id: id)
+            records.removeAll { $0.id == id }
+        } catch {
+            self.error = "Couldn't delete that lesson: \(error.localizedDescription)"
+        }
+    }
+}
