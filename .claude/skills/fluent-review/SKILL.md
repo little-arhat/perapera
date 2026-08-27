@@ -1,6 +1,6 @@
 ---
 name: fluent-review
-description: Run today's spaced-repetition review queue — items scheduled by SM-2 that need reinforcement before the learner forgets them. Triggered only when the learner types /fluent-review. Pulls due items from spaced-repetition.review_queue.today, generates a targeted exercise for each, evaluates the response, updates SM-2 parameters, and reshelves items into the correct future queue.
+description: Run today's spaced-repetition review queue — items scheduled by SM-2 that need reinforcement before the learner forgets them. Triggered only when the learner types /fluent-review. Pulls due items from read-db.py's computed.due_review_items, generates a targeted exercise for each, evaluates the response, updates SM-2 parameters, and reshelves items into the correct future queue.
 allowed-tools: Read, Write, Bash
 disable-model-invocation: true
 ---
@@ -25,7 +25,9 @@ Skip this skill when the queue is empty — suggest `/fluent-vocab` or `/fluent-
 python3 "${CLAUDE_PLUGIN_ROOT:-${CLAUDE_PROJECT_DIR:-.}}/.claude/hooks/read-db.py"
 ```
 
-Read `spaced-repetition.review_queue.today` and `daily_limits.review_items_per_day`. Sort items by `priority` (critical → high → medium → low). Cap at the daily limit (usually 20).
+Read `computed.due_review_items` and `spaced-repetition.daily_limits.review_items_per_day`. Sort items by `priority` (critical → high → medium → low). Cap at the daily limit (usually 20).
+
+**Use `computed.due_review_items`, not `review_queue.today`.** The `review_queue` buckets are a snapshot taken when `update-db.py` last ran; they go stale as the calendar advances, so `today` reads empty on any day the learner didn't practice — exactly the day reviews are due. `computed.due_review_items` is recalculated live from each item's `due_date` on every `read-db.py` call.
 
 If the queue is empty:
 
@@ -59,8 +61,8 @@ Each item has:
 
 ```json
 {
-  "item_id": "...",
-  "item_type": "error_pattern | vocabulary | grammar_rule",
+  "id": "...",
+  "type": "error_pattern | vocabulary | grammar_rule",
   "easiness_factor": 2.5,
   "interval_days": 6,
   "repetitions": 2,
@@ -71,7 +73,7 @@ Each item has:
 }
 ```
 
-Generate an exercise matched to `item_type`:
+Generate an exercise matched to `type`:
 
 - **error_pattern**: load the pattern from `mistakes-db`, create a scenario that forces the correct form. E.g. `formal_informal_confusion` → ask the learner to complete a formal email opening.
 - **vocabulary**: recognition (target → native), production (native → target), or cloze — rotate modes.
@@ -82,7 +84,7 @@ Present one at a time:
 ```markdown
 ## Review {N}/{total} — {priority emoji}
 
-**Type:** {item_type}
+**Type:** {type}
 **Last reviewed:** {X} days ago
 **Current mastery:** {stars}
 

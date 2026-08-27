@@ -122,6 +122,14 @@ Everything else is optional; omitted fields do not update.
 ## Data model notes
 
 - `learner-profile.json` stores `confidence` per skill as an integer 0–100.
+- `learner-profile.json` keeps two dates that are easy to confuse:
+  `last_updated` is when the profile file last changed, `last_session_date` is
+  when the learner last practiced. **Only `last_session_date` drives
+  `current_streak_days`.** `/fluent-setup` stamps `last_updated` at profile
+  creation, so keying the streak off it made every learner's first session look
+  like a same-day repeat and never start the streak. A profile written before
+  this field existed gets it backfilled from the last `session-log` entry (or
+  `null` when there are none) — never from `last_updated`.
 - `progress-db.json` stores `accuracy` values as floats 0.0–1.0.
 - `session-log.json` sessions use `skills_practiced` (array), `score_breakdown`
   (per-skill float accuracy), `topics_covered`, `breakthroughs`,
@@ -130,7 +138,14 @@ Everything else is optional; omitted fields do not update.
 - `spaced-repetition.json` items preserve `consecutive_correct/incorrect`,
   `mastery_level`, `total_reviews`, `priority`, `content`, `answer`,
   `category`, `difficulty` — supply these in `new_vocabulary` payloads so new
-  items are fully populated.
+  items are fully populated. Note the deliberate rename across the boundary: a
+  `new_vocabulary` entry's `item_id`/`item_type` are stored on the item record
+  as `id`/`type`. The payload and the record are different values; read stored
+  items by `type`.
+- `spaced-repetition.review_queue` is a snapshot taken at write time and goes
+  stale as the calendar advances. To find what is due *now*, read
+  `computed.due_review_items` from `read-db.py`, which recalculates from each
+  item's `due_date` on every call.
 - `milestones[]` accepts **either** a bare string **or** an object
   `{ "milestone": <required non-empty string>, "date": <optional YYYY-MM-DD,
   defaults to the session date> }`. A nested `session_id` is ignored — the
