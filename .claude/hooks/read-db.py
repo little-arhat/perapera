@@ -73,10 +73,15 @@ def main():
     sessions = log.get("sessions", [])
 
     profile = databases.get("learner_profile", {})
-    last_updated = profile.get("last_updated", "")
-    streak_active = last_updated in (today, yesterday)
+    # Streak facts come from when the learner last *practiced*, not from when the
+    # profile file last changed. Pre-migration profiles lack the field; fall back
+    # to the session log rather than to last_updated.
+    last_session = profile.get("last_session_date")
+    if not last_session:
+        last_session = sessions[-1].get("date", "") if sessions else ""
+    streak_active = last_session in (today, yesterday)
     try:
-        days_since = (now - datetime.strptime(last_updated, "%Y-%m-%d")).days if last_updated else None
+        days_since = (now - datetime.strptime(last_session, "%Y-%m-%d")).days if last_session else None
     except ValueError:
         days_since = None
 

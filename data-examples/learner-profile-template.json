@@ -12,6 +12,7 @@
   },
   "profile_created": "{YYYY-MM-DD}",
   "last_updated": "{YYYY-MM-DD}",
+  "last_session_date": null,
   "current_streak_days": 0,
   "total_sessions": 0,
   "total_study_minutes": 0,

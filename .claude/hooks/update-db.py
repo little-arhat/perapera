@@ -182,17 +182,33 @@ def calculate_sm2(item: dict, quality: int) -> dict:
 # mastery_level, total_reviews, priority, content, answer, category,
 # difficulty fields on existing items.
 
+def migrate_last_session_date(profile: dict, log: dict) -> None:
+    """Backfill 'last_session_date' on profiles written before it existed.
+
+    The streak needs to know when the learner last *practiced*. That is not
+    'last_updated', which only records when the profile file last changed --
+    /fluent-setup stamps it at profile creation. Deriving one from the other is
+    exactly the conflation this field removes, so the only honest source is the
+    session log; a profile with no logged sessions has no last session date.
+    """
+    if "last_session_date" in profile:
+        return
+    sessions = log.get("sessions") or []
+    profile["last_session_date"] = sessions[-1].get("date") if sessions else None
+
+
 def update_learner_profile(profile: dict, session: dict):
     today = session["date"]
-    last = profile.get("last_updated", "")
+    last_session = profile.get("last_session_date")
 
-    if last == today:
-        pass
-    elif last == yesterday(today):
+    if last_session == today:
+        pass  # second session the same day: already counted
+    elif last_session == yesterday(today):
         profile["current_streak_days"] = profile.get("current_streak_days", 0) + 1
     else:
-        profile["current_streak_days"] = 1
+        profile["current_streak_days"] = 1  # first session ever, or a gap
 
+    profile["last_session_date"] = today
     profile["last_updated"] = today
     profile["total_sessions"] = profile.get("total_sessions", 0) + 1
     profile["total_study_minutes"] = profile.get("total_study_minutes", 0) + session.get("duration_minutes", 0)
@@ -566,6 +582,7 @@ def main():
     data = {k: copy.deepcopy(v) for k, v in originals.items()}
 
     try:
+        migrate_last_session_date(data["profile"], data["log"])
         update_learner_profile(data["profile"], session)
         update_progress_db(data["progress"], session)
         update_mistakes_db(data["mistakes"], session)

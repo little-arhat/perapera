@@ -362,6 +362,123 @@ class UpdateDbSmokeTest(unittest.TestCase):
                 after = len(self._load("learner-profile.json").get("achievements", []))
                 self.assertEqual(after, before)
 
+    # --- Streak (last_session_date) ---
+    #
+    # The streak keys off `last_session_date` (when the learner last practiced),
+    # NOT `last_updated` (when the profile file last changed). /fluent-setup
+    # stamps last_updated at profile creation, so keying off it made every
+    # learner's first session hit the "same day" no-op branch and never start
+    # the streak.
+
+    def _write(self, name, data):
+        (self.tmp / "data" / name).write_text(json.dumps(data))
+
+    def _fresh_profile(self, **overrides):
+        """A profile exactly as /fluent-setup leaves it: last_updated stamped at
+        creation, no last_session_date, zero streak."""
+        profile = {
+            "learner": {"name": "Test", "target_language": "Dutch",
+                        "current_level": "A1", "target_level": "A2"},
+            "profile_created": "2026-04-24",
+            "last_updated": "2026-04-24",
+            "current_streak_days": 0,
+            "total_sessions": 0,
+            "total_study_minutes": 0,
+            "skills": {}, "focus_areas": [], "achievements": [],
+            "preferences": {},
+        }
+        profile.update(overrides)
+        return profile
+
+    def _empty_log(self):
+        return {"metadata": {"language": "Dutch", "learner_name": "Test",
+                             "total_sessions": 0},
+                "sessions": [], "milestones": []}
+
+    def test_first_session_starts_streak(self):
+        """Regression: a brand-new profile whose last_updated == the session date
+        must still start the streak at 1."""
+        self._write("learner-profile.json", self._fresh_profile())
+        self._write("session-log.json", self._empty_log())
+
+        payload = dict(SESSION_PAYLOAD)
+        payload["session_id"] = "session-001"
+        payload["date"] = "2026-04-24"
+        proc = self._run(payload)
+
+        self.assertEqual(proc.returncode, 0, msg=proc.stderr)
+        profile = self._load("learner-profile.json")
+        self.assertEqual(profile["current_streak_days"], 1)
+        self.assertEqual(profile["last_session_date"], "2026-04-24")
+
+    def test_consecutive_days_increment_streak(self):
+        self._write("learner-profile.json", self._fresh_profile(
+            last_session_date="2026-04-23", current_streak_days=4,
+            last_updated="2026-04-23"))
+
+        payload = dict(SESSION_PAYLOAD)
+        payload["session_id"] = "session-002"
+        payload["date"] = "2026-04-24"
+        proc = self._run(payload)
+
+        self.assertEqual(proc.returncode, 0, msg=proc.stderr)
+        self.assertEqual(self._load("learner-profile.json")["current_streak_days"], 5)
+
+    def test_gap_resets_streak(self):
+        self._write("learner-profile.json", self._fresh_profile(
+            last_session_date="2026-04-19", current_streak_days=9,
+            last_updated="2026-04-19"))
+
+        payload = dict(SESSION_PAYLOAD)
+        payload["session_id"] = "session-002"
+        payload["date"] = "2026-04-24"
+        proc = self._run(payload)
+
+        self.assertEqual(proc.returncode, 0, msg=proc.stderr)
+        self.assertEqual(self._load("learner-profile.json")["current_streak_days"], 1)
+
+    def test_migration_derives_last_session_date_from_log(self):
+        """A pre-existing profile has no last_session_date. It must be derived
+        from the session log's last entry -- never from last_updated, which is
+        the conflation being removed."""
+        self._write("learner-profile.json", self._fresh_profile(
+            last_updated="2026-04-24", current_streak_days=2))
+        # Log says the learner last practiced 2026-04-23 (i.e. yesterday).
+        log = self._empty_log()
+        log["sessions"] = [{"session_id": "session-001", "date": "2026-04-23",
+                            "duration_minutes": 10, "skills_practiced": [],
+                            "exercises_completed": 0, "accuracy": 0.0,
+                            "score_breakdown": {}, "topics_covered": [],
+                            "breakthroughs": [], "focus_next_session": [],
+                            "notes": "", "achievements_earned": []}]
+        self._write("session-log.json", log)
+
+        payload = dict(SESSION_PAYLOAD)
+        payload["session_id"] = "session-002"
+        payload["date"] = "2026-04-24"
+        proc = self._run(payload)
+
+        self.assertEqual(proc.returncode, 0, msg=proc.stderr)
+        profile = self._load("learner-profile.json")
+        # Derived 2026-04-23 == yesterday -> increment, not reset.
+        self.assertEqual(profile["current_streak_days"], 3)
+        self.assertEqual(profile["last_session_date"], "2026-04-24")
+
+    def test_last_updated_no_longer_drives_streak(self):
+        """last_updated far in the past must not reset a streak whose
+        last_session_date is current."""
+        self._write("learner-profile.json", self._fresh_profile(
+            last_updated="2026-01-01", last_session_date="2026-04-23",
+            current_streak_days=7))
+
+        payload = dict(SESSION_PAYLOAD)
+        payload["session_id"] = "session-002"
+        payload["date"] = "2026-04-24"
+        proc = self._run(payload)
+
+        self.assertEqual(proc.returncode, 0, msg=proc.stderr)
+        self.assertEqual(self._load("learner-profile.json")["current_streak_days"], 8)
+
 
 if __name__ == "__main__":
     unittest.main()

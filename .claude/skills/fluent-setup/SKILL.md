@@ -167,7 +167,7 @@ Present:
 
 Start from the templates in `data-examples/`. Resolve the target directory via `fluent_paths.ensure_data_dir()` (it creates the directory if missing), then create these 6 files inside it:
 
-- `learner-profile.json` — fill all fields from the interview.
+- `learner-profile.json` — fill all fields from the interview. Leave `last_session_date` as `null` and `current_streak_days` as `0`: the learner hasn't practiced yet, and `update-db.py` sets both on their first session. Setting `last_session_date` here would make that first session look like a repeat and silently skip the streak.
 - `progress-db.json` — empty stats.
 - `mistakes-db.json` — empty `error_patterns`.
 - `mastery-db.json` — `skills_mastery` entries with `mastery_level: 0` for each skill.
