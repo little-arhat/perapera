@@ -36,36 +36,56 @@ on a worn navy noren, plus vertical 定食 on a wooden board. Every character
 correctly formed, at an angle, weathered, with a small circular ラーメン logo
 also correct.
 
-**`google/gemini-3.1-flash-image`** (cheaper) — a handwritten izakaya menu
-board: やきとり 250円 / えだまめ 400円 / おちゃ 150円. All three lines exact,
-natural marker handwriting, correct dakuten on だ and correct small ゃ in おちゃ.
+**`google/gemini-3.1-flash-image`** — a handwritten izakaya menu board:
+やきとり 250円 / えだまめ 400円 / おちゃ 150円. All three lines exact, natural
+marker handwriting, correct dakuten on だ and correct small ゃ in おちゃ. Also
+produced correct vertical tanzaku strips, a shop-window poster
+(アイスコーヒー / レギュラーサイズ), a shrine board (お参りのしかた /
+二礼二拍手一礼), a station sign (みなみぐち / 南口), and a weathered enamel
+plate (でぐち).
 
-This is the real target skill, and the cheap model handled it. CJK text
-rendering used to be the blocker for this idea; it is not any more.
+**`google/gemini-2.5-flash-image` is cheaper and unusable.** At $0.0387 against
+$0.0677 it looks attractive, but asked for みなみぐち it rendered
+**みなみりぢち** — wrong kana, confidently drawn. Text accuracy is the entire
+product here, so the cheaper model is not a saving; it is a defect generator.
+
+CJK text rendering used to be the blocker for this idea. It is not any more —
+but only above a certain model tier.
 
 **Storage** is not a problem: 2.1 MB PNG → 194 KB JPEG at 1024 px, and 832 KB →
 136 KB, both still fully legible. A lesson with five images costs well under a
 megabyte.
 
-### 2. Verification — the part that makes it trustworthy
+### 2. Verification — must be the paid one
 
 A malformed stroke in a recognition drill teaches a wrong letterform. That is
 worse than not practising at all, so generated text must be verified, never
-trusted. Two tiers were tested:
+trusted.
 
-**macOS Vision (`VNRecognizeTextRequest`, `ja-JP`)** — free, offline,
-deterministic, already on the machine. On the handwritten menu it read back all
-three lines exactly. On the noren it read らーめん but missed the vertical 定食.
+**macOS Vision (`VNRecognizeTextRequest`, `ja-JP`) is not adequate.** An early
+test on a flat, horizontal, printed menu was encouraging, and I wrongly
+generalised from it. On the realistic cases it fails badly:
 
-So local OCR is a **one-way filter**: a match confirms the render, a miss proves
-nothing (vertical and heavily stylised text defeat it).
+| Image | Intended | Local OCR read |
+|---|---|---|
+| Shop window poster | アイスコーヒー | アスコービー (dropped イ) |
+| same | レギュラーサイズ | レキュラーサイズ (dropped the dakuten) |
+| Vertical izakaya strips | とりから / ひやしトマト / れんこん | `っう` `い` `それかいん）` |
+| Vertical shrine board | お参りのしかた … | `おがりを` `ありさで` `さむrす。` |
 
-**Vision-model read-back (`google/gemini-2.5-flash`)** — read everything on both
-images, including the vertical 定食 and the small circular logo.
+Those are **false negatives** — the images were correct. A pipeline gated on
+local OCR would reject good images and regenerate them at full price, and would
+be worst exactly where the exercise is most valuable. Vertical, angled and
+weathered text is the point of the drill and the thing Vision cannot read.
 
-That gives a cheap ladder: generate → local OCR → if it confirms, ship free; if
-not, ask the vision model; if that still disagrees with the intended text,
-regenerate. Only ambiguous cases cost anything.
+**Vision-model read-back (`google/gemini-2.5-flash`) handles all of it.** On the
+same four images it transcribed every line exactly, including vertical brush
+calligraphy and the dakuten Vision dropped. Measured cost: **$0.00059 per image**
+against a 1024 px JPEG — 0.9% of what the image itself costs.
+
+So verification is a paid step, but a rounding error. Local OCR is worth keeping
+only as a free fast path for flat horizontal text; it must never be the
+gatekeeper.
 
 ### 3. Font rendering — free, exact, complementary
 
@@ -106,6 +126,55 @@ lighting, wear, the curve of fabric.
 
 Not worth pursuing for a first version. Revisit only if generated images prove
 unrealistic in a way that matters.
+
+## What it costs
+
+Measured on this machine, not estimated:
+
+| Item | Cost | Notes |
+|---|---|---|
+| Image (`gemini-3.1-flash-image`) | **$0.0677** | n=5, range $0.0672–0.0685 |
+| Image (`gemini-2.5-flash-image`) | $0.0387 | **unusable** — renders wrong kana |
+| Verification read-back | **$0.00059** | n=3, on a 1024 px JPEG |
+| Lesson JSON (opus) | **$0.58** | n=3: $0.530 / $0.645 / $0.570 |
+| Grading | not measured | assumed $0.40 below |
+
+**Image cost is flat.** $0.067 whether the prompt is 54 tokens or 73, whether
+the output is 1024×1024 or 1408×768, whether the scene is a bare enamel plate or
+a crowded izakaya. Prompt tokens are noise. So *making the picture simpler or
+smaller does not make it cheaper* — there is no saving on that axis.
+
+Per lesson, assuming a 15% verification-reject rate (guessed, not measured):
+
+| Shape | Recognition items | Total | Per item |
+|---|---|---|---|
+| 5 images, 1 item each | 5 | $1.37 | $0.274 |
+| 8 images, 1 item each | 8 | $1.61 | $0.201 |
+| 2 images, 4 items each | 8 | $1.14 | $0.142 |
+| 3 images, 3 items each | 9 | $1.22 | $0.135 |
+| 3 images, 3 items, **Sonnet** for the lesson text | 9 | **$0.70** | $0.077 |
+
+At one lesson a day, the naive shape is roughly $41–48/month; the last row is
+about $21.
+
+### Where the savings actually are
+
+1. **Several items per image.** A menu board carries three to six readable
+   items; the izakaya photo already carries three. Eight recognition items from
+   two images costs $0.16 in image generation instead of $0.62. This is also
+   more realistic — you read a whole menu, not one word in isolation. It is the
+   inverse of cropping tighter, and it is the reason cropping tighter is the
+   wrong instinct for cost.
+2. **Reuse.** An image is a durable asset, not lesson-scoped ephemera. Three
+   images carrying nine items, each reviewed eight times over the following
+   months, costs **$0.003 per exposure**. Recognition items are exactly the kind
+   of thing spaced repetition should own; generating fresh images per session
+   would be paying repeatedly for something that does not wear out.
+3. **The text model, not the images.** At five images the lesson JSON ($0.58)
+   costs *more than the pictures* ($0.39). Moving generation to Sonnet is worth
+   more than any image-side optimisation.
+4. **Font rendering for the letterform drill**, which is free — reserve
+   photographs for the transfer test.
 
 ## Recommendation: two tracks, one exercise kind
 
