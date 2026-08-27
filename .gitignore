@@ -40,3 +40,12 @@ npm-debug.log*
 temp/
 *.json.tmp
 
+
+# Swift app build artifacts
+/app/.build/
+/app/Fluent.app/
+/app/*.xcodeproj/
+.swiftpm/
+
+# Throwaway exploration scripts
+_probes/
