@@ -48,10 +48,13 @@ struct RubyTextView: NSViewRepresentable {
     func sizeThatFits(
         _ proposal: ProposedViewSize, nsView: RubyCanvas, context: Context
     ) -> CGSize? {
-        // A nil proposal means "unconstrained"; falling through to zero would
-        // lay every character onto its own line.
-        let width = proposal.width ?? (availableWidth > 0 ? availableWidth : 600)
-        return nsView.fittingSize(width: max(width, 80))
+        // A nil proposal means "how big would you like to be?", which for a
+        // short token is its natural single-line width. Substituting a guessed
+        // number here is what made tokens claim a fixed 600pt each.
+        guard let proposed = proposal.width, proposed > 0, proposed < .infinity else {
+            return nsView.fittingSize(width: .greatestFiniteMagnitude)
+        }
+        return nsView.fittingSize(width: max(proposed, 80))
     }
 
     private var model: RubyCanvas.Model {
@@ -306,8 +309,13 @@ final class RubyCanvas: NSView {
         return count
     }
 
+    /// The size this text actually needs within `width`.
+    ///
+    /// Returns the *used* width, not the width offered. Returning the offer
+    /// made every view claim its whole container, so reorder tokens — which
+    /// should hug their word and flow inline — each took a full row.
     func fittingSize(width: CGFloat) -> CGSize {
-        guard !attributed.string.isEmpty else { return CGSize(width: width, height: 0) }
+        guard !attributed.string.isEmpty else { return CGSize(width: 0, height: 0) }
         let setter = CTFramesetterCreateWithAttributedString(attributed)
         var fitRange = CFRange()
         let size = CTFramesetterSuggestFrameSizeWithConstraints(
@@ -317,7 +325,11 @@ final class RubyCanvas: NSView {
         // so a line with readings would be clipped at the top without this.
         // Independent of the toggle, so the height never changes with it.
         let rubyHeadroom = hasRuby ? model.fontSize * 0.6 : 0
-        return CGSize(width: width, height: ceil(size.height + rubyHeadroom + 2))
+        // +1 guards against the suggested width rounding a hair short and
+        // forcing a spurious wrap.
+        return CGSize(
+            width: min(width, ceil(size.width) + 1),
+            height: ceil(size.height + rubyHeadroom + 2))
     }
 
     // MARK: - Drawing
