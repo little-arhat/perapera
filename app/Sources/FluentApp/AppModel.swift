@@ -47,6 +47,15 @@ final class AppModel {
     var textSelectable: Bool {
         didSet { UserDefaults.standard.set(textSelectable, forKey: "textSelectable") }
     }
+    /// Highlight the word under the pointer, and copy it on click.
+    ///
+    /// Separate from selection because they answer different questions: "let me
+    /// grab this exact span" versus "show me where this word ends". Japanese
+    /// has no spaces, so the second is a genuine reading aid rather than a
+    /// convenience.
+    var highlightWords: Bool {
+        didSet { UserDefaults.standard.set(highlightWords, forKey: "highlightWords") }
+    }
 
     func adjustTextSize(by delta: Double) {
         textSizeFactor = min(TextScale.maximum,
@@ -115,6 +124,7 @@ final class AppModel {
         let stored = defaults.double(forKey: "textSizeFactor")
         self.textSizeFactor = stored > 0 ? stored : 1.0
         self.textSelectable = defaults.bool(forKey: "textSelectable")
+        self.highlightWords = defaults.bool(forKey: "highlightWords")
         self.lessonStore = LessonStore(
             dataDirectory: Paths.dataDirectory(pluginRoot: root))
     }

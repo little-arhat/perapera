@@ -28,7 +28,11 @@ struct LessonPlayerView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     if index == 0, let preamble = record.lesson.preamble, !revealed {
-                        Text(.init(preamble))
+                        // Markdown cannot host ruby, so readings become
+                        // parentheticals rather than leaking as raw markup.
+                        Text(.init(model.showFurigana
+                                   ? Furigana.parenthesized(preamble)
+                                   : Furigana.stripped(preamble)))
                             .padding(16)
                             .background(palette.surface, in: .rect(cornerRadius: 10))
                     }
@@ -97,6 +101,7 @@ struct LessonPlayerView: View {
                 }
                 Spacer()
                 TextSizeControls()
+                WordHighlightToggle()
                 SelectionToggle()
                 if hasKanji {
                     FuriganaToggle(isOn: Binding(
@@ -155,7 +160,9 @@ struct LessonPlayerView: View {
                     }
                 }
                 if let explanation = exercise.explanation {
-                    Text(.init(Furigana.stripped(explanation)))
+                    Text(.init(model.showFurigana
+                               ? Furigana.parenthesized(explanation)
+                               : Furigana.stripped(explanation)))
                         .foregroundStyle(palette.bodyText)
                 }
             }

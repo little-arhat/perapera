@@ -27,15 +27,14 @@ section; move items to **Done** with a one-line note on what actually changed.
       blunt instrument for that.
 
 ### Settings & appearance
-- [ ] **Word/particle highlighting.** Beyond show/hide readings: tint particles
-      distinctly, and highlight word boundaries on hover so the learner can see
-      where one word ends. Needs tokenisation — kana runs and kanji runs are a
-      crude first pass; a real segmenter would be better.
-- [ ] **Click a word to copy it** for dictionary lookups. Pairs with the
-      hover highlighting above: hover shows the boundary, click takes the word.
-- [ ] **Furigana in more places.** Done for prompts, options, tokens, matching
-      pairs and flashcards; still plain in Picker rows (which cannot host ruby —
-      currently stripped) and in feedback comments.
+- [ ] **Tint particles distinctly.** Word highlighting is in; colouring
+      は/を/に/で by role is the remaining half, and would make the particle
+      drills much easier to read at a glance.
+- [ ] **Better segmentation.** `NLTokenizer` splits 新幹線 into 新+幹線 and
+      まどぐち into まど+ぐち. Good enough to hover, wrong often enough to notice.
+- [ ] **Ruby in Picker rows.** A Picker cannot host ruby, so matching-menu
+      labels are stripped. Replacing the Picker with a custom control would fix
+      it; low priority.
 - [ ] **Settings page for theme and colours.** Solarized light/dark currently
       follows the system appearance with no override. Wants: explicit
       light/dark/auto, and ideally an alternate palette for anyone who doesn't
@@ -66,6 +65,22 @@ section; move items to **Done** with a one-line note on what actually changed.
       answers at grading time.
 
 ## Done
+- [x] **Selection only worked one fragment at a time.** RubyText rendered one
+      SwiftUI `Text` per segment inside a FlowLayout, and selection cannot span
+      separate Text views — so it felt "selectable by kanji only", because the
+      fragments *were* the kanji runs. Replaced with a Core Text view
+      (`CTRubyAnnotation`) that keeps the line as one attributed string.
+      `NSTextView` was tried first and silently drops ruby. (2026-08-28)
+- [x] **Word highlighting on hover, click to copy.** Uses `NLTokenizer`, which
+      segments Japanese without spaces. Copied text carries no markup, because
+      ruby is an annotation rather than inline text. (2026-08-28)
+- [x] **Raw markup in the preamble.** The preamble renders Markdown, which
+      cannot host ruby, so 切符[きっぷ] arrived on screen literally. Markdown
+      contexts now show readings as 切符（きっぷ）instead. (2026-08-28)
+- [x] **Column too wide for latin prose.** The width curve was derived for CJK
+      (one character ≈ one em); English runs about half that, so a column sized
+      for 35 kana held 75 latin characters. Gentler and clamped: 48-72 latin,
+      26-40 CJK across the whole size range. (2026-08-28)
 - [x] **Text size control.** ⌘+ / ⌘− / ⌘0, persisted, applied as one scale
       factor through the environment rather than per-view constants. Plus a
       selection toggle — selectable text helps dictionary lookups and hurts

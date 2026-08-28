@@ -14,33 +14,27 @@ struct RubyText: View {
 
     @Environment(\.palette) private var palette
     @Environment(\.textScale) private var scale
-
-    private var segments: [Furigana.Segment] { Furigana.parse(annotated) }
-    private var scaled: CGFloat { scale.size(size) }
-    private var rubySize: CGFloat { scaled * 0.45 }
+    @Environment(AppModel.self) private var model
 
     var body: some View {
+        // Plain text with no readings needs none of the machinery, and a real
+        // SwiftUI Text composes better (Dynamic Type, accessibility, layout).
         if !Furigana.hasAnnotations(annotated) {
             Text(annotated)
-                .font(.system(size: scaled))
+                .font(.system(size: scale.size(size)))
                 .selectableIf(scale.selectable)
         } else {
-            FlowLayout(spacing: 0) {
-                ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
-                    VStack(spacing: 1) {
-                        Text(segment.reading ?? " ")
-                            .font(.system(size: rubySize))
-                            .foregroundStyle(palette.secondaryText)
-                            .opacity(showFurigana && segment.reading != nil ? 1 : 0)
-                        Text(segment.base)
-                            .font(.system(size: scaled))
-                            .selectableIf(scale.selectable)
-                    }
-                    // Height is reserved whether or not the reading shows, so
-                    // toggling furigana never reflows the page.
-                    .frame(minHeight: scaled + rubySize + 1, alignment: .bottom)
-                }
-            }
+            RubyTextView(
+                annotated: annotated,
+                showFurigana: showFurigana,
+                fontSize: scale.size(size),
+                color: NSColor(palette.emphasizedText),
+                rubyColor: NSColor(palette.secondaryText),
+                selectable: scale.selectable,
+                highlightWords: model.highlightWords,
+                availableWidth: 0
+            )
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 }

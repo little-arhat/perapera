@@ -84,6 +84,25 @@ public enum Furigana {
         parse(annotated).map { $0.reading ?? $0.base }.joined()
     }
 
+    /// Readings as parentheticals: 切符（きっぷ）.
+    ///
+    /// For places that render Markdown — a lesson preamble, a feedback comment —
+    /// where ruby cannot be drawn but the reading is still worth having. The
+    /// alternative is stripping it, which throws away the one thing a beginner
+    /// most needs from a kanji they have not met.
+    ///
+    /// Full-width brackets on purpose: 「切符(きっぷ)」 in half-width reads as
+    /// an aside in latin text, while （）is the Japanese convention and sits
+    /// correctly against CJK glyphs.
+    public static func parenthesized(_ annotated: String) -> String {
+        parse(annotated)
+            .map { segment in
+                guard let reading = segment.reading else { return segment.base }
+                return "\(segment.base)（\(reading)）"
+            }
+            .joined()
+    }
+
     /// Whether anything here is annotated, so a view can skip the ruby layout
     /// entirely for plain text.
     public static func hasAnnotations(_ annotated: String) -> Bool {

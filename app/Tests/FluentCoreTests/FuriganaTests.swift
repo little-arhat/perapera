@@ -57,3 +57,15 @@ import Testing
     let segments = Furigana.parse("東京[とうきょう]から京都[きょうと]まで")
     #expect(segments.filter { $0.reading != nil }.count == 2)
 }
+
+@Test func parenthesizedKeepsReadingsWhereRubyCannotBeDrawn() {
+    // Markdown contexts — a lesson preamble, a feedback comment — cannot host
+    // ruby. Stripping would throw away the one thing a beginner most needs from
+    // an unfamiliar kanji, so the reading becomes a parenthetical instead.
+    #expect(Furigana.parenthesized("切符[きっぷ]を2枚[まい]ください")
+            == "切符（きっぷ）を2枚（まい）ください")
+    // Unannotated text is untouched.
+    #expect(Furigana.parenthesized("コンビニで水を買います") == "コンビニで水を買います")
+    // And nothing is left behind that looks like markup.
+    #expect(!Furigana.parenthesized("明日[あした]").contains("["))
+}

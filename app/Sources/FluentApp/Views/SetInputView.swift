@@ -77,7 +77,9 @@ struct SetInputView: View {
                             .font(.callout)
                             .foregroundStyle(palette.emphasizedText)
                         if let explanation = item.explanation, !explanation.isEmpty {
-                            Text(Furigana.stripped(explanation))
+                            Text(model.showFurigana
+                                 ? Furigana.parenthesized(explanation)
+                                 : Furigana.stripped(explanation))
                                 .font(.caption)
                                 .foregroundStyle(palette.secondaryText)
                         }

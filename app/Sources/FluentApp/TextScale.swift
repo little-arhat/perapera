@@ -22,13 +22,15 @@ struct TextScale {
 
     /// Reading column width for a given base.
     ///
-    /// Grows faster than the text itself. Measure is what makes prose readable
-    /// -- roughly 30-40 characters a line for Japanese -- and a column fixed at
-    /// 720pt holds half that once the text is doubled, so the passage turns
-    /// into a narrow ribbon. The square root keeps it from running to the full
-    /// window at large sizes, where an over-long line is its own problem.
+    /// Grows with the text, but at roughly half the rate and capped at 1.6x.
+    /// The first version scaled by (f²+f)/2, which was derived for Japanese
+    /// where a character is about one em. Mixed prose is not: English runs near
+    /// half an em, so a column sized to hold 35 kana held 75 latin characters —
+    /// well past comfortable measure. Sub-linear and clamped keeps both scripts
+    /// inside a readable line at every size.
     func width(_ base: CGFloat) -> CGFloat {
-        base * CGFloat((factor * factor + factor) / 2)
+        let growth = 1 + (factor - 1) * 0.6
+        return base * min(1.6, max(0.85, growth))
     }
 }
 
@@ -85,6 +87,25 @@ struct TextSizeCommands: Commands {
                 .keyboardShortcut("0", modifiers: .command)
             Divider()
         }
+    }
+}
+
+/// Toggles word highlighting on hover.
+struct WordHighlightToggle: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.palette) private var palette
+
+    var body: some View {
+        Button { model.highlightWords.toggle() } label: {
+            Label(model.highlightWords ? "Words on" : "Words off",
+                  systemImage: model.highlightWords
+                      ? "character.cursor.ibeam" : "character")
+                .font(.caption)
+                .foregroundStyle(model.highlightWords
+                                 ? palette.accent : palette.secondaryText)
+        }
+        .buttonStyle(.plain)
+        .help("Highlight the word under the pointer; click to copy it")
     }
 }
 
