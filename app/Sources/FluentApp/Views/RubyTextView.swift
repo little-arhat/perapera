@@ -85,6 +85,9 @@ final class RubyCanvas: NSView {
         selectable: false, highlightWords: false)
 
     private var attributed = NSAttributedString()
+    /// Whether any segment carries a reading. Drives layout regardless of
+    /// whether readings are currently shown.
+    private var hasRuby = false
     /// Offsets in `attributed` mapped back to the plain (unannotated) string, so
     /// a selection can be copied without markup.
     private var plainText = ""
@@ -98,6 +101,26 @@ final class RubyCanvas: NSView {
 
     override var isFlipped: Bool { false }
     override var acceptsFirstResponder: Bool { model.selectable }
+
+    /// Height depends on width, and the width SwiftUI finally allots need not
+    /// be the one it proposed while measuring. Without re-measuring on resize,
+    /// a string that wraps in the real slot but not in the proposed one is laid
+    /// out for one line and clipped — which is why only the longest item looked
+    /// wrong.
+    override var intrinsicContentSize: NSSize {
+        guard bounds.width > 1 else { return NSSize(width: NSView.noIntrinsicMetric,
+                                                    height: NSView.noIntrinsicMetric) }
+        return fittingSize(width: bounds.width)
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        let widthChanged = abs(newSize.width - bounds.width) > 0.5
+        super.setFrameSize(newSize)
+        if widthChanged {
+            invalidateIntrinsicContentSize()
+            needsDisplay = true
+        }
+    }
 
     func configure(with model: Model) {
         guard model != self.model else { return }
@@ -126,6 +149,7 @@ final class RubyCanvas: NSView {
     private func rebuild() {
         let segments = Furigana.parse(model.annotated)
         plainText = segments.map(\.base).joined()
+        hasRuby = segments.contains { $0.reading != nil }
 
         let font = NSFont(name: "HiraginoSans-W3", size: model.fontSize)
             ?? NSFont.systemFont(ofSize: model.fontSize)
@@ -136,17 +160,20 @@ final class RubyCanvas: NSView {
                 .font: font,
                 .foregroundColor: model.color,
             ]
-            // Ruby is attached only when readings are shown. Attaching it
-            // always and hiding it with colour would still reserve the space,
-            // which is fine, but it would also put the reading on the clipboard
-            // in some copy paths.
-            if model.showFurigana, let reading = segment.reading {
+            // The annotation is always attached; hiding readings only makes it
+            // transparent. Attaching it conditionally changed the line's ascent,
+            // so toggling readings moved every line on the page — and reserving
+            // headroom is not enough to prevent that, because the metrics
+            // themselves differ. Clipboard content is unaffected either way:
+            // copying reads `plainText`, which is built from the base segments.
+            if let reading = segment.reading {
+                let color = model.showFurigana ? model.rubyColor : NSColor.clear
                 attributes[kCTRubyAnnotationAttributeName as NSAttributedString.Key] =
                     CTRubyAnnotationCreateWithAttributes(
                         .auto, .auto, .before, reading as CFString,
                         [
                             kCTRubyAnnotationSizeFactorAttributeName: 0.5,
-                            kCTForegroundColorAttributeName: model.rubyColor.cgColor,
+                            kCTForegroundColorAttributeName: color.cgColor,
                         ] as CFDictionary
                     )
             }
@@ -165,7 +192,8 @@ final class RubyCanvas: NSView {
             CGSize(width: width, height: .greatestFiniteMagnitude), &fitRange)
         // Ruby sits above the line and is not counted in the suggested height,
         // so a line with readings would be clipped at the top without this.
-        let rubyHeadroom = model.showFurigana ? model.fontSize * 0.6 : 0
+        // Independent of the toggle, so the height never changes with it.
+        let rubyHeadroom = hasRuby ? model.fontSize * 0.6 : 0
         return CGSize(width: width, height: ceil(size.height + rubyHeadroom + 2))
     }
 
@@ -178,7 +206,7 @@ final class RubyCanvas: NSView {
 
         // Core Text lays out from the top of the path; the view is unflipped,
         // so shift so the first line sits at the top with room for its ruby.
-        let headroom = model.showFurigana ? model.fontSize * 0.6 : 0
+        let headroom = hasRuby ? model.fontSize * 0.6 : 0
         context.saveGState()
         context.translateBy(x: 0, y: bounds.height - textHeight - headroom)
 
@@ -247,7 +275,7 @@ final class RubyCanvas: NSView {
 
     /// Character index under a point in view coordinates.
     private func characterIndex(at point: NSPoint) -> Int? {
-        let headroom = model.showFurigana ? model.fontSize * 0.6 : 0
+        let headroom = hasRuby ? model.fontSize * 0.6 : 0
         let adjusted = CGPoint(
             x: point.x, y: point.y - (bounds.height - textHeight - headroom))
         for (line, origin) in lines {
