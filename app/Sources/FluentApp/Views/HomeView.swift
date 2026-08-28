@@ -4,6 +4,7 @@ import FluentCore
 struct HomeView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.palette) private var palette
+    @Environment(\.textScale) private var scale
 
     @State private var size: LessonSpec.Size = .medium
     @State private var depth: LessonSpec.Depth = .standard
@@ -23,7 +24,7 @@ struct HomeView: View {
                 footer
             }
             .padding(32)
-            .frame(maxWidth: 760, alignment: .leading)
+            .frame(maxWidth: scale.width(760), alignment: .leading)
             .frame(maxWidth: .infinity)
         }
     }

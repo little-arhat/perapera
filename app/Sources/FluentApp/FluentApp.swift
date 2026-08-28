@@ -21,6 +21,7 @@ struct FluentApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(AppWindow.idealSize)
+        .commands { TextSizeCommands(model: model) }
 
         Settings {
             SettingsView()

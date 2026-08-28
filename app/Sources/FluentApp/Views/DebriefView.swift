@@ -7,6 +7,7 @@ import FluentCore
 struct DebriefView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.palette) private var palette
+    @Environment(\.textScale) private var scale
 
     let record: LessonRecord
 
@@ -26,7 +27,7 @@ struct DebriefView: View {
                     .foregroundStyle(palette.secondaryText)
             }
             .padding(32)
-            .frame(maxWidth: 760, alignment: .leading)
+            .frame(maxWidth: scale.width(760), alignment: .leading)
             .frame(maxWidth: .infinity)
         }
     }

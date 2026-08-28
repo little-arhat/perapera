@@ -4,6 +4,7 @@ import FluentCore
 struct ArchiveView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.palette) private var palette
+    @Environment(\.textScale) private var scale
 
     @State private var query = ""
 
@@ -55,7 +56,7 @@ struct ArchiveView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.bottom, 20)
-                    .frame(maxWidth: 760)
+                    .frame(maxWidth: scale.width(760))
                     .frame(maxWidth: .infinity)
                 }
             }

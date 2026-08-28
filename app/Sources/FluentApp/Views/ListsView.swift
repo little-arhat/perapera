@@ -10,6 +10,7 @@ import FluentCore
 struct ListsView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.palette) private var palette
+    @Environment(\.textScale) private var scale
 
     @State private var selection: Set<String> = []
     @State private var filter: SavedItem.Kind?
@@ -90,7 +91,7 @@ struct ListsView: View {
                 }
             }
             .padding(.horizontal, 20)
-            .frame(maxWidth: 820)
+            .frame(maxWidth: scale.width(820))
             .frame(maxWidth: .infinity)
         }
     }

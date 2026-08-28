@@ -19,6 +19,17 @@ struct TextScale {
     static let step = 0.1
 
     func size(_ base: CGFloat) -> CGFloat { base * factor }
+
+    /// Reading column width for a given base.
+    ///
+    /// Grows faster than the text itself. Measure is what makes prose readable
+    /// -- roughly 30-40 characters a line for Japanese -- and a column fixed at
+    /// 720pt holds half that once the text is doubled, so the passage turns
+    /// into a narrow ribbon. The square root keeps it from running to the full
+    /// window at large sizes, where an over-long line is its own problem.
+    func width(_ base: CGFloat) -> CGFloat {
+        base * CGFloat((factor * factor + factor) / 2)
+    }
 }
 
 private struct TextScaleKey: EnvironmentKey {
@@ -32,36 +43,48 @@ extension EnvironmentValues {
     }
 }
 
-/// The ⌘+ / ⌘- / ⌘0 controls, and a matching on-screen pair.
+/// On-screen text sizing. The keyboard shortcuts live in the app's menu
+/// commands so they work on every screen; these are the discoverable version.
+///
+/// Deliberately two fixed buttons and no Reset: a control that appears only
+/// when the size is non-default shifts everything beside it each time you cross
+/// the boundary. ⌘0 still resets, and stepping back by hand is barely slower.
 struct TextSizeControls: View {
     @Environment(AppModel.self) private var model
     @Environment(\.palette) private var palette
 
     var body: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: 4) {
             Button { model.adjustTextSize(by: -TextScale.step) } label: {
                 Image(systemName: "textformat.size.smaller")
             }
-            .keyboardShortcut("-", modifiers: .command)
             .disabled(model.textSizeFactor <= TextScale.minimum + 0.001)
 
             Button { model.adjustTextSize(by: TextScale.step) } label: {
                 Image(systemName: "textformat.size.larger")
             }
-            .keyboardShortcut("+", modifiers: .command)
             .disabled(model.textSizeFactor >= TextScale.maximum - 0.001)
-
-            // Only offered once it would do something, so it is not permanent
-            // clutter.
-            if abs(model.textSizeFactor - 1.0) > 0.001 {
-                Button("Reset") { model.resetTextSize() }
-                    .keyboardShortcut("0", modifiers: .command)
-                    .font(.caption)
-            }
         }
         .buttonStyle(.plain)
         .foregroundStyle(palette.secondaryText)
         .help("⌘+ / ⌘− to resize, ⌘0 to reset")
+    }
+}
+
+/// Menu commands, so the shortcuts work regardless of what is on screen.
+struct TextSizeCommands: Commands {
+    let model: AppModel
+
+    var body: some Commands {
+        CommandGroup(after: .sidebar) {
+            Button("Bigger Text") { model.adjustTextSize(by: TextScale.step) }
+                .keyboardShortcut("+", modifiers: .command)
+            Button("Smaller Text") { model.adjustTextSize(by: -TextScale.step) }
+                .keyboardShortcut("-", modifiers: .command)
+            Button("Actual Size") { model.resetTextSize() }
+                .keyboardShortcut("0", modifiers: .command)
+            Divider()
+        }
     }
 }
 

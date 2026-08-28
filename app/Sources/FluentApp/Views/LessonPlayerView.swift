@@ -5,6 +5,7 @@ struct LessonPlayerView: View {
     @Environment(AppModel.self) private var model
     @Environment(Speech.self) private var speech
     @Environment(\.palette) private var palette
+    @Environment(\.textScale) private var scale
 
     @State private var record: LessonRecord
     @State private var index = 0
@@ -52,7 +53,7 @@ struct LessonPlayerView: View {
                     if revealed { verdictView }
                 }
                 .padding(28)
-                .frame(maxWidth: 720, alignment: .leading)
+                .frame(maxWidth: scale.width(720), alignment: .leading)
                 .frame(maxWidth: .infinity)
             }
             controls
