@@ -83,6 +83,7 @@ struct DebriefView: View {
         VStack(alignment: .leading, spacing: 20) {
             if let overall = feedback.overallComment {
                 Text(.init(overall))
+                    .selectableIf(scale.selectable)
                     .padding(18)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(palette.surface, in: .rect(cornerRadius: 12))
@@ -102,6 +103,7 @@ struct DebriefView: View {
                                     .foregroundStyle(item.score >= 6 ? palette.correct : palette.wrong)
                             }
                             Text(.init(item.comment)).font(.callout)
+                                .selectableIf(scale.selectable)
                         }
                         .padding(14)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -120,6 +122,7 @@ struct DebriefView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("\(error.yourAnswer) → \(error.correctAnswer)")
                                     .foregroundStyle(palette.emphasizedText)
+                                    .selectableIf(scale.selectable)
                                 Text(error.notes ?? error.category)
                                     .font(.caption)
                                     .foregroundStyle(palette.secondaryText)

@@ -118,6 +118,7 @@ struct ListsView: View {
                         .font(.caption)
                         .foregroundStyle(palette.secondaryText)
                         .lineLimit(2)
+                        .selectableIf(scale.selectable)
                 }
             }
 

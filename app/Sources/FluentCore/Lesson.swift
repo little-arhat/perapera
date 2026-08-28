@@ -178,6 +178,32 @@ public struct Exercise: Codable, Sendable, Identifiable {
 
     public var isAutoGradable: Bool { content.isAutoGradable }
 
+    /// Every target-language string this exercise puts on screen.
+    ///
+    /// Used to decide whether the readings toggle is worth offering. Checking
+    /// only `prompt` gets a `set` wrong: its prompt is often the English
+    /// instruction while the kanji live in the items.
+    public var displayedText: [String] {
+        var texts = [prompt, instruction ?? "", passage ?? "", explanation ?? ""]
+        switch content {
+        case let .multipleChoice(options, _):
+            texts += options
+        case let .reorder(tokens, _):
+            texts += tokens
+        case let .matching(pairs):
+            texts += pairs.map(\.left) + pairs.map(\.right)
+        case let .flashcard(front, back):
+            texts += [front, back]
+        case let .set(items):
+            texts += items.flatMap { [$0.prompt, $0.hint ?? "", $0.explanation ?? ""] }
+        case let .translation(reference), let .freeResponse(reference):
+            texts.append(reference)
+        case .cloze, .digitEntry:
+            break
+        }
+        return texts.filter { !$0.isEmpty }
+    }
+
     /// How many things the learner actually answers. A set of five counts as
     /// five: it is what the lesson costs in time and attention.
     public var itemCount: Int {

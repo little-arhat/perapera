@@ -101,11 +101,24 @@ final class RubyCanvas: NSView {
 
     func configure(with model: Model) {
         guard model != self.model else { return }
+        let highlightingChanged = model.highlightWords != self.model.highlightWords
         self.model = model
         if !model.selectable { selection = nil }
         if !model.highlightWords { hoveredWord = nil }
         rebuild()
+        // Tracking areas are rebuilt on bounds changes, but toggling word
+        // highlighting changes nothing about the bounds -- without this the
+        // toggle does nothing until the view happens to resize.
+        if highlightingChanged { updateTrackingAreas() }
         needsDisplay = true
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        // A window does not deliver mouseMoved unless it is asked to, and it
+        // defaults to off -- so hover silently did nothing.
+        window?.acceptsMouseMovedEvents = true
+        updateTrackingAreas()
     }
 
     // MARK: - Text

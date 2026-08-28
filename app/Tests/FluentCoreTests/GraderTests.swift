@@ -361,3 +361,48 @@ private func drill() -> Exercise {
     #expect(drill().itemCount == 3)
     #expect(exercise(["kind": "cloze", "acceptedAnswers": ["で"]]).itemCount == 1)
 }
+
+// MARK: - What is actually on screen
+//
+// The readings toggle is offered when the exercise shows kanji. Deciding that
+// from `prompt` alone hid it on set exercises, whose prompt is the English
+// instruction while the kanji sit in the items — so readings could not be
+// switched on for the one shape that most needed them.
+
+@Test func displayedTextIncludesSetItemsNotJustThePrompt() {
+    let ex = exercise([
+        "kind": "set",
+        "prompt": "Fill each gap with one particle.",
+        "instruction": "Type only the particle.",
+        "items": [
+            ["prompt": "コンビニ＿水[みず]を買[か]います", "acceptedAnswers": ["で"]],
+            ["prompt": "東京[とうきょう]＿行[い]きます", "acceptedAnswers": ["に"]],
+        ],
+    ])
+    #expect(ex.displayedText.contains { Furigana.hasAnnotations($0) })
+}
+
+@Test func displayedTextCoversEveryKindsVisibleStrings() {
+    let choice = exercise(["kind": "multipleChoice",
+                           "options": ["東京[とうきょう]", "京都[きょうと]"],
+                           "correctIndex": 0])
+    #expect(choice.displayedText.contains("東京[とうきょう]"))
+
+    let reorder = exercise(["kind": "reorder", "tokens": ["切符[きっぷ]", "を"],
+                            "correctOrder": [0, 1]])
+    #expect(reorder.displayedText.contains("切符[きっぷ]"))
+
+    let card = exercise(["kind": "flashcard", "front": "駅[えき]", "back": "station"])
+    #expect(card.displayedText.contains("駅[えき]"))
+
+    let pairs = exercise(["kind": "matching", "pairs": [
+        ["left": "はがき", "right": "枚[まい]"],
+        ["left": "かさ", "right": "本[ほん]"],
+    ]])
+    #expect(pairs.displayedText.contains("枚[まい]"))
+}
+
+@Test func displayedTextDropsEmptyFields() {
+    let plain = exercise(["kind": "cloze", "prompt": "p", "acceptedAnswers": ["で"]])
+    #expect(!plain.displayedText.contains(""))
+}

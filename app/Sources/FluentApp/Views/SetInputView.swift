@@ -13,6 +13,7 @@ struct SetInputView: View {
     let useKana: Bool
 
     @Environment(\.palette) private var palette
+    @Environment(\.textScale) private var scale
     @Environment(AppModel.self) private var model
 
     /// Per-item verdicts, once answered.
@@ -39,14 +40,14 @@ struct SetInputView: View {
         let verdict = verdicts[index]
 
         return VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
+            HStack(alignment: .top, spacing: 10) {
                 Text("\(index + 1).")
                     .font(.callout.monospacedDigit())
                     .foregroundStyle(palette.secondaryText)
                     .frame(width: 24, alignment: .trailing)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    HStack(alignment: .center, spacing: 8) {
                         RubyText(annotated: item.prompt,
                                  showFurigana: model.showFurigana, size: 18)
                             .foregroundStyle(palette.emphasizedText)
@@ -54,6 +55,7 @@ struct SetInputView: View {
                             Text("(\(hint))")
                                 .font(.callout)
                                 .foregroundStyle(palette.secondaryText)
+                                .selectableIf(scale.selectable)
                         }
                     }
 
@@ -76,12 +78,14 @@ struct SetInputView: View {
                         Text("→ \(item.acceptedAnswers.first ?? "")")
                             .font(.callout)
                             .foregroundStyle(palette.emphasizedText)
+                            .selectableIf(scale.selectable)
                         if let explanation = item.explanation, !explanation.isEmpty {
                             Text(model.showFurigana
                                  ? Furigana.parenthesized(explanation)
                                  : Furigana.stripped(explanation))
                                 .font(.caption)
                                 .foregroundStyle(palette.secondaryText)
+                                .selectableIf(scale.selectable)
                         }
                     }
                 }

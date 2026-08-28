@@ -33,6 +33,7 @@ struct LessonPlayerView: View {
                         Text(.init(model.showFurigana
                                    ? Furigana.parenthesized(preamble)
                                    : Furigana.stripped(preamble)))
+                            .selectableIf(scale.selectable)
                             .padding(16)
                             .background(palette.surface, in: .rect(cornerRadius: 10))
                     }
@@ -116,13 +117,13 @@ struct LessonPlayerView: View {
                 Text(instruction)
                     .font(.callout)
                     .foregroundStyle(palette.secondaryText)
+                    .selectableIf(scale.selectable)
             }
         }
     }
 
     private var hasKanji: Bool {
-        Furigana.hasAnnotations(exercise.prompt)
-            || Furigana.hasAnnotations(exercise.passage ?? "")
+        exercise.displayedText.contains(where: Furigana.hasAnnotations)
     }
 
     /// Reading-comprehension text. Set apart from the question so the eye can
@@ -164,6 +165,7 @@ struct LessonPlayerView: View {
                                ? Furigana.parenthesized(explanation)
                                : Furigana.stripped(explanation)))
                         .foregroundStyle(palette.bodyText)
+                        .selectableIf(scale.selectable)
                 }
             }
             .padding(16)
