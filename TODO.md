@@ -65,6 +65,12 @@ section; move items to **Done** with a one-line note on what actually changed.
       answers at grading time.
 
 ## Done
+- [x] **Layout jumped when toggling readings.** The Core Text view was already
+      stable; the remaining jump was the preamble, where readings were rendered
+      as 切符（きっぷ）parentheticals that change the text's *length*, so the
+      paragraph reflowed and everything below it moved. The preamble now parses
+      Markdown and then applies real ruby, which sits above the line and changes
+      nothing: 272.0pt in both states. (2026-08-28)
 - [x] **Selection only worked one fragment at a time.** RubyText rendered one
       SwiftUI `Text` per segment inside a FlowLayout, and selection cannot span
       separate Text views — so it felt "selectable by kanji only", because the

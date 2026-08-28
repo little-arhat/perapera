@@ -32,6 +32,7 @@ struct RubyTextView: NSViewRepresentable {
     /// Width to lay out into. SwiftUI measures after layout, so the view needs
     /// telling rather than asking.
     let availableWidth: CGFloat
+    var isMarkdown: Bool = false
 
     func makeNSView(context: Context) -> RubyCanvas {
         let view = RubyCanvas()
@@ -61,7 +62,8 @@ struct RubyTextView: NSViewRepresentable {
             color: color,
             rubyColor: rubyColor,
             selectable: selectable,
-            highlightWords: highlightWords
+            highlightWords: highlightWords,
+            isMarkdown: isMarkdown
         )
     }
 }
@@ -77,6 +79,14 @@ final class RubyCanvas: NSView {
         var rubyColor: NSColor
         var selectable: Bool
         var highlightWords: Bool
+        /// Parse the source as Markdown before applying ruby.
+        ///
+        /// Explanatory prose — a lesson preamble, a feedback comment — carries
+        /// bold and italics. Rendering it as plain text would lose them;
+        /// rendering it with SwiftUI Markdown loses ruby. Doing both here keeps
+        /// the formatting *and* keeps the line length constant when readings
+        /// toggle, which is what stops the page reflowing.
+        var isMarkdown: Bool = false
     }
 
     private var model = Model(
@@ -147,6 +157,10 @@ final class RubyCanvas: NSView {
     // MARK: - Text
 
     private func rebuild() {
+        if model.isMarkdown {
+            rebuildFromMarkdown()
+            return
+        }
         let segments = Furigana.parse(model.annotated)
         plainText = segments.map(\.base).joined()
         hasRuby = segments.contains { $0.reading != nil }
@@ -181,6 +195,115 @@ final class RubyCanvas: NSView {
         }
         attributed = result
         frame_ = nil
+    }
+
+    /// Markdown first, then ruby.
+    ///
+    /// Order matters and works out: a bare `[きっぷ]` is not link syntax, so it
+    /// survives Markdown parsing intact and can be converted afterwards. Going
+    /// the other way — ruby first — would leave the annotations to be mangled
+    /// by the Markdown parser.
+    private func rebuildFromMarkdown() {
+        var options = AttributedString.MarkdownParsingOptions()
+        // Full syntax would swallow the "- " and "> " prefixes into list and
+        // quote structures Core Text will not draw, silently dropping them.
+        // Inline-only keeps them as the literal characters they already appear
+        // as elsewhere in the app.
+        options.interpretedSyntax = .inlineOnlyPreservingWhitespace
+
+        let parsed = (try? NSAttributedString(markdown: model.annotated, options: options))
+            ?? NSAttributedString(string: model.annotated)
+        let result = NSMutableAttributedString(attributedString: parsed)
+
+        let base = NSFont(name: "HiraginoSans-W3", size: model.fontSize)
+            ?? NSFont.systemFont(ofSize: model.fontSize)
+        let full = NSRange(location: 0, length: result.length)
+        result.addAttributes([.font: base, .foregroundColor: model.color], range: full)
+
+        // Markdown records emphasis as an intent rather than a font, so the
+        // traits have to be applied by hand.
+        result.enumerateAttribute(
+            .inlinePresentationIntent, in: full
+        ) { value, range, _ in
+            guard let raw = value as? UInt else { return }
+            let intent = InlinePresentationIntent(rawValue: raw)
+            var traits: NSFontDescriptor.SymbolicTraits = []
+            if intent.contains(.stronglyEmphasized) { traits.insert(.bold) }
+            if intent.contains(.emphasized) { traits.insert(.italic) }
+            guard !traits.isEmpty else { return }
+            // Japanese faces generally ship no italic, so asking Hiragino for
+            // one yields nil and the emphasis is silently lost. Fall back to
+            // the system font, which has both traits — the run is almost always
+            // latin prose anyway, since Japanese does not italicise.
+            let descriptor = base.fontDescriptor.withSymbolicTraits(traits)
+            let styled = NSFont(descriptor: descriptor, size: model.fontSize)
+                ?? NSFont(
+                    descriptor: NSFont.systemFont(ofSize: model.fontSize)
+                        .fontDescriptor.withSymbolicTraits(traits),
+                    size: model.fontSize)
+            if let styled {
+                result.addAttribute(.font, value: styled, range: range)
+            }
+        }
+
+        hasRuby = applyRuby(to: result)
+        plainText = result.string
+        attributed = result
+        frame_ = nil
+    }
+
+    /// Turns `漢字[かんじ]` markers inside an attributed string into real ruby.
+    ///
+    /// Walks backwards so that removing a marker cannot invalidate the indices
+    /// of the ones still to be processed.
+    @discardableResult
+    private func applyRuby(to text: NSMutableAttributedString) -> Bool {
+        let pattern = try? NSRegularExpression(pattern: "\\[([^\\[\\]]{1,12})\\]")
+        guard let pattern else { return false }
+        let matches = pattern.matches(
+            in: text.string, range: NSRange(location: 0, length: text.length))
+        var applied = false
+
+        for match in matches.reversed() {
+            let markerRange = match.range
+            let readingRange = match.range(at: 1)
+            let reading = (text.string as NSString).substring(with: readingRange)
+
+            let baseLength = trailingKanjiCount(
+                in: text.string as NSString, before: markerRange.location)
+            guard baseLength > 0 else { continue }
+            let baseRange = NSRange(
+                location: markerRange.location - baseLength, length: baseLength)
+
+            let color = model.showFurigana ? model.rubyColor : NSColor.clear
+            let annotation = CTRubyAnnotationCreateWithAttributes(
+                .auto, .auto, .before, reading as CFString,
+                [
+                    kCTRubyAnnotationSizeFactorAttributeName: 0.5,
+                    kCTForegroundColorAttributeName: color.cgColor,
+                ] as CFDictionary)
+            text.addAttribute(
+                kCTRubyAnnotationAttributeName as NSAttributedString.Key,
+                value: annotation, range: baseRange)
+            text.deleteCharacters(in: markerRange)
+            applied = true
+        }
+        return applied
+    }
+
+    private func trailingKanjiCount(in text: NSString, before index: Int) -> Int {
+        var count = 0
+        var cursor = index - 1
+        while cursor >= 0 {
+            let scalar = text.character(at: cursor)
+            let isKanji = (0x4E00...0x9FFF).contains(Int(scalar))
+                || (0x3400...0x4DBF).contains(Int(scalar))
+                || Int(scalar) == 0x3005
+            guard isKanji else { break }
+            count += 1
+            cursor -= 1
+        }
+        return count
     }
 
     func fittingSize(width: CGFloat) -> CGSize {

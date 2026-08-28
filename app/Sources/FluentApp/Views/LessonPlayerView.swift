@@ -28,12 +28,8 @@ struct LessonPlayerView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     if index == 0, let preamble = record.lesson.preamble, !revealed {
-                        // Markdown cannot host ruby, so readings become
-                        // parentheticals rather than leaking as raw markup.
-                        Text(.init(model.showFurigana
-                                   ? Furigana.parenthesized(preamble)
-                                   : Furigana.stripped(preamble)))
-                            .selectableIf(scale.selectable)
+                        MarkdownRubyText(markdown: preamble,
+                                         showFurigana: model.showFurigana)
                             .padding(16)
                             .background(palette.surface, in: .rect(cornerRadius: 10))
                     }
