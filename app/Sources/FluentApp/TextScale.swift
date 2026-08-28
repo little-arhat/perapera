@@ -22,15 +22,13 @@ struct TextScale {
 
     /// Reading column width for a given base.
     ///
-    /// Grows with the text, but at roughly half the rate and capped at 1.6x.
-    /// The first version scaled by (f²+f)/2, which was derived for Japanese
-    /// where a character is about one em. Mixed prose is not: English runs near
-    /// half an em, so a column sized to hold 35 kana held 75 latin characters —
-    /// well past comfortable measure. Sub-linear and clamped keeps both scripts
-    /// inside a readable line at every size.
+    /// Grows with the text at roughly half the rate, capped at 1.6x — and never
+    /// goes *below* the base. Shrinking the text is a request to fit more on
+    /// screen, so narrowing the column with it cancels the only reason to do
+    /// it. The floor costs a longer measure at small sizes, which is the
+    /// tradeoff the person shrinking the text has already chosen.
     func width(_ base: CGFloat) -> CGFloat {
-        let growth = 1 + (factor - 1) * 0.6
-        return base * min(1.6, max(0.85, growth))
+        base * min(1.6, max(1.0, 1 + (factor - 1) * 0.6))
     }
 }
 
