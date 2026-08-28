@@ -18,8 +18,12 @@ struct FluentApp: App {
                     idealWidth: AppWindow.idealSize.width,
                     idealHeight: AppWindow.idealSize.height)
                 .task { await model.start() }
+                // The title bar is not decoration: it carries double-click to
+                // zoom, the window menu, and a drag region the content cannot
+                // swallow. Hiding it traded those for a slightly cleaner edge,
+                // which was a bad trade on macOS.
+                .navigationTitle(model.windowTitle)
         }
-        .windowStyle(.hiddenTitleBar)
         .defaultSize(AppWindow.idealSize)
         .commands { TextSizeCommands(model: model) }
 

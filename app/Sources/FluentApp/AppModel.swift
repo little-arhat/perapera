@@ -121,6 +121,24 @@ final class AppModel {
 
     var dataDirectory: URL { Paths.dataDirectory(pluginRoot: pluginRoot) }
 
+    /// What the title bar says. Follows the screen, so the window's entry in
+    /// Mission Control and the Window menu identifies itself.
+    var windowTitle: String {
+        switch screen {
+        case .home:
+            let name = snapshot?.databases.learner_profile.learner.name
+            return name.map { "Fluent — \($0)" } ?? "Fluent"
+        case let .lesson(id):
+            return record(id: id)?.lesson.title ?? "Lesson"
+        case let .debrief(id):
+            return record(id: id).map { "\($0.lesson.title) — results" } ?? "Results"
+        case .archive:
+            return "Archive"
+        case .lists:
+            return "Saved items"
+        }
+    }
+
     /// BCP-47 code for speech, derived from the profile rather than configured:
     /// the learner already told Fluent what they are learning.
     var voiceLanguage: String? {
