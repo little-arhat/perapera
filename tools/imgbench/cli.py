@@ -1,0 +1,392 @@
+#!/usr/bin/env python3
+"""imgbench — which image model can actually draw Japanese, and what it costs.
+
+    imgbench list              # image-capable models, catalog price, discount
+    imgbench run               # benchmark the shortlist (costs money)
+    imgbench run --models a,b  # benchmark specific models
+    imgbench report            # last measurements, ranked, with movement
+
+The effectful shell. Fetching, generating, verifying and rendering live here;
+the pricing values are in ``catalog.py``, the probe set and scoring in
+``fidelity.py``, the history in ``store.py``.
+
+Why this exists as its own tool rather than a flag on the app: choosing an image
+model is an occasional, deliberate, paid decision. Folding it into the app would
+either run benchmarks nobody asked for or bury the numbers where nobody looks.
+
+Requires OPENROUTER_KB for `run`; `list` and `report` need no key.
+"""
+
+from __future__ import annotations
+
+import argparse
+import base64
+import datetime as dt
+import json
+import os
+import pathlib
+import re
+import sys
+import urllib.error
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
+from catalog import ImageModel, Observation, discount_from_endpoints, parse_models, rank
+from fidelity import PROBES, ModelResult, ProbeResult, missing, score_transcription
+import store
+
+ROOT = pathlib.Path(__file__).resolve().parent
+BASE = "https://openrouter.ai/api/v1"
+
+# The model that reads generated images back. Chosen because it transcribed
+# vertical brush calligraphy and dakuten that macOS Vision dropped, at $0.0006
+# per image — see docs/research/script-recognition.md.
+VERIFIER = "google/gemini-2.5-flash"
+
+# Benchmarking every image model would cost ~$3 a run to learn nothing about
+# most of them. These are the ones plausibly worth using.
+SHORTLIST = (
+    "google/gemini-3.1-flash-image",
+    "google/gemini-3-pro-image",
+    "google/gemini-2.5-flash-image",
+)
+
+
+# ─── Credentials ─────────────────────────────────────────────
+
+
+def api_key() -> str:
+    """OPENROUTER_KB, from the environment or the login shell's env file.
+
+    GUI and cron contexts do not source a login shell, so falling back to the
+    file is the difference between working and a confusing auth error.
+    """
+    key = os.environ.get("OPENROUTER_KB")
+    if key:
+        return key
+    env_file = pathlib.Path.home() / ".zshenv"
+    if env_file.exists():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            match = re.match(r"\s*(?:export\s+)?OPENROUTER_KB=(.+)", line)
+            if match:
+                return match.group(1).strip().strip('"').strip("'")
+    sys.exit("OPENROUTER_KB is not set — required to generate images")
+
+
+# ─── Network ─────────────────────────────────────────────────
+
+
+def get_json(url: str, key: str | None = None) -> dict:
+    headers = {"Authorization": f"Bearer {key}"} if key else {}
+    request = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(request, timeout=60) as response:
+        return json.load(response)
+
+
+def post_chat(payload: dict, key: str, timeout: int = 300) -> dict:
+    request = urllib.request.Request(
+        f"{BASE}/chat/completions",
+        data=json.dumps(payload).encode(),
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return json.load(response)
+
+
+def generate(model: str, prompt: str, key: str) -> tuple[bytes | None, float | None, str]:
+    """One image. Returns (png bytes, metered cost, note)."""
+    try:
+        body = post_chat(
+            {
+                "model": model,
+                "messages": [{"role": "user", "content": prompt}],
+                "modalities": ["image", "text"],
+                "usage": {"include": True},
+            },
+            key,
+        )
+    except urllib.error.HTTPError as error:
+        return None, None, f"HTTP {error.code}: {error.read().decode()[:160]}"
+
+    message = body["choices"][0]["message"]
+    cost = (body.get("usage") or {}).get("cost")
+    cost = float(cost) if cost is not None else None
+    images = message.get("images") or []
+    if not images:
+        return None, cost, "no image returned"
+    data = images[0]["image_url"]["url"].split(",", 1)[1]
+    return base64.b64decode(data), cost, ""
+
+
+def transcribe(png: bytes, key: str) -> tuple[str, float | None]:
+    """Read the image back. The only trustworthy check on what was drawn."""
+    encoded = base64.b64encode(png).decode()
+    try:
+        body = post_chat(
+            {
+                "model": VERIFIER,
+                "usage": {"include": True},
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": (
+                                    "Transcribe every piece of Japanese text on the "
+                                    "main sign, poster or menu in this image, exactly "
+                                    "as written, one line per line of text. Include "
+                                    "vertical text. Output only the transcriptions."
+                                ),
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/png;base64,{encoded}"},
+                            },
+                        ],
+                    }
+                ],
+            },
+            key,
+        )
+    except urllib.error.HTTPError as error:
+        return f"<verifier failed: HTTP {error.code}>", None
+    cost = (body.get("usage") or {}).get("cost")
+    return body["choices"][0]["message"]["content"].strip(), (
+        float(cost) if cost is not None else None
+    )
+
+
+# ─── Commands ────────────────────────────────────────────────
+
+
+def cmd_list(args: argparse.Namespace) -> int:
+    """Image-capable models with catalog price and promotion state."""
+    models = parse_models(get_json(f"{BASE}/models"))
+    if not models:
+        print("no image-capable models found")
+        return 1
+
+    key = None
+    if args.discounts:
+        key = api_key()
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            payloads = list(
+                pool.map(
+                    lambda m: _endpoints_safe(m.id, key),
+                    models,
+                )
+            )
+        models = [
+            ImageModel(
+                id=m.id,
+                quoted_image=m.quoted_image,
+                quoted_prompt=m.quoted_prompt,
+                discount=discount_from_endpoints(p, m.quoted_image or m.quoted_prompt),
+                context=m.context,
+            )
+            for m, p in zip(models, payloads)
+        ]
+
+    history = store.latest_by_model(store.read(store.history_path(ROOT)))
+
+    print(f"{'model':<44} {'quoted':>12} {'disc':>6} {'measured':>10} {'fidelity':>9}")
+    print("-" * 86)
+    for model in models:
+        seen = history.get(model.id, {})
+        # Rendered at full precision on purpose. The catalog quotes
+        # $0.0000003 for a model that bills $0.0387 — a 130,000x gap. Rounding
+        # that to $0.0000 would hide the discrepancy that justifies this tool.
+        quoted = f"${model.quoted_image:.7f}" if model.quoted_image else "—"
+        discount = f"{model.discount:.0%}" if model.discount else "—"
+        measured = seen.get("measured_image")
+        fidelity = seen.get("fidelity")
+        print(
+            f"{model.id:<44} {quoted:>12} {discount:>6} "
+            f"{('$%.4f' % measured) if measured else '—':>10} "
+            f"{('%.0f%%' % (fidelity * 100)) if fidelity is not None else '—':>9}"
+        )
+    print(
+        "\nquoted is unreliable for image models: often blank, and when present it\n"
+        "is a per-token figure that bears no relation to the per-image bill.\n"
+        "measured/fidelity come from `imgbench run` and are the only real numbers."
+    )
+    return 0
+
+
+def _endpoints_safe(model_id: str, key: str) -> dict:
+    try:
+        return get_json(f"{BASE}/models/{model_id}/endpoints", key)
+    except urllib.error.HTTPError:
+        return {}
+
+
+def cmd_run(args: argparse.Namespace) -> int:
+    """Generate the probe set against each model and score what comes back."""
+    key = api_key()
+    models = args.models.split(",") if args.models else list(SHORTLIST)
+    probes = [p for p in PROBES if not args.probe or p.name == args.probe]
+    if not probes:
+        print(f"no probe named {args.probe!r}")
+        return 1
+
+    estimate = len(models) * len(probes) * 0.069
+    print(f"{len(models)} model(s) x {len(probes)} probe(s) — roughly ${estimate:.2f}")
+    if not args.yes:
+        if input("proceed? [y/N] ").strip().lower() not in ("y", "yes"):
+            print("nothing spent")
+            return 0
+
+    out_dir = ROOT / "samples"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    day = dt.date.today().isoformat()
+    results: list[ModelResult] = []
+
+    for model in models:
+        print(f"\n{model}")
+        model_result = ModelResult(model=model)
+        for probe in probes:
+            png, gen_cost, note = generate(model, probe.prompt, key)
+            if png is None:
+                print(f"  {probe.name:<26} FAILED — {note}")
+                model_result.results.append(
+                    ProbeResult(probe.name, probe.targets, (), 0.0, gen_cost, note)
+                )
+                continue
+
+            slug = model.split("/")[-1]
+            (out_dir / f"{day}_{slug}_{probe.name}.png").write_bytes(png)
+
+            text, verify_cost = transcribe(png, key)
+            score = score_transcription(probe.targets, text)
+            gone = missing(probe.targets, text)
+            total = (gen_cost or 0) + (verify_cost or 0)
+            model_result.results.append(
+                ProbeResult(
+                    probe.name,
+                    probe.targets,
+                    tuple(text.splitlines()),
+                    score,
+                    total,
+                    "missing: " + " ".join(gone) if gone else "",
+                )
+            )
+            mark = "ok " if score == 1.0 else "MISS"
+            detail = f"  missing {' '.join(gone)}" if gone else ""
+            print(f"  {probe.name:<26} {mark} {score:.0%}  ${total:.4f}{detail}")
+        results.append(model_result)
+
+    observations = [
+        Observation(
+            id=r.model,
+            measured_image=(r.cost / len(r.results)) if r.results else None,
+            fidelity=r.fidelity,
+            samples=len(r.results),
+        )
+        for r in results
+    ]
+    store.append(
+        store.history_path(ROOT), [store.record(o, day) for o in observations]
+    )
+    print(f"\nimages in {out_dir}")
+    _render(observations)
+    return 0
+
+
+def cmd_report(args: argparse.Namespace) -> int:
+    """The last measurement for each model, ranked, with movement."""
+    records = store.read(store.history_path(ROOT))
+    if not records:
+        print("nothing measured yet — run `imgbench run`")
+        return 1
+
+    latest = store.latest_by_model(records)
+    observations = [
+        Observation(
+            id=model_id,
+            measured_image=entry.get("measured_image"),
+            fidelity=entry.get("fidelity"),
+            samples=entry.get("samples", 0),
+            discount=entry.get("discount", 0.0) or 0.0,
+            quoted_image=entry.get("quoted_image"),
+        )
+        for model_id, entry in latest.items()
+    ]
+    _render(observations)
+
+    moved = []
+    for observation in observations:
+        before, now = store.movement(records, observation.id)
+        if before and now:
+            was, is_now = before.get("measured_image"), now.get("measured_image")
+            if was and is_now and abs(is_now - was) / was > 0.02:
+                moved.append(
+                    f"  {observation.id}: ${was:.4f} → ${is_now:.4f} "
+                    f"({(is_now - was) / was:+.0%}) since {before['date']}"
+                )
+    if moved:
+        print("\nprice moved:")
+        print("\n".join(moved))
+    return 0
+
+
+def _render(observations: list[Observation]) -> None:
+    print()
+    print(f"{'model':<40} {'$/image':>9} {'fidelity':>9} {'$/usable':>9}  verdict")
+    print("-" * 84)
+    for observation in rank(observations):
+        measured = f"${observation.measured_image:.4f}" if observation.measured_image else "—"
+        fidelity = (
+            f"{observation.fidelity:.0%}" if observation.fidelity is not None else "—"
+        )
+        effective = (
+            f"${observation.cost_per_correct_image:.4f}"
+            if observation.cost_per_correct_image
+            else "—"
+        )
+        verdict = "use" if observation.usable else "REJECT — renders wrong characters"
+        print(
+            f"{observation.id:<40} {measured:>9} {fidelity:>9} {effective:>9}  {verdict}"
+        )
+    print(
+        "\n$/usable is price divided by fidelity: what a correct image really costs.\n"
+        "Fidelity below 95% is a reject at any price — a wrong glyph teaches a\n"
+        "wrong letterform, which is worse than not practising."
+    )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        prog="imgbench",
+        description="Which image model can draw Japanese, and what it costs.",
+    )
+    sub = parser.add_subparsers(dest="command")
+
+    p_list = sub.add_parser("list", help="image-capable models and catalog prices")
+    p_list.add_argument(
+        "--discounts",
+        action="store_true",
+        help="also fetch per-model endpoints for promotion state (slower, needs key)",
+    )
+    p_list.set_defaults(func=cmd_list)
+
+    p_run = sub.add_parser("run", help="benchmark models (costs money)")
+    p_run.add_argument("--models", help="comma-separated ids (default: shortlist)")
+    p_run.add_argument("--probe", help="run only this probe")
+    p_run.add_argument("-y", "--yes", action="store_true", help="skip the cost prompt")
+    p_run.set_defaults(func=cmd_run)
+
+    p_report = sub.add_parser("report", help="last measurements, ranked")
+    p_report.set_defaults(func=cmd_report)
+
+    args = parser.parse_args()
+    if not getattr(args, "func", None):
+        parser.print_help()
+        return 0
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

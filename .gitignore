@@ -49,3 +49,6 @@ temp/
 
 # Throwaway exploration scripts
 _probes/
+
+# imgbench keeps its measurements; the sample images are large and disposable
+/tools/imgbench/samples/
