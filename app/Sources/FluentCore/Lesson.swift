@@ -387,6 +387,7 @@ extension Lesson {
         case silentListening(exerciseID: String)
         case leakedAnswer(exerciseID: String)
         case missingInstruction(exerciseID: String)
+        case transcriptInPrompt(exerciseID: String)
 
         public var description: String {
             switch self {
@@ -402,6 +403,8 @@ extension Lesson {
                 "exercise '\(id)' gives its own answer away in the prompt"
             case let .missingInstruction(id):
                 "exercise '\(id)' asks for a gap to be filled without saying what to type"
+            case let .transcriptInPrompt(id):
+                "listening exercise '\(id)' prints what is spoken, so there is nothing to listen for"
             }
         }
     }
@@ -458,6 +461,18 @@ extension Lesson {
             if exercise.skill == .listening,
                (exercise.audioText ?? "").isEmpty {
                 defects.append(.silentListening(exerciseID: exercise.id))
+            }
+
+            // A listening exercise that writes the spoken line into its own
+            // prompt is a reading exercise wearing a costume: the learner can
+            // answer without ever pressing play.
+            if let audio = exercise.audioText, !audio.isEmpty {
+                let spoken = Furigana.stripped(audio)
+                    .trimmingCharacters(in: CharacterSet(charactersIn: "「」。、 \n"))
+                if spoken.count >= 4,
+                   Furigana.stripped(exercise.prompt).contains(spoken) {
+                    defects.append(.transcriptInPrompt(exerciseID: exercise.id))
+                }
             }
 
             // A gap with no instruction is ambiguous: fragment, or whole

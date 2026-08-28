@@ -95,6 +95,8 @@ struct LessonPlayerView: View {
                         .foregroundStyle(palette.secondaryText)
                 }
                 Spacer()
+                TextSizeControls()
+                SelectionToggle()
                 if hasKanji {
                     FuriganaToggle(isOn: Binding(
                         get: { model.showFurigana },

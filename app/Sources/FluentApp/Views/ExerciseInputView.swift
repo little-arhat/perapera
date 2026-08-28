@@ -44,7 +44,11 @@ struct ExerciseInputView: View {
             ForEach(options.indices, id: \.self) { i in
                 Button { draft.choice = i } label: {
                     HStack {
-                        Text(options[i]).font(.system(size: 18))
+                        // Ruby, not raw markup. Options carry furigana like any
+                        // other target-language text, and rendering them as
+                        // plain strings leaked 漢字[かんじ] into the UI.
+                        RubyText(annotated: options[i],
+                                 showFurigana: model.showFurigana, size: 18)
                         Spacer()
                         if draft.choice == i {
                             Image(systemName: "checkmark.circle.fill")
@@ -130,8 +134,7 @@ struct ExerciseInputView: View {
     }
 
     private func token(_ text: String, filled: Bool) -> some View {
-        Text(text)
-            .font(.system(size: 18))
+        RubyText(annotated: text, showFurigana: model.showFurigana, size: 18)
             .padding(.horizontal, 12).padding(.vertical, 8)
             .background(filled ? palette.accent.opacity(0.18) : palette.surface,
                         in: .rect(cornerRadius: 8))
@@ -146,12 +149,14 @@ struct ExerciseInputView: View {
     }
 
     private func matching(_ pairs: [Exercise.Pair]) -> some View {
-        let rights = pairs.map(\.right)
+        // A Picker row cannot host ruby, so strip the annotation rather than
+        // show 漢字[かんじ] in a menu.
+        let rights = pairs.map { Furigana.stripped($0.right) }
         return VStack(spacing: 8) {
             ForEach(pairs.indices, id: \.self) { i in
                 HStack {
-                    Text(pairs[i].left)
-                        .font(.system(size: 18))
+                    RubyText(annotated: pairs[i].left,
+                             showFurigana: model.showFurigana, size: 18)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Picker("", selection: binding(for: i, count: pairs.count)) {
                         Text("—").tag(-1)
@@ -186,14 +191,14 @@ struct ExerciseInputView: View {
     /// only they can say whether it was there.
     private func flashcard(front: String, back: String) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(front)
-                .font(.system(size: 34))
+            RubyText(annotated: front, showFurigana: model.showFurigana, size: 34)
                 .frame(maxWidth: .infinity)
                 .padding(24)
                 .background(palette.surface, in: .rect(cornerRadius: 12))
 
             if draft.rating != nil {
-                Text(back).font(.system(size: 20)).foregroundStyle(palette.emphasizedText)
+                RubyText(annotated: back, showFurigana: model.showFurigana, size: 20)
+                    .foregroundStyle(palette.emphasizedText)
             }
 
             Text("How well did you know it?")

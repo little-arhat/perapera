@@ -126,3 +126,29 @@ private func base(_ extra: [String: Any]) -> [String: Any] {
     record.state = .submitted
     #expect(!record.awaitsSubmission)
 }
+
+@Test func flagsAListeningPromptThatPrintsWhatIsSpoken() throws {
+    // Observed in a real lesson: the prompt read
+    // 「京都までの新幹線の切符は、はっせんえんです。」いくらですか
+    // with the same line as audioText. The answer was on screen, so the audio
+    // was decorative and the listening skill went unpractised.
+    let leaked = try lesson([base([
+        "kind": "digitEntry",
+        "skill": "listening",
+        "instruction": "Write the number in digits.",
+        "prompt": "駅のアナウンス:「切符ははっせんえんです。」いくらですか。",
+        "audioText": "切符ははっせんえんです。",
+        "acceptedAnswers": ["8000"],
+    ])])
+    #expect(leaked.validate() == [.transcriptInPrompt(exerciseID: "ex-01")])
+
+    let sound = try lesson([base([
+        "kind": "digitEntry",
+        "skill": "listening",
+        "instruction": "Write the number in digits.",
+        "prompt": "駅のアナウンスを聞いてください。いくらですか。",
+        "audioText": "切符ははっせんえんです。",
+        "acceptedAnswers": ["8000"],
+    ])])
+    #expect(sound.validate().isEmpty)
+}

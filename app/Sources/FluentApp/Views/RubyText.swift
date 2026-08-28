@@ -13,15 +13,17 @@ struct RubyText: View {
     var size: CGFloat = 22
 
     @Environment(\.palette) private var palette
+    @Environment(\.textScale) private var scale
 
     private var segments: [Furigana.Segment] { Furigana.parse(annotated) }
-    private var rubySize: CGFloat { size * 0.45 }
+    private var scaled: CGFloat { scale.size(size) }
+    private var rubySize: CGFloat { scaled * 0.45 }
 
     var body: some View {
         if !Furigana.hasAnnotations(annotated) {
             Text(annotated)
-                .font(.system(size: size))
-                .textSelection(.enabled)
+                .font(.system(size: scaled))
+                .selectableIf(scale.selectable)
         } else {
             FlowLayout(spacing: 0) {
                 ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
@@ -31,13 +33,27 @@ struct RubyText: View {
                             .foregroundStyle(palette.secondaryText)
                             .opacity(showFurigana && segment.reading != nil ? 1 : 0)
                         Text(segment.base)
-                            .font(.system(size: size))
+                            .font(.system(size: scaled))
+                            .selectableIf(scale.selectable)
                     }
                     // Height is reserved whether or not the reading shows, so
                     // toggling furigana never reflows the page.
-                    .frame(minHeight: size + rubySize + 1, alignment: .bottom)
+                    .frame(minHeight: scaled + rubySize + 1, alignment: .bottom)
                 }
             }
+        }
+    }
+}
+
+extension View {
+    /// `.textSelection` takes two different types, so it cannot be chosen with
+    /// a ternary. This branches instead.
+    @ViewBuilder
+    func selectableIf(_ enabled: Bool) -> some View {
+        if enabled {
+            textSelection(.enabled)
+        } else {
+            textSelection(.disabled)
         }
     }
 }

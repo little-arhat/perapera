@@ -27,13 +27,19 @@ section; move items to **Done** with a one-line note on what actually changed.
       blunt instrument for that.
 
 ### Settings & appearance
+- [ ] **Word/particle highlighting.** Beyond show/hide readings: tint particles
+      distinctly, and highlight word boundaries on hover so the learner can see
+      where one word ends. Needs tokenisation — kana runs and kanji runs are a
+      crude first pass; a real segmenter would be better.
+- [ ] **Click a word to copy it** for dictionary lookups. Pairs with the
+      hover highlighting above: hover shows the boundary, click takes the word.
+- [ ] **Furigana in more places.** Done for prompts, options, tokens, matching
+      pairs and flashcards; still plain in Picker rows (which cannot host ruby —
+      currently stripped) and in feedback comments.
 - [ ] **Settings page for theme and colours.** Solarized light/dark currently
       follows the system appearance with no override. Wants: explicit
       light/dark/auto, and ideally an alternate palette for anyone who doesn't
       love Solarized.
-- [ ] **Font size control.** Sizes are hardcoded per view (22pt prompts, 18pt
-      options). Should be one scale factor applied through the environment, not
-      a hunt through every view.
 ### Lessons
 - [ ] **Re-check lesson length now that sets exist.** Baselines are 10 / 18 / 30
       *items*; a medium run produced 13. Judge by how long a sitting actually
@@ -60,6 +66,17 @@ section; move items to **Done** with a one-line note on what actually changed.
       answers at grading time.
 
 ## Done
+- [x] **Text size control.** ⌘+ / ⌘− / ⌘0, persisted, applied as one scale
+      factor through the environment rather than per-view constants. Plus a
+      selection toggle — selectable text helps dictionary lookups and hurts
+      while answering, so it is a choice. (2026-08-28)
+- [x] **Raw furigana markup leaked into the UI.** Multiple-choice options,
+      reorder tokens, matching pairs and flashcards rendered
+      `切符[きっぷ]` as literal text — only prompts went through RubyText.
+      (2026-08-28)
+- [x] **Listening exercises printed what was spoken.** A prompt reading
+      「切符ははっせんえんです」いくらですか with the same line as audioText is a
+      reading exercise wearing a costume. Generation now rejects it. (2026-08-28)
 - [x] **Study time was wall-clock, not study time.** A lesson opened one night
       and finished the next evening logged **1383 minutes** into Fluent's
       totals. Now accumulates active time between interactions, ignoring gaps

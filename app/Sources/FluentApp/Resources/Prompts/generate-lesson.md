@@ -78,6 +78,13 @@ Recent session notes:
    a sibling exercise's options. For `reorder`, supply `tokens` in a plausible
    but incorrect order.
 
+   **For a listening exercise this means the prompt must not contain what is
+   spoken.** Writing 「切符ははっせんえんです」 into the prompt and then also
+   into `audioText` makes the audio decorative — the learner reads the answer
+   and never presses play. The prompt sets the scene and asks the question
+   ("駅のアナウンスを聞いてください。いくらですか。"); `audioText` alone carries
+   the words.
+
 8. **Every exercise carries an `explanation`** that teaches the rule, not just
    the fact. "は marks the topic, を the direct object" beats "the answer is は".
 

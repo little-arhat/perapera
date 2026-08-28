@@ -39,6 +39,26 @@ final class AppModel {
 
     var savedItems = SavedItems()
 
+    /// Target-language text size, persisted. Asked for repeatedly: the default
+    /// is too small to read comfortably for a whole session.
+    var textSizeFactor: Double {
+        didSet { UserDefaults.standard.set(textSizeFactor, forKey: "textSizeFactor") }
+    }
+    var textSelectable: Bool {
+        didSet { UserDefaults.standard.set(textSelectable, forKey: "textSelectable") }
+    }
+
+    func adjustTextSize(by delta: Double) {
+        textSizeFactor = min(TextScale.maximum,
+                             max(TextScale.minimum, textSizeFactor + delta))
+    }
+
+    func resetTextSize() { textSizeFactor = 1.0 }
+
+    var textScale: TextScale {
+        TextScale(factor: textSizeFactor, selectable: textSelectable)
+    }
+
     var screen: Screen = .home
     var snapshot: FluentStore.Snapshot?
     var records: [LessonRecord] = []
@@ -92,6 +112,9 @@ final class AppModel {
             ?? ""
         self.model = defaults.string(forKey: "model") ?? "opus"
         self.showFurigana = defaults.bool(forKey: "showFurigana")
+        let stored = defaults.double(forKey: "textSizeFactor")
+        self.textSizeFactor = stored > 0 ? stored : 1.0
+        self.textSelectable = defaults.bool(forKey: "textSelectable")
         self.lessonStore = LessonStore(
             dataDirectory: Paths.dataDirectory(pluginRoot: root))
     }

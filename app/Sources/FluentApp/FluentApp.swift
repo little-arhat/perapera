@@ -11,6 +11,7 @@ struct FluentApp: App {
             RootView()
                 .environment(model)
                 .environment(speech)
+                .environment(\.textScale, model.textScale)
                 .solarized()
                 .frame(minWidth: 720, minHeight: 520)
                 .frame(
