@@ -22,13 +22,18 @@ struct TextScale {
 
     /// Reading column width for a given base.
     ///
-    /// Grows with the text at roughly half the rate, capped at 1.6x — and never
-    /// goes *below* the base. Shrinking the text is a request to fit more on
-    /// screen, so narrowing the column with it cancels the only reason to do
-    /// it. The floor costs a longer measure at small sizes, which is the
-    /// tradeoff the person shrinking the text has already chosen.
+    /// Wider than a typographer would choose. The measure-optimal column left
+    /// more than half of a large display empty, which reads as a mistake even
+    /// though every line was comfortable. This trades some measure for a page
+    /// that looks composed: about 89 latin characters at the default size
+    /// against a textbook 65-75.
+    ///
+    /// Still bounded, and still grows with the text — an unbounded column on a
+    /// wide display gives 200-character lines, which is a different and worse
+    /// failure. And never narrower than the floor: shrinking the text is a
+    /// request to fit more, so narrowing with it cancels the point.
     func width(_ base: CGFloat) -> CGFloat {
-        base * min(1.6, max(1.0, 1 + (factor - 1) * 0.6))
+        base * min(2.2, max(1.25, 1.5 + (factor - 1) * 0.7))
     }
 }
 
