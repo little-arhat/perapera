@@ -7,6 +7,48 @@ Priority is by **learner impact**, not by effort. `S`/`M`/`L` is rough size.
 
 ---
 
+## Reported 2026-08-29 — working through these
+
+### FL-19 — Instruction text is cut off, content overflows the window · S · **BUG**
+`~/Downloads/3.png`: "Rewrite the whole s…" runs off the right edge and the
+exercise cards are clipped. The column can now exceed the window width (FL-18
+raised the cap to 2.2x), and the Core Text view asks for its natural
+single-line width when given an unspecified proposal — which is right for a
+reorder token and wrong for everything that should wrap.
+
+### FL-20 — A wrong answer is wiped from the field · S · **BUG**
+Grading an answer clears the input, so there is nothing to compare against the
+correction. Worse, several set items were graded incorrect with an *empty*
+field after a value had been typed and was visibly correct — an answer is being
+lost, not just hidden. Same shape as the earlier `KanaTextField` state leak.
+
+### FL-21 — Generation ignored the requested size · M
+Asked for large + drill, got 3 items per set. Either `exerciseTarget` is
+computing the wrong numbers or the prompt is not honouring them.
+`LessonService.exerciseTarget`, and the `{{ITEMS_PER_SET}}` line in the prompt.
+
+### FL-22 — Translation on hover · M
+Some sentences are hard enough that the meaning is the blocker, not the script.
+Hovering a word already highlights it; showing a gloss there would be the
+natural home. Needs a source of glosses — the generator could supply per-item
+translations cheaply, since it already knows them.
+
+### FL-23 — No images or kanji drills yet · L
+Both researched and specced but unbuilt, so lessons are all text. Depends on
+FL-1 (script recognition track) for the kanji side.
+
+### FL-24 — No sense of topic completeness · M
+Every lesson lands on the same material with no indication of progress through
+it. Fluent tracks mastery per skill and per pattern (`mastery-db.json`,
+`spaced-repetition.json`) — the app reads neither. Wants: what this topic is,
+how much of it is mastered, what is left.
+
+### FL-25 — Show when a lesson was generated · S
+A human-readable timestamp on the row. `Lesson.generatedAt` already exists and
+is never displayed, which matters once lessons are queued days ahead.
+
+---
+
 ## Blocked on a decision
 
 ### FL-1 — Script recognition: pick a track · L
@@ -27,11 +69,33 @@ Two tracks, and the decision is whether to ship A alone first:
 **Recommendation: ship A alone first.** It needs nothing the app does not
 already have.
 
-### FL-2 — Run `imgbench` for real · S
-The tool is built and tested (`tools/imgbench/`) but has never been run, so
-`report` says "nothing measured yet" and the numbers quoted in the research doc
-came from ad-hoc probes. A full sweep is ~$0.83; `--probe dakuten` on one model
-is ~$0.07 and enough to confirm behaviour first.
+### FL-2 — Price discovery for image models · M
+**First real run is done** (2026-08-29, `--probe dakuten`, $0.246), and it
+reproduced the finding the tool exists to catch:
+
+| model | $/image | fidelity | $/usable | verdict |
+|---|---|---|---|---|
+| `gemini-3.1-flash-image` | $0.0690 | 100% | $0.0690 | use |
+| `gemini-3-pro-image` | $0.1378 | 100% | $0.1378 | use |
+| `gemini-2.5-flash-image` | $0.0392 | 50% | $0.0783 | REJECT — drew みなみりぢち |
+
+Note `gemini-3-pro-image` at **$0.1378** — double the flash model for the same
+100%. Nothing in the catalog said so; it was only knowable by spending it.
+
+**What is still missing is discovery.** Price is currently learned only by
+paying for a generation, one model at a time:
+
+- The catalog is not merely incomplete but wrong — it quotes $0.0000003 per
+  token for a model that bills $0.0392 per image.
+- `--discounts` reads `/models/{id}/endpoints`, but that has never been checked
+  against a *measured* per-image price, so we do not know whether the endpoint
+  data predicts the bill or is equally unrelated.
+- Nothing notices when a price moves. `store.movement` exists and renders, but
+  only across runs a human remembered to do.
+
+Wanted: a cheap sweep that estimates per-image price without a full benchmark
+(one probe per model, or endpoint data if it turns out to correlate), plus a
+scheduled re-run so a price change is noticed rather than discovered in a bill.
 
 ### FL-3 — Move lesson generation off Opus · S
 At five images the lesson JSON ($0.58, measured over 3 runs) costs *more than
@@ -131,6 +195,14 @@ since cards hold short lines that do not suffer from width. `TextScale.width`.
 
 ## Done
 
+### Lesson labels (2026-08-29)
+- **Name and note on a lesson**, set at generation time or added later via
+  Rename. Kept on `LessonRecord` rather than `Lesson`: the generated lesson is
+  an artifact that does not change, the label is the learner's and can be
+  corrected at any point. Never sent to the model — `focus` is the instruction,
+  the name is a label. Makes queuing several differently-configured lessons
+  ahead of time actually usable.
+
 Newest first. Kept because several exist only because a measurement contradicted
 an assumption, and that is worth remembering.
 
@@ -191,11 +263,18 @@ an assumption, and that is worth remembering.
 - **Live streaming** of the model's output instead of a spinner.
 - **`imgbench`** — picks an image model on fidelity, not price.
 
+### Credentials
+- The OpenRouter key is **`OPENROUTER_FLUENT`**, read from the environment or a
+  gitignored `.env` at the repo root (`.env.example` shows the shape). Named per
+  project rather than shared, so revoking it cannot break anything else.
+
 ### Measurements worth keeping
 - Speech rate is non-linear: 0.375 → 4.6s vs 0.5 → 4.2s (inaudible); 0.3 → 5.6s.
 - `isSpeaking` is false immediately after `speak()`; use the delegate.
-- Image generation is **$0.0677** flat per image regardless of prompt or size.
-  Verification read-back is **$0.00059**. Lesson JSON on Opus is **$0.58**.
+- Image generation is flat per image regardless of prompt, content or
+  resolution: **$0.069** for `gemini-3.1-flash-image`, **$0.138** for
+  `gemini-3-pro-image`. Verification read-back is **$0.00059**. Lesson JSON on
+  Opus is **$0.58**.
 - `gemini-2.5-flash-image` is 43% cheaper and renders wrong kana (みなみりぢち
   for みなみぐち) — unusable at any price.
 - macOS Vision OCR gives false negatives on vertical and angled Japanese; the

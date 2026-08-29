@@ -7,13 +7,16 @@ struct ArchiveView: View {
     @Environment(\.textScale) private var scale
 
     @State private var query = ""
+    @State private var labelling: LessonRecord?
 
     private var filtered: [LessonRecord] {
         guard !query.isEmpty else { return model.records }
         let needle = query.lowercased()
         return model.records.filter {
-            $0.lesson.title.lowercased().contains(needle)
+            $0.displayTitle.lowercased().contains(needle)
+                || $0.lesson.title.lowercased().contains(needle)
                 || $0.lesson.focus.lowercased().contains(needle)
+                || $0.note?.lowercased().contains(needle) == true
                 || $0.feedback?.sessionNotes.lowercased().contains(needle) == true
         }
     }
@@ -48,6 +51,7 @@ struct ArchiveView: View {
                             }
                             .buttonStyle(.plain)
                             .contextMenu {
+                                Button("Rename…") { labelling = record }
                                 Button("Delete", role: .destructive) {
                                     model.delete(id: record.id)
                                 }
@@ -61,6 +65,7 @@ struct ArchiveView: View {
                 }
             }
         }
+        .sheet(item: $labelling) { LabelSheet(record: $0) }
     }
 }
 

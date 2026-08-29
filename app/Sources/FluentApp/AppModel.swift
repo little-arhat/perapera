@@ -139,9 +139,9 @@ final class AppModel {
             let name = snapshot?.databases.learner_profile.learner.name
             return name.map { "Fluent — \($0)" } ?? "Fluent"
         case let .lesson(id):
-            return record(id: id)?.lesson.title ?? "Lesson"
+            return record(id: id)?.displayTitle ?? "Lesson"
         case let .debrief(id):
-            return record(id: id).map { "\($0.lesson.title) — results" } ?? "Results"
+            return record(id: id).map { "\($0.displayTitle) — results" } ?? "Results"
         case .archive:
             return "Archive"
         case .lists:
@@ -198,7 +198,8 @@ final class AppModel {
 
     func generate(
         mode: LessonSpec.Mode, size: LessonSpec.Size,
-        depth: LessonSpec.Depth = .standard, focus: String
+        depth: LessonSpec.Depth = .standard, focus: String,
+        name: String = "", note: String = ""
     ) async {
         guard let lessons else { return }
         guard !claudePath.isEmpty else {
@@ -210,9 +211,18 @@ final class AppModel {
         defer { isGenerating = false; endProgress() }
 
         do {
-            let record = try await lessons.generate(
+            var record = try await lessons.generate(
                 spec: LessonSpec(mode: mode, size: size, depth: depth, focus: focus),
                 progress: progressSink())
+            // The label is the learner's, so it is attached after generation
+            // rather than sent to the model.
+            record.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                .nilWhenEmpty
+            record.note = note.trimmingCharacters(in: .whitespacesAndNewlines)
+                .nilWhenEmpty
+            if record.name != nil || record.note != nil {
+                try? lessonStore.save(record)
+            }
             records.insert(record, at: 0)
             screen = .lesson(id: record.id)
         } catch {
@@ -273,6 +283,15 @@ final class AppModel {
         screen = record.state == .generated || record.state == .inProgress
             ? .lesson(id: record.id)
             : .debrief(id: record.id)
+    }
+
+    /// Renames or annotates a lesson after the fact. Queuing lessons ahead of
+    /// time is only useful if you can still tell them apart a week later.
+    func label(id: String, name: String, note: String) {
+        guard var record = record(id: id) else { return }
+        record.name = name.trimmingCharacters(in: .whitespacesAndNewlines).nilWhenEmpty
+        record.note = note.trimmingCharacters(in: .whitespacesAndNewlines).nilWhenEmpty
+        update(record)
     }
 
     func record(id: String) -> LessonRecord? {

@@ -26,6 +26,15 @@ public struct LessonRecord: Codable, Sendable, Identifiable {
     public var state: State
     public var answers: [String: Answer]         // exercise id → answer
     public var verdicts: [String: Verdict]       // exercise id → locally-decided verdict
+    /// A label the learner gave this lesson, e.g. "plane — counters".
+    ///
+    /// Deliberately on the record rather than on `Lesson`. `Lesson` is the
+    /// generated artifact and does not change; the name is the learner's, so it
+    /// can be added or corrected long after generation. It is also never sent
+    /// to the model — `LessonSpec.focus` is the instruction, this is the label.
+    public var name: String?
+    /// A note to self: why this lesson exists, when to do it.
+    public var note: String?
     public var startedAt: Date?
     public var finishedAt: Date?
     /// Time actually spent answering, accumulated between interactions.
@@ -43,7 +52,7 @@ public struct LessonRecord: Codable, Sendable, Identifiable {
 
     private enum CodingKeys: String, CodingKey {
         case lesson, state, answers, verdicts, startedAt, finishedAt
-        case activeSeconds, feedback, sessionId
+        case activeSeconds, feedback, sessionId, name, note
     }
 
     /// Records written before a field existed must still open. The archive's
@@ -54,6 +63,8 @@ public struct LessonRecord: Codable, Sendable, Identifiable {
         state = try c.decode(State.self, forKey: .state)
         answers = try c.decodeIfPresent([String: Answer].self, forKey: .answers) ?? [:]
         verdicts = try c.decodeIfPresent([String: Verdict].self, forKey: .verdicts) ?? [:]
+        name = try c.decodeIfPresent(String.self, forKey: .name)
+        note = try c.decodeIfPresent(String.self, forKey: .note)
         startedAt = try c.decodeIfPresent(Date.self, forKey: .startedAt)
         finishedAt = try c.decodeIfPresent(Date.self, forKey: .finishedAt)
         activeSeconds = try c.decodeIfPresent(TimeInterval.self, forKey: .activeSeconds) ?? 0
@@ -88,6 +99,13 @@ public struct LessonRecord: Codable, Sendable, Identifiable {
         let wallClock = finishedAt.timeIntervalSince(startedAt)
         let plausible = Double(lesson.estimatedMinutes * 3 * 60)
         return max(1, Int((min(wallClock, plausible) / 60).rounded()))
+    }
+
+    /// What to call this lesson in a list. The learner's name when they gave
+    /// one, otherwise the generated title.
+    public var displayTitle: String {
+        let trimmed = name?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return (trimmed?.isEmpty == false ? trimmed! : lesson.title)
     }
 
     /// Whether this lesson still owes work to Fluent. Both states offer the

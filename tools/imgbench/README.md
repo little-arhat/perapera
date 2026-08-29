@@ -91,4 +91,14 @@ old runs re-rank correctly instead of carrying a stale judgement.
 | `cli.py` | the shell: fetching, generating, verifying, rendering |
 | `test_imgbench.py` | 21 tests, no network |
 
-Needs `OPENROUTER_KB` for `run`; `list` and `report` do not.
+## Credentials
+
+`run` needs `OPENROUTER_FLUENT`, read from the environment or from a `.env` at
+the repo root:
+
+```
+OPENROUTER_FLUENT=sk-or-...
+```
+
+`.env` is gitignored. The key is Fluent-specific rather than shared with other
+projects, so revoking it cannot break them. `list` and `report` need no key.

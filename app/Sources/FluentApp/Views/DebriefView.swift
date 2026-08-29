@@ -35,7 +35,7 @@ struct DebriefView: View {
     private var header: some View {
         let score = live.autoGradedScore
         return VStack(alignment: .leading, spacing: 8) {
-            Text(live.lesson.title)
+            Text(live.displayTitle)
                 .font(.system(size: 26, weight: .semibold))
                 .foregroundStyle(palette.emphasizedText)
             HStack(spacing: 16) {

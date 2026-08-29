@@ -14,7 +14,8 @@ Why this exists as its own tool rather than a flag on the app: choosing an image
 model is an occasional, deliberate, paid decision. Folding it into the app would
 either run benchmarks nobody asked for or bury the numbers where nobody looks.
 
-Requires OPENROUTER_KB for `run`; `list` and `report` need no key.
+Requires OPENROUTER_FLUENT (environment or .env at the repo root)
+for `run`; `list` and `report` need no key.
 """
 
 from __future__ import annotations
@@ -45,6 +46,10 @@ BASE = "https://openrouter.ai/api/v1"
 # per image — see docs/research/script-recognition.md.
 VERIFIER = "google/gemini-2.5-flash"
 
+# The key's name. Fluent-specific rather than shared with other projects, so
+# revoking one does not break the others.
+ENV_KEY = "OPENROUTER_FLUENT"
+
 # Benchmarking every image model would cost ~$3 a run to learn nothing about
 # most of them. These are the ones plausibly worth using.
 SHORTLIST = (
@@ -58,21 +63,30 @@ SHORTLIST = (
 
 
 def api_key() -> str:
-    """OPENROUTER_KB, from the environment or the login shell's env file.
+    """The OpenRouter key: `OPENROUTER_FLUENT`.
 
-    GUI and cron contexts do not source a login shell, so falling back to the
-    file is the difference between working and a confusing auth error.
+    Looked up in the environment first, then in a `.env` file at the repo root.
+    The file is the normal case — cron and GUI contexts never source a login
+    shell, so relying on the environment alone is the difference between working
+    and a confusing auth error.
+
+    `.env` is gitignored. Never print or log the value.
     """
-    key = os.environ.get("OPENROUTER_KB")
+    key = os.environ.get(ENV_KEY)
     if key:
         return key
-    env_file = pathlib.Path.home() / ".zshenv"
-    if env_file.exists():
-        for line in env_file.read_text(encoding="utf-8").splitlines():
-            match = re.match(r"\s*(?:export\s+)?OPENROUTER_KB=(.+)", line)
+    for candidate in (ROOT.parent.parent / ".env", pathlib.Path.cwd() / ".env"):
+        if not candidate.exists():
+            continue
+        for line in candidate.read_text(encoding="utf-8").splitlines():
+            match = re.match(rf"\s*(?:export\s+)?{ENV_KEY}\s*=\s*(.+)", line)
             if match:
                 return match.group(1).strip().strip('"').strip("'")
-    sys.exit("OPENROUTER_KB is not set — required to generate images")
+    sys.exit(
+        f"{ENV_KEY} is not set.\n"
+        f"Add it to {ROOT.parent.parent / '.env'} as {ENV_KEY}=sk-or-...\n"
+        "or export it in the environment."
+    )
 
 
 # ─── Network ─────────────────────────────────────────────────

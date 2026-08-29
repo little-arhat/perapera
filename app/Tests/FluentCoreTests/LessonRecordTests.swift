@@ -95,3 +95,58 @@ import Foundation
     #expect(record.durationMinutes <= record.lesson.estimatedMinutes * 3)
     #expect(record.durationMinutes > 0)
 }
+
+// MARK: - Labels
+//
+// Queuing lessons ahead of time is only useful if you can tell them apart
+// later. The label is the learner's, so it lives on the record rather than the
+// generated lesson and can be added or corrected at any point.
+
+@Test func displayTitleFallsBackToTheGeneratedTitle() throws {
+    let url = try #require(Bundle.module.url(
+        forResource: "real-lesson-record", withExtension: "json",
+        subdirectory: "Fixtures"))
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    var record = try decoder.decode(LessonRecord.self, from: Data(contentsOf: url))
+
+    #expect(record.displayTitle == record.lesson.title)
+
+    record.name = "plane — counters"
+    #expect(record.displayTitle == "plane — counters")
+
+    // A blank name is not a name; it must not blank out the row.
+    record.name = "   "
+    #expect(record.displayTitle == record.lesson.title)
+}
+
+@Test func labelsSurviveARoundTrip() throws {
+    let url = try #require(Bundle.module.url(
+        forResource: "real-lesson-record", withExtension: "json",
+        subdirectory: "Fixtures"))
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+
+    var record = try decoder.decode(LessonRecord.self, from: Data(contentsOf: url))
+    record.name = "plane — counters"
+    record.note = "do before the Kyoto trip"
+
+    let reloaded = try decoder.decode(
+        LessonRecord.self, from: try encoder.encode(record))
+    #expect(reloaded.name == "plane — counters")
+    #expect(reloaded.note == "do before the Kyoto trip")
+}
+
+@Test func recordsWrittenBeforeLabelsExistedStillOpen() throws {
+    // The archive must read back everything it ever wrote.
+    let url = try #require(Bundle.module.url(
+        forResource: "real-lesson-record", withExtension: "json",
+        subdirectory: "Fixtures"))
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    let record = try decoder.decode(LessonRecord.self, from: Data(contentsOf: url))
+    #expect(record.name == nil)
+    #expect(record.note == nil)
+}

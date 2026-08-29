@@ -9,7 +9,10 @@ struct HomeView: View {
     @State private var size: LessonSpec.Size = .medium
     @State private var depth: LessonSpec.Depth = .standard
     @State private var focus = ""
+    @State private var name = ""
+    @State private var note = ""
     @State private var showUnreadable = false
+    @State private var labelling: LessonRecord?
 
     private var pending: [LessonRecord] {
         model.records.filter { $0.state != .submitted }
@@ -27,6 +30,7 @@ struct HomeView: View {
             .frame(maxWidth: scale.width(760), alignment: .leading)
             .frame(maxWidth: .infinity)
         }
+        .sheet(item: $labelling) { LabelSheet(record: $0) }
     }
 
     private var header: some View {
@@ -92,9 +96,20 @@ struct HomeView: View {
                       text: $focus)
                 .textFieldStyle(.roundedBorder)
 
+            // Focus steers the generator; name and note are the learner's own,
+            // and never reach the model. Queuing several lessons ahead of time
+            // is only useful if you can tell them apart afterwards.
+            HStack(spacing: 10) {
+                TextField("Name (optional) — how you'll recognise it later",
+                          text: $name)
+                    .textFieldStyle(.roundedBorder)
+                TextField("Note (optional) — when or why to do it", text: $note)
+                    .textFieldStyle(.roundedBorder)
+            }
+
             HStack(spacing: 12) {
                 Button {
-                    Task { await model.generate(mode: .lesson, size: size, depth: depth, focus: focus) }
+                    Task { await generate(.lesson) }
                 } label: {
                     Label("Generate Lesson", systemImage: "sparkles")
                         .frame(maxWidth: .infinity)
@@ -103,7 +118,7 @@ struct HomeView: View {
                 .tint(palette.accent)
 
                 Button {
-                    Task { await model.generate(mode: .review, size: size, depth: depth, focus: focus) }
+                    Task { await generate(.review) }
                 } label: {
                     Label("Generate Review", systemImage: "arrow.triangle.2.circlepath")
                         .frame(maxWidth: .infinity)
@@ -125,6 +140,15 @@ struct HomeView: View {
         .background(palette.surface, in: .rect(cornerRadius: 12))
     }
 
+    /// Generates, then clears the labels so the next lesson starts fresh —
+    /// carrying a stale name into the following lesson is worse than no name.
+    private func generate(_ mode: LessonSpec.Mode) async {
+        await model.generate(mode: mode, size: size, depth: depth,
+                             focus: focus, name: name, note: note)
+        name = ""
+        note = ""
+    }
+
     private var pendingSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Ready to do")
@@ -140,6 +164,9 @@ struct HomeView: View {
                     LessonRow(record: record)
                 }
                 .buttonStyle(.plain)
+                .contextMenu {
+                    Button("Rename…") { labelling = record }
+                }
             }
         }
     }
@@ -226,8 +253,14 @@ struct LessonRow: View {
                 .foregroundStyle(record.lesson.spec.mode == .review ? palette.review : palette.accent)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(record.lesson.title)
+                Text(record.displayTitle)
                     .foregroundStyle(palette.emphasizedText)
+                if let note = record.note, !note.isEmpty {
+                    Text(note)
+                        .font(.caption)
+                        .foregroundStyle(palette.secondaryText)
+                        .lineLimit(1)
+                }
                 Text("\(record.lesson.exercises.count) exercises · ~\(record.lesson.estimatedMinutes) min · \(stateLabel)")
                     .font(.caption)
                     .foregroundStyle(palette.secondaryText)
