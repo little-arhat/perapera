@@ -1,153 +1,202 @@
 # TODO
 
-Running list for the Fluent macOS app. Newest requests at the top of each
-section; move items to **Done** with a one-line note on what actually changed.
+Outstanding work on the Fluent macOS app, as numbered tickets so they can be
+referred to by name. Each says what, why it matters, and where in the code.
+
+Priority is by **learner impact**, not by effort. `S`/`M`/`L` is rough size.
+
+---
+
+## Blocked on a decision
+
+### FL-1 — Script recognition: pick a track · L
+Reading kana on screen and reading it on a noren are different perceptual
+tasks; the app currently trains only the first. Researched in full, with costs
+measured: `docs/research/script-recognition.md`.
+
+Two tracks, and the decision is whether to ship A alone first:
+
+- **Track A — rendered.** Free, offline, exact, no new service, no verification.
+  57 installed font families already span brush, signage, rounded and textbook.
+  The natural home for the confusable pairs that actually break — シ/ツ, ソ/ン,
+  ね/れ/わ, ぬ/め, る/ろ. Roughly two days.
+- **Track B — photographic.** Generated and verified. Real transfer, and it
+  doubles as menu-reading and price-parsing. Roughly a week, and it needs
+  lesson assets, an OpenRouter path, and a verifier.
+
+**Recommendation: ship A alone first.** It needs nothing the app does not
+already have.
+
+### FL-2 — Run `imgbench` for real · S
+The tool is built and tested (`tools/imgbench/`) but has never been run, so
+`report` says "nothing measured yet" and the numbers quoted in the research doc
+came from ad-hoc probes. A full sweep is ~$0.83; `--probe dakuten` on one model
+is ~$0.07 and enough to confirm behaviour first.
+
+### FL-3 — Move lesson generation off Opus · S
+At five images the lesson JSON ($0.58, measured over 3 runs) costs *more than
+the pictures*. Sonnet would be roughly a tenth of that. The open question is
+whether generation quality holds — it is the call that shapes every lesson, so
+it is worth an A/B rather than a blind switch. Grading cost has never been
+measured at all.
+
+---
 
 ## Next
 
-### Speech
-- [ ] **Better voices.** macOS ships only `.default`-quality voices out of the
-      box (all 9 Japanese ones are quality 1). Higher-quality voices download
-      via System Settings → Accessibility → Spoken Content → System Voice →
-      Manage Voices; Kyoko (Enhanced/Premium) is the one worth getting.
-      `Speech.bestVoice(for:)` already picks the highest installed quality, so
-      the app improves the moment one is added — but it should *tell* the
-      learner when only a default-quality voice is present rather than leaving
-      them to wonder why it sounds robotic.
-- [ ] **Voice picker in Settings.** `Speech.voices(for:)` already returns every
-      installed voice sorted best-first; needs a control and a stored
-      preference. Kyoko vs Otoya are noticeably different to listen to daily.
-- [ ] **Speed slider** instead of two fixed buttons. Measured: the rate scale is
-      badly non-linear — 0.375 reads a sentence in 4.6 s against 0.5's 4.2 s,
-      which is inaudible; 0.3 takes 5.6 s and is clearly slower. A slider from
-      0.25 to 0.55 with the value remembered beats guessing at two presets.
-- [ ] **Per-word playback** for listening exercises: tap a word in the
-      transcript to hear just that word. The failure mode being practiced is
-      parsing はっぴゃく mid-sentence, and a replay of the whole sentence is a
-      blunt instrument for that.
+### FL-4 — Tell the learner their voice is robotic · S
+All nine installed Japanese voices are `.default` quality. Better ones are a
+free download (System Settings → Accessibility → Spoken Content → Manage
+Voices; Kyoko Enhanced is the one). `Speech.bestVoice(for:)` already picks the
+best installed, so the app improves the moment one is added — but nothing says
+so, leaving the learner to assume this is as good as it gets.
 
-### Settings & appearance
-- [ ] **Tint particles distinctly.** Word highlighting is in; colouring
-      は/を/に/で by role is the remaining half, and would make the particle
-      drills much easier to read at a glance.
-- [ ] **Better segmentation.** `NLTokenizer` splits 新幹線 into 新+幹線 and
-      まどぐち into まど+ぐち. Good enough to hover, wrong often enough to notice.
-- [ ] **Ruby in Picker rows.** A Picker cannot host ruby, so matching-menu
-      labels are stripped. Replacing the Picker with a custom control would fix
-      it; low priority.
-- [ ] **Settings page for theme and colours.** Solarized light/dark currently
-      follows the system appearance with no override. Wants: explicit
-      light/dark/auto, and ideally an alternate palette for anyone who doesn't
-      love Solarized.
-### Lessons
-- [ ] **Re-check lesson length now that sets exist.** Baselines are 10 / 18 / 30
-      *items*; a medium run produced 13. Judge by how long a sitting actually
-      takes before raising further.
-- [ ] **Generate several lessons at once**, for stocking up before a flight.
-      One button, N lessons, one progress indicator.
-- [ ] **Retry a single exercise** rather than the whole lesson when one comes
-      back malformed.
+### FL-5 — Speed slider instead of two presets · S
+Measured: the rate scale is badly non-linear. 0.375 reads a sentence in 4.6s
+against 0.5's 4.2s — inaudible; 0.3 takes 5.6s and is clearly slower. A slider
+from 0.25 to 0.55, remembered, beats guessing at two presets. `Speech.Rate`.
+
+### FL-6 — Voice picker in Settings · S
+`Speech.voices(for:)` already returns every installed voice, best first. Needs
+a control and a stored preference. Kyoko and Otoya are noticeably different to
+listen to daily.
+
+### FL-7 — Tint particles by role · M
+Word highlighting is in; colouring は/を/に/で distinctly is the other half, and
+would make the particle drills readable at a glance. Needs the tokenizer to
+classify, not just segment — `RubyCanvas.wordRange`.
+
+### FL-8 — Better segmentation · M
+`NLTokenizer` splits 新幹線 into 新+幹線 and まどぐち into まど+ぐち. Good enough
+to hover, wrong often enough to notice. Blocks FL-7 from being trustworthy.
+
+### FL-9 — Retry one exercise, not the whole lesson · M
+A single malformed exercise currently costs a full regeneration. `LessonService`
+already validates per-exercise (`Lesson.validate`), so the information needed to
+retry precisely is there.
+
+---
+
+## Soon
+
+### FL-10 — Generate several lessons at once · M
+For stocking up before a flight. One button, N lessons, one progress indicator.
+The offline path is already complete; this is the missing half of it.
+
+### FL-11 — Theme and colour settings · M
+Solarized light/dark follows the system with no override. Wants explicit
+light/dark/auto, and ideally an alternate palette. `Theme.swift`.
+
+### FL-12 — Progress dashboard · M
+Streak and due count show on the home screen, but there is no accuracy trend or
+mastery view. `/fluent-progress` in the terminal still does this better, which
+is the wrong way round.
+
+### FL-13 — Archive filters · S
+Text search only. No filter by state or date. `ArchiveView`.
+
+### FL-14 — Re-check lesson length · S
+Baselines are 10 / 18 / 30 *items*; a medium run produced 13. Judge by how long
+a sitting actually takes before changing anything.
+`LessonService.exerciseTarget`.
+
+---
 
 ## Known issues
-- [ ] `LessonPlayerView` holds its own `@State` copy of the record and pushes
-      updates to `AppModel`. Two copies of one identity — it works because only
-      the player writes, but it is exactly the state/identity braiding that
-      causes bugs later. Should read through the model.
-- [ ] The archive has no filter by state or date, just a text search.
-- [ ] No dashboard yet: streak and due count show on the home screen, but there
-      is no accuracy trend or mastery view (`/fluent-progress` still does this
-      better).
 
-- [ ] A generator sometimes lists a genuinely wrong variant in
-      `acceptedAnswers` — one run offered `お` alongside `を`. Accepting a wrong
-      particle teaches the wrong thing, but there is no cheap way to validate
-      semantics locally. Watch it; if it recurs, have the teacher audit accepted
-      answers at grading time.
+### FL-15 — `LessonPlayerView` keeps its own copy of the record · M
+It holds `@State var record` and pushes updates to `AppModel`. Two copies of one
+identity. It works because only the player writes, but that is exactly the
+identity/state braiding that causes bugs later — and it already caused one (see
+the answer-leak entry below, which was the same shape). Should read through the
+model.
+
+### FL-16 — Generators sometimes accept a wrong answer · S
+One run listed `お` alongside `を` in `acceptedAnswers`. Accepting a wrong
+particle teaches the wrong thing. There is no cheap local check for semantics;
+if it recurs, have the teacher audit accepted answers at grading time.
+
+### FL-17 — Ruby cannot appear in Picker rows · S
+A `Picker` cannot host ruby, so matching-menu labels are stripped of readings.
+Replacing the Picker with a custom control would fix it. Low priority.
+
+### FL-18 — Column measure is wider than ideal · S
+Deliberate: at the default size a line runs ~89 latin characters against a
+textbook 65–75. The narrower column left half a large display empty, which read
+as a mistake. The principled fix is to stop treating the page as one column —
+keep *prose* at a readable measure while letting exercise *cards* span wider,
+since cards hold short lines that do not suffer from width. `TextScale.width`.
+
+---
 
 ## Done
-- [x] **Layout jumped when toggling readings.** The Core Text view was already
-      stable; the remaining jump was the preamble, where readings were rendered
-      as 切符（きっぷ）parentheticals that change the text's *length*, so the
-      paragraph reflowed and everything below it moved. The preamble now parses
-      Markdown and then applies real ruby, which sits above the line and changes
-      nothing: 272.0pt in both states. (2026-08-28)
-- [x] **Selection only worked one fragment at a time.** RubyText rendered one
-      SwiftUI `Text` per segment inside a FlowLayout, and selection cannot span
-      separate Text views — so it felt "selectable by kanji only", because the
-      fragments *were* the kanji runs. Replaced with a Core Text view
-      (`CTRubyAnnotation`) that keeps the line as one attributed string.
-      `NSTextView` was tried first and silently drops ruby. (2026-08-28)
-- [x] **Word highlighting on hover, click to copy.** Uses `NLTokenizer`, which
-      segments Japanese without spaces. Copied text carries no markup, because
-      ruby is an annotation rather than inline text. (2026-08-28)
-- [x] **Raw markup in the preamble.** The preamble renders Markdown, which
-      cannot host ruby, so 切符[きっぷ] arrived on screen literally. Markdown
-      contexts now show readings as 切符（きっぷ）instead. (2026-08-28)
-- [x] **Column too wide for latin prose.** The width curve was derived for CJK
-      (one character ≈ one em); English runs about half that, so a column sized
-      for 35 kana held 75 latin characters. Gentler and clamped: 48-72 latin,
-      26-40 CJK across the whole size range. (2026-08-28)
-- [x] **Text size control.** ⌘+ / ⌘− / ⌘0, persisted, applied as one scale
-      factor through the environment rather than per-view constants. Plus a
-      selection toggle — selectable text helps dictionary lookups and hurts
-      while answering, so it is a choice. (2026-08-28)
-- [x] **Raw furigana markup leaked into the UI.** Multiple-choice options,
-      reorder tokens, matching pairs and flashcards rendered
-      `切符[きっぷ]` as literal text — only prompts went through RubyText.
-      (2026-08-28)
-- [x] **Listening exercises printed what was spoken.** A prompt reading
-      「切符ははっせんえんです」いくらですか with the same line as audioText is a
-      reading exercise wearing a costume. Generation now rejects it. (2026-08-28)
-- [x] **Study time was wall-clock, not study time.** A lesson opened one night
-      and finished the next evening logged **1383 minutes** into Fluent's
-      totals. Now accumulates active time between interactions, ignoring gaps
-      over 5 minutes; older records fall back to a wall-clock capped at 3× the
-      lesson estimate. Corrupted totals repaired (1417 → 49 min). (2026-08-26)
-- [x] **A finished lesson reopened at question 1.** Tapping it meant clicking
-      through every exercise again to reach Finish. It now opens on the finish
-      screen. (2026-08-26)
-- [x] **Grading was charged twice on a crash.** Feedback is persisted the moment
-      it arrives, in a new `graded` state, so a failure between grading and the
-      database write retries only the write. (2026-08-26)
-- [x] **A 40-second wait showed only a spinner.** Now streams the model's output
-      live with phase, elapsed time, and the answer as it is written. (2026-08-26)
-- [x] **Breadth and depth split.** "How much" (how many points) and "Repetition"
-      (items per set) are separate controls; nearly every exercise is now a set.
-      (2026-08-26)
-- [x] **Answers leaked between exercises.** `KanaTextField` kept `@State`
-      internally and SwiftUI reused the view across questions, so text typed for
-      one exercise reappeared as — and would have been submitted as — the answer
-      to the next. Fixed with `.id(exercise.id)` on the input. (2026-08-26)
-- [x] **Correct Japanese marked wrong.** Writing the full sentence for a
-      fill-in-the-blank was failed on a formatting technicality. Cloze now also
-      accepts the blank-filled sentence, and grading gained a third outcome:
-      genuinely ambiguous answers go to the teacher instead of being guessed at.
-      A reordering never defers — word order is the thing being taught.
-      (2026-08-26)
-- [x] **Exercise sets.** New `set` kind: one instruction, numbered items with
-      hints, graded item by item with partial credit. Lesson size now counts
-      items, not exercises. (2026-08-26)
-- [x] **Ambiguous prompts.** A gap with no instruction cannot tell the learner
-      whether to type the fragment or the whole sentence; generation now rejects
-      those. (2026-08-26)
-- [x] **Furigana**, **saved lists**, **comprehension passages**, **app icon**.
-- [x] **Dropped the hiragana/katakana selector** — the learner's own IME handles
-      script switching, and kana passes through the converter untouched.
-- [x] **Speech speed had no audible effect.** The two presets were
-      `default × 0.75` and `default` — an 8% difference. Slow is now 0.30, a
-      measured ~32% longer reading. (2026-08-26)
-- [x] **`isSpeaking` never became true.** It was polled immediately after
-      `speak()`, but synthesis starts asynchronously, so the poll always saw
-      "finished". Now driven by `AVSpeechSynthesizerDelegate`. (2026-08-26)
-- [x] **Blank matching row.** A generated lesson padded `pairs` with an empty
-      entry, which rendered as an unanswerable row. Schema now sets `minLength`
-      on every answer-bearing string and the decoder rejects blank entries, so
-      the client retries instead of showing it. (2026-08-26)
-- [x] **Reorder answers rendered with spaces** — "京都 までの 切符". Now joined
-      without spaces for unspaced scripts, decided from the text rather than a
-      configured language. (2026-08-26)
-- [x] Kana input with the IME bypassed, so production exercises test recall.
-- [x] Japanese TTS, unlocking listening practice.
-- [x] Streak bug in `update-db.py` — it keyed off `last_updated`, which setup
-      stamps at profile creation, so no learner's first session ever started a
-      streak.
+
+Newest first. Kept because several exist only because a measurement contradicted
+an assumption, and that is worth remembering.
+
+### Layout and text rendering (2026-08-28 → 29)
+- **Reorder tokens each took a full row.** `fittingSize` returned the width it
+  was *offered* rather than the width used, and an unspecified proposal — what
+  `FlowLayout` sends — fell through to a guessed 600pt. Now measures unbounded
+  and returns used width: tokens 45–89pt, paragraphs still wrap.
+- **Column too narrow on a wide display.** Widened ~50%, trading measure for a
+  composed page. See FL-18.
+- **Shrinking the text shrank the column**, cancelling the reason to shrink it.
+  Width now never goes below its base.
+- **Toggling readings reflowed the page.** The Core Text view was already
+  stable; the preamble was rendering readings as 切符（きっぷ）parentheticals,
+  which change the text's *length*. It now parses Markdown then applies real
+  ruby — 272.0pt in both states, measured.
+- **Selection only caught one fragment.** `RubyText` rendered one SwiftUI `Text`
+  per segment, and selection cannot span separate `Text` views. Replaced with a
+  Core Text view using `CTRubyAnnotation`. `NSTextView` was tried first and
+  silently drops ruby.
+- **Word highlighting on hover, click to copy**, via `NLTokenizer`.
+- **Readings unreachable on set exercises** — the toggle keyed off `prompt`,
+  which on a set is the English instruction. Now keys off everything displayed.
+- **Hover did nothing**: a window does not deliver `mouseMoved` unless asked.
+- **Text size control** (⌘+/⌘−/⌘0), one scale factor through the environment.
+- **Window title bar restored** — `.hiddenTitleBar` cost double-click-to-zoom
+  and the window menu for a slightly cleaner edge.
+
+### Correctness (2026-08-26 → 28)
+- **Study time was wall-clock.** A lesson left open overnight logged 1383
+  minutes. Now accumulates active time, ignoring gaps over 5 minutes; old
+  records fall back to a capped wall-clock. Corrupted totals repaired.
+- **Answers leaked between exercises** — `KanaTextField` kept `@State` and
+  SwiftUI reused the view, so text typed for one exercise would have been
+  submitted for the next.
+- **Correct Japanese marked wrong.** Cloze now accepts the blank-filled
+  sentence, and grading has a third outcome: ambiguous answers go to the
+  teacher. A reordering never defers — word order is what is being taught.
+- **Grading was charged twice on a crash.** Feedback persists on arrival, in a
+  `graded` state.
+- **A finished lesson reopened at question 1.**
+- **Listening exercises printed what was spoken** — a reading exercise in a
+  costume. Generation rejects it.
+- **Ambiguous prompts** — a gap with no instruction cannot say whether to type
+  the fragment or the sentence. Generation rejects those too.
+- **Blank matching row** from padded `pairs`.
+- **Reorder answers rendered with spaces** — 京都 までの 切符.
+- **Streak never started.** `update-db.py` keyed off `last_updated`, which
+  `/fluent-setup` stamps at profile creation, so no learner's first session
+  ever started a streak.
+
+### Features (2026-08-26 → 28)
+- Exercise **sets** — one instruction, numbered items, partial credit.
+- **Breadth and depth** as separate controls.
+- **Furigana**, **saved lists**, **comprehension passages**, **app icon**.
+- **Kana input** with the IME bypassed, so production tests recall.
+- **Japanese TTS**, unlocking listening practice.
+- **Live streaming** of the model's output instead of a spinner.
+- **`imgbench`** — picks an image model on fidelity, not price.
+
+### Measurements worth keeping
+- Speech rate is non-linear: 0.375 → 4.6s vs 0.5 → 4.2s (inaudible); 0.3 → 5.6s.
+- `isSpeaking` is false immediately after `speak()`; use the delegate.
+- Image generation is **$0.0677** flat per image regardless of prompt or size.
+  Verification read-back is **$0.00059**. Lesson JSON on Opus is **$0.58**.
+- `gemini-2.5-flash-image` is 43% cheaper and renders wrong kana (みなみりぢち
+  for みなみぐち) — unusable at any price.
+- macOS Vision OCR gives false negatives on vertical and angled Japanese; the
+  vision-model read-back does not.
