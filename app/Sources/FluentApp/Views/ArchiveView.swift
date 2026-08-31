@@ -1,3 +1,4 @@
+import AVFoundation
 import SwiftUI
 import FluentCore
 
@@ -71,7 +72,25 @@ struct ArchiveView: View {
 
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
+    @Environment(Speech.self) private var speech
     @Environment(\.palette) private var palette
+
+    private var voices: [AVSpeechSynthesisVoice] {
+        model.voiceLanguage.map(Speech.voices(for:)) ?? []
+    }
+
+    private var onlyBasicVoices: Bool {
+        model.voiceLanguage.map(Speech.onlyDefaultQuality(for:)) ?? false
+    }
+
+    /// Quality matters more than the name here, so it is part of the label.
+    private func voiceLabel(_ voice: AVSpeechSynthesisVoice) -> String {
+        switch voice.quality {
+        case .premium: "\(voice.name) — premium"
+        case .enhanced: "\(voice.name) — enhanced"
+        default: voice.name
+        }
+    }
 
     var body: some View {
         @Bindable var model = model
@@ -90,6 +109,53 @@ struct SettingsView: View {
                     Text(model.dataDirectory.path)
                         .font(.caption.monospaced())
                         .lineLimit(1).truncationMode(.head)
+                }
+            }
+
+            Section("Speech") {
+                Picker("Voice", selection: $model.voiceIdentifier) {
+                    Text("Best installed").tag("")
+                    ForEach(voices, id: \.identifier) { voice in
+                        Text(voiceLabel(voice)).tag(voice.identifier)
+                    }
+                }
+                .disabled(voices.isEmpty)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Slider(value: $model.speechRate, in: 0.25...0.55) {
+                        Text("Slow speed")
+                    } minimumValueLabel: {
+                        Image(systemName: "tortoise")
+                    } maximumValueLabel: {
+                        Image(systemName: "hare")
+                    }
+                    // The scale is misleading enough to be worth spelling out:
+                    // 0.375 and 0.5 sound identical, 0.30 clearly does not.
+                    Text("Used by Play slowly. The scale is uneven — small moves near the top do almost nothing.")
+                        .font(.caption)
+                        .foregroundStyle(palette.secondaryText)
+                }
+
+                Button("Preview") {
+                    speech.speak("さんぜんはっぴゃくえんです。",
+                                 language: model.voiceLanguage,
+                                 rate: Float(model.speechRate),
+                                 voiceIdentifier: model.voiceIdentifier.nilWhenEmpty)
+                }
+
+                if onlyBasicVoices {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Label("Only the basic voice is installed",
+                              systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(palette.warning)
+                        Text(Speech.betterVoicesHint)
+                            .font(.caption)
+                            .foregroundStyle(palette.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Button("Open Spoken Content settings") {
+                            Speech.openVoiceSettings()
+                        }
+                    }
                 }
             }
 

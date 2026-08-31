@@ -56,6 +56,15 @@ public struct LessonSpec: Codable, Sendable, Equatable {
             case .large: "Large"
             }
         }
+
+        /// What the option means, in one line.
+        public var help: String {
+            switch self {
+            case .small: "3 topics. A short sitting."
+            case .medium: "5 topics."
+            case .large: "8 topics. Covers the most ground."
+            }
+        }
     }
 
     /// How many items each drill repeats.
@@ -81,6 +90,14 @@ public struct LessonSpec: Codable, Sendable, Equatable {
         /// a mood; a lesson generated as `light` then looks like the app
         /// ignoring a request for `drill`.
         public var detailedLabel: String { "\(label) · \(itemsPerSet)" }
+
+        public var help: String {
+            switch self {
+            case .light: "3 questions per topic. More variety, less repetition."
+            case .standard: "5 questions per topic."
+            case .drill: "9 questions per topic. Builds automaticity."
+            }
+        }
 
         /// Items per set.
         public var itemsPerSet: Int {

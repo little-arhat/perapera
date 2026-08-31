@@ -15,9 +15,24 @@ Hovering a word already highlights it; showing a gloss there would be the
 natural home. Needs a source of glosses — the generator could supply per-item
 translations cheaply, since it already knows them.
 
-### FL-23 — No images or kanji drills yet · L
-Both researched and specced but unbuilt, so lessons are all text. Depends on
-FL-1 (script recognition track) for the kanji side.
+### FL-23 — No images or kanji drills yet · L · **BLOCKED**
+Lessons are all text. Both halves are researched and costed
+(`docs/research/script-recognition.md`) but neither is built, and both wait on
+one decision — **FL-1: which track**.
+
+Nothing else blocks them. Concretely, what each needs once the call is made:
+
+- **Track A (kanji/script drills, fonts)** — free, offline, no new service, no
+  verification, ~2 days. Needs a Core Text renderer for the stimulus (the ruby
+  view already does most of this), a `recognition` exercise kind, and prompt
+  work. Grading reuses the existing text grader unchanged.
+- **Track B (photographs)** — ~1 week and it costs money. Needs three things
+  the app does not have: per-lesson image assets on disk, a direct OpenRouter
+  path (`OPENROUTER_FLUENT` is already in `.env`), and a verification step,
+  since a wrong glyph teaches a wrong letterform. $0.069 per image on
+  `gemini-3.1-flash-image`, ~$0.0006 to verify.
+
+**Recommendation unchanged: ship A first.** It needs nothing new.
 
 ---
 
@@ -79,23 +94,6 @@ measured at all.
 ---
 
 ## Next
-
-### FL-4 — Tell the learner their voice is robotic · S
-All nine installed Japanese voices are `.default` quality. Better ones are a
-free download (System Settings → Accessibility → Spoken Content → Manage
-Voices; Kyoko Enhanced is the one). `Speech.bestVoice(for:)` already picks the
-best installed, so the app improves the moment one is added — but nothing says
-so, leaving the learner to assume this is as good as it gets.
-
-### FL-5 — Speed slider instead of two presets · S
-Measured: the rate scale is badly non-linear. 0.375 reads a sentence in 4.6s
-against 0.5's 4.2s — inaudible; 0.3 takes 5.6s and is clearly slower. A slider
-from 0.25 to 0.55, remembered, beats guessing at two presets. `Speech.Rate`.
-
-### FL-6 — Voice picker in Settings · S
-`Speech.voices(for:)` already returns every installed voice, best first. Needs
-a control and a stored preference. Kyoko and Otoya are noticeably different to
-listen to daily.
 
 ### FL-7 — Tint particles by role · M
 Word highlighting is in; colouring は/を/に/で distinctly is the other half, and
@@ -166,6 +164,15 @@ since cards hold short lines that do not suffer from width. `TextScale.width`.
 ---
 
 ## Done
+
+### Speech and controls (2026-09-01)
+- **FL-4/5/6 — a Speech section in Settings**: voice picker labelled by quality,
+  a slow-speed slider with the stored value, a preview button, and a warning
+  when only the basic voice is installed — with the four-level System Settings
+  path spelled out and a deep link, since nobody finds it otherwise. Without
+  the warning the learner concludes the robotic reading is as good as it gets.
+- **Tooltips on size and depth**, and the numbers in the labels, so "Varied"
+  cannot be read as a mood.
 
 ### Reported 2026-08-29, fixed (2026-09-01)
 - **FL-24 — a "Where you are" panel**, least finished first, from Fluent's own

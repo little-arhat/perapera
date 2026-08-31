@@ -14,6 +14,7 @@ struct AudioPromptView: View {
 
     @Environment(\.palette) private var palette
     @Environment(Speech.self) private var speech
+    @Environment(AppModel.self) private var model
 
     @State private var hasPlayed = false
     @State private var showTranscript = false
@@ -23,7 +24,8 @@ struct AudioPromptView: View {
             HStack(spacing: 10) {
                 Button {
                     hasPlayed = true
-                    speech.speak(text, language: language, rate: Speech.Rate.slow)
+                    speech.speak(text, language: language, rate: Float(model.speechRate),
+                                 voiceIdentifier: model.voiceIdentifier.nilWhenEmpty)
                 } label: {
                     Label(hasPlayed ? "Play again" : "Play slowly",
                           systemImage: "speaker.wave.2.fill")
@@ -36,7 +38,8 @@ struct AudioPromptView: View {
 
                 Button {
                     hasPlayed = true
-                    speech.speak(text, language: language, rate: Speech.Rate.natural)
+                    speech.speak(text, language: language, rate: Speech.Rate.natural,
+                                 voiceIdentifier: model.voiceIdentifier.nilWhenEmpty)
                 } label: {
                     Label("Natural speed", systemImage: "hare")
                 }

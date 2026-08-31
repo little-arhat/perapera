@@ -30,6 +30,8 @@ struct FluentApp: App {
         Settings {
             SettingsView()
                 .environment(model)
+                .environment(speech)
+                .environment(\.textScale, model.textScale)
                 .solarized()
         }
     }

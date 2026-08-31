@@ -84,22 +84,30 @@ struct HomeView: View {
                         .foregroundStyle(palette.secondaryText)
                     Picker("Size", selection: $size) {
                         ForEach(LessonSpec.Size.allCases, id: \.self) {
-                            Text($0.label).tag($0)
+                            Text($0.label).tag($0).help($0.help)
                         }
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
+                    .help("How many distinct topics the lesson covers.\n"
+                          + LessonSpec.Size.allCases
+                              .map { "\($0.label) — \($0.help)" }
+                              .joined(separator: "\n"))
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Repetition").font(.caption)
                         .foregroundStyle(palette.secondaryText)
                     Picker("Depth", selection: $depth) {
                         ForEach(LessonSpec.Depth.allCases, id: \.self) {
-                            Text($0.detailedLabel).tag($0)
+                            Text($0.detailedLabel).tag($0).help($0.help)
                         }
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
+                    .help("How many times each topic is practised.\n"
+                          + LessonSpec.Depth.allCases
+                              .map { "\($0.label) — \($0.help)" }
+                              .joined(separator: "\n"))
                 }
             }
 

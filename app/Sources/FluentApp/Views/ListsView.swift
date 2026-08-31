@@ -175,6 +175,7 @@ struct ListsView: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .frame(width: 190)
+            .help("How many distinct topics the lesson covers.")
 
             Picker("", selection: $depth) {
                 ForEach(LessonSpec.Depth.allCases, id: \.self) {
@@ -184,6 +185,7 @@ struct ListsView: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .frame(width: 200)
+            .help("How many times each topic is practised.")
 
             Button {
                 Task { await model.practice(items: chosen, size: size, depth: depth) }

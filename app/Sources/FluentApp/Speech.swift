@@ -1,4 +1,5 @@
 import AVFoundation
+import AppKit
 import Observation
 
 /// Speaks target-language text aloud.
@@ -73,7 +74,36 @@ final class Speech {
     static func voices(for language: String) -> [AVSpeechSynthesisVoice] {
         AVSpeechSynthesisVoice.speechVoices()
             .filter { $0.language == language }
-            .sorted { $0.quality.rawValue > $1.quality.rawValue }
+            .sorted {
+                $0.quality.rawValue == $1.quality.rawValue
+                    ? $0.name < $1.name
+                    : $0.quality.rawValue > $1.quality.rawValue
+            }
+    }
+
+    /// True when every installed voice for a language is the basic one.
+    ///
+    /// Worth saying out loud. macOS ships only `.default` voices; the better
+    /// ones are a free download most people never discover, and without a
+    /// prompt the learner concludes the robotic reading is as good as the app
+    /// gets — and quietly trusts the listening practice less.
+    static func onlyDefaultQuality(for language: String) -> Bool {
+        let installed = voices(for: language)
+        return !installed.isEmpty && installed.allSatisfy { $0.quality == .default }
+    }
+
+    /// Where to get better ones. Shown, not just linked, because the path is
+    /// four levels deep in System Settings.
+    static let betterVoicesHint =
+        "System Settings → Accessibility → Spoken Content → System Voice → "
+        + "Manage Voices. Kyoko (Enhanced) is the one worth downloading."
+
+    static func openVoiceSettings() {
+        // Deep link straight to Spoken Content; the pane is hard to find.
+        let url = URL(
+            string: "x-apple.systempreferences:com.apple.preference.universalaccess"
+                + "?SpeakableItems")
+        if let url { NSWorkspace.shared.open(url) }
     }
 
     func speak(

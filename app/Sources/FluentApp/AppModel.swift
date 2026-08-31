@@ -56,6 +56,16 @@ final class AppModel {
     var highlightWords: Bool {
         didSet { UserDefaults.standard.set(highlightWords, forKey: "highlightWords") }
     }
+    /// Slow-playback rate. A stored value rather than a preset because the
+    /// scale is badly non-linear — 0.375 and 0.5 are indistinguishable, 0.30 is
+    /// obviously slower — so the useful range is narrow and personal.
+    var speechRate: Double {
+        didSet { UserDefaults.standard.set(speechRate, forKey: "speechRate") }
+    }
+    /// Chosen voice identifier; empty means "best installed".
+    var voiceIdentifier: String {
+        didSet { UserDefaults.standard.set(voiceIdentifier, forKey: "voiceIdentifier") }
+    }
 
     func adjustTextSize(by delta: Double) {
         textSizeFactor = min(TextScale.maximum,
@@ -125,6 +135,9 @@ final class AppModel {
         self.textSizeFactor = stored > 0 ? stored : 1.0
         self.textSelectable = defaults.bool(forKey: "textSelectable")
         self.highlightWords = defaults.bool(forKey: "highlightWords")
+        let storedRate = defaults.double(forKey: "speechRate")
+        self.speechRate = storedRate > 0 ? storedRate : Double(Speech.Rate.slow)
+        self.voiceIdentifier = defaults.string(forKey: "voiceIdentifier") ?? ""
         self.lessonStore = LessonStore(
             dataDirectory: Paths.dataDirectory(pluginRoot: root))
     }
