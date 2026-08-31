@@ -5,6 +5,7 @@
     imgbench run               # benchmark the shortlist (costs money)
     imgbench run --models a,b  # benchmark specific models
     imgbench report            # last measurements, ranked, with movement
+    imgbench suggest           # cheaper swaps, price moves, what to measure
 
 The effectful shell. Fetching, generating, verifying and rendering live here;
 the pricing values are in ``catalog.py``, the probe set and scoring in
@@ -34,7 +35,16 @@ from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
-from catalog import ImageModel, Observation, discount_from_endpoints, parse_models, rank
+from catalog import (
+    ImageModel,
+    Observation,
+    discount_from_endpoints,
+    dominates,
+    parse_models,
+    price_moves,
+    rank,
+    worth_measuring,
+)
 from fidelity import PROBES, ModelResult, ProbeResult, missing, score_transcription
 import store
 
@@ -57,6 +67,9 @@ SHORTLIST = (
     "google/gemini-3-pro-image",
     "google/gemini-2.5-flash-image",
 )
+
+# What the app generates with today. `suggest` compares against this.
+IN_USE = "google/gemini-3.1-flash-image"
 
 
 # ─── Credentials ─────────────────────────────────────────────
@@ -346,6 +359,83 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_suggest(args: argparse.Namespace) -> int:
+    """Cheaper swaps that are no less faithful, plus what is worth measuring."""
+    records = store.read(store.history_path(ROOT))
+    observed = {
+        model_id: Observation(
+            id=model_id,
+            measured_image=entry.get("measured_image"),
+            fidelity=entry.get("fidelity"),
+            samples=entry.get("samples", 0),
+        )
+        for model_id, entry in store.latest_by_model(records).items()
+    }
+    if not observed:
+        print("nothing measured yet — run `imgbench run`")
+        return 1
+
+    current = args.current or IN_USE
+    incumbent = observed.get(current)
+    if incumbent is None:
+        print(f"{current} has never been measured — run `imgbench run --models {current}`")
+        return 1
+
+    print(
+        f"in use: {incumbent.id}  "
+        f"${incumbent.measured_image:.4f}  {(incumbent.fidelity or 0):.0%} fidelity\n"
+    )
+
+    better = [o for o in observed.values() if dominates(o, incumbent)]
+    if better:
+        print("cheaper and no less faithful:")
+        for option in sorted(better, key=lambda o: o.measured_image or 0):
+            saving = 1 - (option.measured_image or 0) / (incumbent.measured_image or 1)
+            print(
+                f"  {option.id:<40} ${option.measured_image:.4f}  "
+                f"{(option.fidelity or 0):.0%}  saves {saving:.0%}"
+            )
+    else:
+        print("no cheaper model matches it on fidelity — staying put is correct.")
+
+    # Rejected models are named rather than omitted, so the same cheap option is
+    # not reconsidered every time someone reads the table.
+    rejected = [
+        o for o in observed.values()
+        if o.id != incumbent.id and o.measured_image is not None
+        and (o.measured_image < (incumbent.measured_image or 0)) and not o.usable
+    ]
+    if rejected:
+        print("\ncheaper but rejected on fidelity:")
+        for option in rejected:
+            print(
+                f"  {option.id:<40} ${option.measured_image:.4f}  "
+                f"{(option.fidelity or 0):.0%} — draws wrong characters"
+            )
+
+    moves = price_moves(records)
+    if moves:
+        print("\nprice moved since the previous run:")
+        for model_id, was, now, when in moves:
+            print(f"  {model_id:<40} ${was:.4f} → ${now:.4f} ({(now-was)/was:+.0%}) since {when}")
+
+    try:
+        catalog = parse_models(get_json(f"{BASE}/models"))
+    except urllib.error.URLError:
+        catalog = []
+    unknown = worth_measuring(catalog, observed, incumbent)
+    if unknown:
+        cost = len(unknown) * 0.07
+        print(f"\nnever measured ({len(unknown)}), ~${cost:.2f} to benchmark all:")
+        for model in unknown:
+            print(f"  {model.id}")
+        print(
+            "  The catalog cannot say whether these are cheaper — its prices do\n"
+            "  not match the bill — nor whether they can draw kana at all."
+        )
+    return 0
+
+
 def _render(observations: list[Observation]) -> None:
     print()
     print(f"{'model':<40} {'$/image':>9} {'fidelity':>9} {'$/usable':>9}  verdict")
@@ -394,6 +484,12 @@ def main() -> int:
 
     p_report = sub.add_parser("report", help="last measurements, ranked")
     p_report.set_defaults(func=cmd_report)
+
+    p_suggest = sub.add_parser(
+        "suggest", help="cheaper swaps that are no less faithful")
+    p_suggest.add_argument(
+        "--current", help=f"model in use (default: {IN_USE})")
+    p_suggest.set_defaults(func=cmd_suggest)
 
     args = parser.parse_args()
     if not getattr(args, "func", None):

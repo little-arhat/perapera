@@ -225,3 +225,65 @@ class StoreTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SuggestTests(unittest.TestCase):
+    """`suggest` must under-suggest rather than manufacture confidence."""
+
+    def test_cheaper_and_equally_faithful_wins(self):
+        from catalog import dominates
+        incumbent = Observation(id="dear", measured_image=0.069, fidelity=1.0)
+        challenger = Observation(id="cheap", measured_image=0.040, fidelity=1.0)
+        self.assertTrue(dominates(challenger, incumbent))
+
+    def test_cheaper_but_less_faithful_never_wins(self):
+        # The whole point. No discount offsets a wrong glyph.
+        from catalog import dominates
+        incumbent = Observation(id="good", measured_image=0.069, fidelity=1.0)
+        challenger = Observation(id="bad", measured_image=0.039, fidelity=0.95)
+        self.assertFalse(dominates(challenger, incumbent))
+
+    def test_unmeasured_never_displaces_measured(self):
+        # A catalog price is not evidence: it does not match the bill.
+        from catalog import dominates
+        incumbent = Observation(id="known", measured_image=0.069, fidelity=1.0)
+        self.assertFalse(dominates(Observation(id="unknown"), incumbent))
+        self.assertFalse(
+            dominates(Observation(id="u", quoted_image=0.001), incumbent))
+
+    def test_a_model_never_dominates_itself(self):
+        from catalog import dominates
+        same = Observation(id="x", measured_image=0.05, fidelity=1.0)
+        self.assertFalse(dominates(same, same))
+
+    def test_worth_measuring_lists_only_the_unknown(self):
+        from catalog import ImageModel, worth_measuring
+        catalog = [ImageModel(id="a"), ImageModel(id="b"), ImageModel(id="c")]
+        observed = {"a": Observation(id="a", measured_image=0.05, fidelity=1.0)}
+        incumbent = observed["a"]
+        self.assertEqual(
+            [m.id for m in worth_measuring(catalog, observed, incumbent)],
+            ["b", "c"],
+        )
+
+    def test_price_moves_need_two_measured_observations(self):
+        from catalog import price_moves
+        history = [
+            {"id": "m", "date": "2026-08-01", "measured_image": 0.05},
+            {"id": "m", "date": "2026-09-01", "measured_image": 0.07},
+            {"id": "once", "date": "2026-09-01", "measured_image": 0.02},
+            # A catalog-only record is not news: that figure never matched the bill.
+            {"id": "quoted", "date": "2026-08-01", "quoted_image": 0.001},
+            {"id": "quoted", "date": "2026-09-01", "quoted_image": 0.002},
+        ]
+        moves = price_moves(history)
+        self.assertEqual([m[0] for m in moves], ["m"])
+        self.assertEqual(moves[0][1:3], (0.05, 0.07))
+
+    def test_a_small_move_is_not_reported(self):
+        from catalog import price_moves
+        history = [
+            {"id": "m", "date": "2026-08-01", "measured_image": 0.0690},
+            {"id": "m", "date": "2026-09-01", "measured_image": 0.0691},
+        ]
+        self.assertEqual(price_moves(history), [])

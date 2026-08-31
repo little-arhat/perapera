@@ -118,6 +118,32 @@ public struct LessonRecord: Codable, Sendable, Identifiable {
         lesson.exercises.filter { !$0.isAutoGradable }
     }
 
+    /// The whole lesson's score once graded: local verdicts and the teacher's
+    /// marks together.
+    ///
+    /// `autoGradedScore` deliberately counts only what the app decided, so it
+    /// can be shown honestly before submission. After grading that is the wrong
+    /// number to display — it silently omits every written answer.
+    public var finalScore: (correct: Int, total: Int)? {
+        guard let feedback else { return nil }
+        let teacher = Dictionary(
+            feedback.graded.map { ($0.exerciseId, $0.score) },
+            uniquingKeysWith: { first, _ in first })
+
+        var correct = 0
+        var total = 0
+        for exercise in lesson.exercises {
+            if let verdict = verdicts[exercise.id] {
+                total += 1
+                if verdict.isCorrect { correct += 1 }
+            } else if let score = teacher[exercise.id] {
+                total += 1
+                if score >= 6 { correct += 1 }
+            }
+        }
+        return total > 0 ? (correct, total) : nil
+    }
+
     /// Locally-known accuracy. Excludes teacher-graded exercises, so it is a
     /// floor on the final number, not the final number itself.
     public var autoGradedScore: (correct: Int, total: Int) {

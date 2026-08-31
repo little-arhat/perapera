@@ -322,7 +322,14 @@ struct LessonRow: View {
         case .inProgress: "\(record.answers.count)/\(record.lesson.exercises.count) answered"
         case .completed: "done — needs your teacher"
         case .graded: "graded — not yet saved to Fluent"
-        case .submitted: "graded"
+        case .submitted:
+            // The score, not just the word. A graded lesson in a list is only
+            // useful if it says how it went.
+            if let score = record.finalScore {
+                "\(score.correct)/\(score.total) · \(Int(Double(score.correct) / Double(score.total) * 100))%"
+            } else {
+                "graded"
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ Which image model can actually draw Japanese, and what it costs.
 python3 tools/imgbench/cli.py list          # models, catalog price, discount
 python3 tools/imgbench/cli.py run           # benchmark the shortlist (costs money)
 python3 tools/imgbench/cli.py report        # last measurements, ranked
+python3 tools/imgbench/cli.py suggest       # cheaper swaps, moves, what to measure
 ```
 
 Adapted from the `llm` price watch in the options repo, which keeps two facts
@@ -74,6 +75,36 @@ price.
 
 Rejected models stay in the table rather than being dropped, so a run records
 why they were rejected.
+
+## `suggest`
+
+Adapted from `llm suggest`, and deliberately narrower. A challenger replaces the
+incumbent only when it is **strictly cheaper and no less faithful**, and only
+when *both* have been measured:
+
+```
+in use: google/gemini-3.1-flash-image  $0.0690  100% fidelity
+
+no cheaper model matches it on fidelity — staying put is correct.
+
+cheaper but rejected on fidelity:
+  google/gemini-2.5-flash-image   $0.0392  50% — draws wrong characters
+
+never measured (6), ~$0.42 to benchmark all:
+  ...
+```
+
+Three rules, each earning its keep:
+
+- **Fidelity must be no lower, never merely close.** A model that is 5% cheaper
+  and 5% less accurate is not a trade; the wrong glyph teaches a wrong
+  letterform.
+- **Unmeasured never displaces measured.** A catalog price is not evidence here
+  — it does not match the bill.
+- **Rejected models are named, not hidden**, so the same cheap option is not
+  reconsidered every time someone reads the table.
+
+Price moves are reported from *measured* prices only, above a 2% threshold.
 
 ## The log
 

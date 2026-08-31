@@ -9,16 +9,41 @@ struct ArchiveView: View {
 
     @State private var query = ""
     @State private var labelling: LessonRecord?
+    @State private var filter: Filter = .all
+
+    /// Why you open the archive: to finish something, or to re-read a grade.
+    enum Filter: String, CaseIterable {
+        case all = "All"
+        case todo = "To do"
+        case graded = "Graded"
+
+        func matches(_ record: LessonRecord) -> Bool {
+            switch self {
+            case .all: true
+            case .todo: record.state != .submitted
+            case .graded: record.state == .submitted
+            }
+        }
+    }
 
     private var filtered: [LessonRecord] {
-        guard !query.isEmpty else { return model.records }
+        let scoped = model.records.filter(filter.matches)
+        guard !query.isEmpty else { return scoped }
         let needle = query.lowercased()
-        return model.records.filter {
+        return scoped.filter {
             $0.displayTitle.lowercased().contains(needle)
                 || $0.lesson.title.lowercased().contains(needle)
                 || $0.lesson.focus.lowercased().contains(needle)
                 || $0.note?.lowercased().contains(needle) == true
                 || $0.feedback?.sessionNotes.lowercased().contains(needle) == true
+                || $0.feedback?.overallComment?.lowercased().contains(needle) == true
+                || $0.feedback?.graded.contains {
+                    $0.comment.lowercased().contains(needle)
+                } == true
+                || $0.feedback?.errors?.contains {
+                    $0.patternId.lowercased().contains(needle)
+                        || $0.correctAnswer.lowercased().contains(needle)
+                } == true
         }
     }
 
@@ -31,7 +56,13 @@ struct ArchiveView: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(palette.secondaryText)
                 Spacer()
-                TextField("Search lessons", text: $query)
+                Picker("", selection: $filter) {
+                    ForEach(Filter.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 220)
+                TextField("Search lessons, notes, feedback", text: $query)
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 240)
             }

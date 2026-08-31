@@ -183,6 +183,79 @@ def rank(observations: Sequence[Observation]) -> list[Observation]:
     )
 
 
+def dominates(challenger: Observation, incumbent: Observation) -> bool:
+    """Whether `challenger` is strictly cheaper and no less faithful.
+
+    Deliberately narrow, and narrower than the text-model version it is adapted
+    from. It fires only when BOTH models have been measured, so an unmeasured
+    model never displaces a measured one on a catalog price — which here would
+    be worse than useless, since the catalog price bears no relation to the bill.
+
+    Fidelity must be no lower, never merely "close". A cheaper model that is
+    fractionally less accurate is not a saving: the wrong glyph it draws teaches
+    a wrong letterform, and no discount offsets that.
+    """
+    if challenger.id == incumbent.id:
+        return False
+    if challenger.measured_image is None or incumbent.measured_image is None:
+        return False
+    if challenger.fidelity is None or incumbent.fidelity is None:
+        return False
+    if not challenger.usable:
+        return False
+    if challenger.fidelity < incumbent.fidelity:
+        return False
+    return challenger.measured_image < incumbent.measured_image
+
+
+def worth_measuring(
+    catalog: Sequence[ImageModel],
+    observed: Mapping[str, Observation],
+    incumbent: Observation | None,
+) -> list[ImageModel]:
+    """Models that might beat the incumbent but have never been benchmarked.
+
+    Not a suggestion — a shortlist of things worth spending a probe on. The
+    catalog cannot say whether they are cheaper (its prices are unrelated to the
+    bill) or whether they can draw kana at all, so the only honest output is
+    "unknown, and cheap to find out".
+    """
+    return [
+        model
+        for model in catalog
+        if model.id not in observed
+        and (incumbent is None or model.id != incumbent.id)
+    ]
+
+
+def price_moves(
+    history: Sequence[Mapping[str, Any]], threshold: float = 0.02
+) -> list[tuple[str, float, float, str]]:
+    """Models whose measured price moved between their last two observations.
+
+    Returns (id, was, now, date_of_earlier). Only measured prices, because a
+    move in a catalog figure that never matched the bill is not news.
+    """
+    by_model: dict[str, list[Mapping[str, Any]]] = {}
+    for record in history:
+        model_id = record.get("id")
+        if model_id:
+            by_model.setdefault(str(model_id), []).append(record)
+
+    moves: list[tuple[str, float, float, str]] = []
+    for model_id, records in by_model.items():
+        ordered = sorted(records, key=lambda r: str(r.get("date", "")))
+        if len(ordered) < 2:
+            continue
+        was = ordered[-2].get("measured_image")
+        now = ordered[-1].get("measured_image")
+        if not was or not now:
+            continue
+        if abs(now - was) / was > threshold:
+            moves.append((model_id, float(was), float(now), str(ordered[-2].get("date", ""))))
+    return sorted(moves, key=lambda m: (m[2] - m[1]) / m[1])
+
+
 def _float_or_none(value: Any) -> float | None:
     """Parse a price. Absent and unparseable both mean unknown, never zero."""
     if value is None or value == "":
