@@ -23,6 +23,10 @@ struct KanaTextField: View {
 
     /// What the field shows. Holds kana plus at most a trailing romaji fragment
     /// still waiting for the letter that resolves it.
+    ///
+    /// A private copy, so it has to be seeded from the binding on appear —
+    /// otherwise a restored answer sits in the draft while the field reads
+    /// empty, and the learner is shown a blank box for work they did.
     @State private var field = ""
 
     var body: some View {

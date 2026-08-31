@@ -152,3 +152,53 @@ private func base(_ extra: [String: Any]) -> [String: Any] {
     ])])
     #expect(sound.validate().isEmpty)
 }
+
+// MARK: - Lesson sizing
+//
+// The prompt and the on-screen preview must agree about what was asked for.
+// They previously could not: the calculation was private to LessonService, so
+// the UI described the request in words while the numbers stayed invisible —
+// which is how a lesson generated as `light` reads as a request for `drill`
+// being ignored.
+
+@Test func depthSetsItemsPerSetAndSizeSetsBreadth() {
+    let smallDrill = LessonPlan.plan(size: .small, depth: .drill, level: "A1",
+                                     totalSessions: 3, mode: .lesson, dueCount: 0)
+    #expect(smallDrill.exercises == 3)
+    #expect(smallDrill.itemsPerSet == 9)
+    #expect(smallDrill.items == 27)
+
+    let largeLight = LessonPlan.plan(size: .large, depth: .light, level: "A1",
+                                     totalSessions: 3, mode: .lesson, dueCount: 0)
+    #expect(largeLight.exercises == 8)
+    #expect(largeLight.itemsPerSet == 3)
+    #expect(largeLight.items == 24)
+}
+
+@Test func breadthAndDepthMoveIndependently() {
+    // The whole point of two controls. If either axis moved the other, one of
+    // them would be unreachable.
+    let base = LessonPlan.plan(size: .medium, depth: .standard, level: "A1",
+                               totalSessions: 0, mode: .lesson, dueCount: 0)
+    let deeper = LessonPlan.plan(size: .medium, depth: .drill, level: "A1",
+                                 totalSessions: 0, mode: .lesson, dueCount: 0)
+    let broader = LessonPlan.plan(size: .large, depth: .standard, level: "A1",
+                                  totalSessions: 0, mode: .lesson, dueCount: 0)
+
+    #expect(deeper.exercises == base.exercises)
+    #expect(deeper.itemsPerSet > base.itemsPerSet)
+    #expect(broader.itemsPerSet == base.itemsPerSet)
+    #expect(broader.exercises > base.exercises)
+}
+
+@Test func reviewCoversWhatIsDue() {
+    // A review that leaves due items untouched lets the schedule slip.
+    let plan = LessonPlan.plan(size: .small, depth: .light, level: "A1",
+                               totalSessions: 0, mode: .review, dueCount: 30)
+    #expect(plan.items >= 24, "only \(plan.items) questions for 30 due items")
+}
+
+@Test func aDepthLabelCarriesItsNumber() {
+    #expect(LessonSpec.Depth.light.detailedLabel.contains("3"))
+    #expect(LessonSpec.Depth.drill.detailedLabel.contains("9"))
+}

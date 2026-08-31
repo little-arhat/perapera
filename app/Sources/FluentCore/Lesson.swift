@@ -19,6 +19,9 @@ public struct Lesson: Codable, Sendable, Identifiable {
     public let spec: LessonSpec
     public let generatedAt: Date
 
+    /// Questions the learner actually answers — a set of nine counts as nine.
+    public var itemCount: Int { exercises.reduce(0) { $0 + $1.itemCount } }
+
     public init(
         id: String, title: String, focus: String, estimatedMinutes: Int,
         preamble: String?, exercises: [Exercise], spec: LessonSpec, generatedAt: Date
@@ -73,6 +76,11 @@ public struct LessonSpec: Codable, Sendable, Equatable {
             case .drill: "Drill"
             }
         }
+
+        /// The label with what it actually means. "Varied" on its own reads as
+        /// a mood; a lesson generated as `light` then looks like the app
+        /// ignoring a request for `drill`.
+        public var detailedLabel: String { "\(label) · \(itemsPerSet)" }
 
         /// Items per set.
         public var itemsPerSet: Int {

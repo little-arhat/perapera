@@ -144,36 +144,19 @@ struct LessonService {
             .replacingOccurrences(of: "{{RECENT_NOTES}}", with: "(see error patterns above)")
     }
 
-    /// Size means "how much", and how much scales with the learner. A medium
-    /// lesson at A1 is not a medium lesson at B1, so the baseline grows with
-    /// level and with how many sessions are behind them.
+    /// Delegates to `LessonPlan` so the prompt and the on-screen preview cannot
+    /// disagree about what was asked for.
     private func exerciseTarget(
         spec: LessonSpec, snapshot: FluentStore.Snapshot
     ) -> (exercises: Int, itemsPerSet: Int, minutes: Int) {
-        let level = snapshot.databases.learner_profile.learner.current_level.uppercased()
-        let levelBonus = switch level {
-        case "A1": 0
-        case "A2": 2
-        case "B1": 4
-        case "B2": 6
-        default: 8
-        }
-        let experienceBonus = min(4, snapshot.databases.learner_profile.total_sessions / 15)
-
-        // Breadth: how many distinct points the lesson touches.
-        let base = switch spec.size {
-        case .small: 3
-        case .medium: 5
-        case .large: 8
-        }
-        let exercises = base + levelBonus / 2 + experienceBonus / 2
-        // Review mode must cover what is due, or the schedule slips. Due items
-        // are spread across sets rather than each becoming its own exercise.
-        let dueFloor = spec.mode == .review
-            ? snapshot.computed.due_reviews_count / spec.depth.itemsPerSet : 0
-        let count = min(12, max(exercises, dueFloor))
-        let items = count * spec.depth.itemsPerSet
-        return (count, spec.depth.itemsPerSet, max(5, items * 5 / 4))
+        let plan = LessonPlan.plan(
+            size: spec.size,
+            depth: spec.depth,
+            level: snapshot.databases.learner_profile.learner.current_level,
+            totalSessions: snapshot.databases.learner_profile.total_sessions,
+            mode: spec.mode,
+            dueCount: snapshot.computed.due_reviews_count)
+        return (plan.exercises, plan.itemsPerSet, plan.minutes)
     }
 
     // MARK: - Submission

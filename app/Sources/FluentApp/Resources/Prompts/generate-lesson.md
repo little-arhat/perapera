@@ -16,9 +16,15 @@ JSON object.
 ## This lesson
 
 - Mode: {{MODE}}
-- Breadth: **{{TARGET_EXERCISES}} exercises** — that many distinct points.
-- Depth: **{{ITEMS_PER_SET}} items per set** — that many repetitions of each.
+- Breadth: **exactly {{TARGET_EXERCISES}} exercises** — that many distinct points.
+- Depth: **exactly {{ITEMS_PER_SET}} items in every set** — that many repetitions.
 - Together, roughly {{TARGET_MINUTES}} minutes.
+
+Both numbers are requirements, not suggestions. A lesson with fewer exercises
+than asked is a shorter sitting than the learner planned for; a set with fewer
+items than asked defeats the repetition it exists for. If the focus feels too
+narrow for the breadth requested, widen it with adjacent material rather than
+returning fewer exercises.
 - Focus requested: {{FOCUS}}
 
 ## What the learner is currently working on

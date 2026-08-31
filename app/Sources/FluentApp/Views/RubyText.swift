@@ -11,6 +11,9 @@ struct RubyText: View {
     let annotated: String
     let showFurigana: Bool
     var size: CGFloat = 22
+    /// Shrink to the content instead of filling the width offered. For inline
+    /// words — reorder tokens — not for anything that wraps.
+    var hugsContent: Bool = false
 
     @Environment(\.palette) private var palette
     @Environment(\.textScale) private var scale
@@ -23,6 +26,7 @@ struct RubyText: View {
             Text(annotated)
                 .font(.system(size: scale.size(size)))
                 .selectableIf(scale.selectable)
+                .fixedSize(horizontal: hugsContent, vertical: false)
         } else {
             RubyTextView(
                 annotated: annotated,
@@ -32,9 +36,10 @@ struct RubyText: View {
                 rubyColor: NSColor(palette.secondaryText),
                 selectable: scale.selectable,
                 highlightWords: model.highlightWords,
-                availableWidth: 0
+                availableWidth: 0,
+                hugsContent: hugsContent
             )
-            .fixedSize(horizontal: false, vertical: true)
+            .fixedSize(horizontal: hugsContent, vertical: true)
         }
     }
 }

@@ -9,24 +9,6 @@ Priority is by **learner impact**, not by effort. `S`/`M`/`L` is rough size.
 
 ## Reported 2026-08-29 — working through these
 
-### FL-19 — Instruction text is cut off, content overflows the window · S · **BUG**
-`~/Downloads/3.png`: "Rewrite the whole s…" runs off the right edge and the
-exercise cards are clipped. The column can now exceed the window width (FL-18
-raised the cap to 2.2x), and the Core Text view asks for its natural
-single-line width when given an unspecified proposal — which is right for a
-reorder token and wrong for everything that should wrap.
-
-### FL-20 — A wrong answer is wiped from the field · S · **BUG**
-Grading an answer clears the input, so there is nothing to compare against the
-correction. Worse, several set items were graded incorrect with an *empty*
-field after a value had been typed and was visibly correct — an answer is being
-lost, not just hidden. Same shape as the earlier `KanaTextField` state leak.
-
-### FL-21 — Generation ignored the requested size · M
-Asked for large + drill, got 3 items per set. Either `exerciseTarget` is
-computing the wrong numbers or the prompt is not honouring them.
-`LessonService.exerciseTarget`, and the `{{ITEMS_PER_SET}}` line in the prompt.
-
 ### FL-22 — Translation on hover · M
 Some sentences are hard enough that the meaning is the blocker, not the script.
 Hovering a word already highlights it; showing a gloss there would be the
@@ -42,10 +24,6 @@ Every lesson lands on the same material with no indication of progress through
 it. Fluent tracks mastery per skill and per pattern (`mastery-db.json`,
 `spaced-repetition.json`) — the app reads neither. Wants: what this topic is,
 how much of it is mastered, what is left.
-
-### FL-25 — Show when a lesson was generated · S
-A human-readable timestamp on the row. `Lesson.generatedAt` already exists and
-is never displayed, which matters once lessons are queued days ahead.
 
 ---
 
@@ -194,6 +172,29 @@ since cards hold short lines that do not suffer from width. `TextScale.width`.
 ---
 
 ## Done
+
+### Reported 2026-08-29, fixed (2026-09-01)
+- **FL-19 — content overflowed the window**, clipping the instruction line. The
+  Core Text view answered "how big would you like to be?" with its natural
+  single-line width, which is right for a reorder token and wrong for anything
+  that wraps. Hugging is now opt-in; wrapping text defers to its laid-out width.
+- **FL-20 — answers were lost.** `advance()` restored the *revealed* flag from
+  the saved answers but reset the draft, so a previously-answered exercise
+  rendered its verdicts against an empty form — showing every item wrong with a
+  blank field, for work that was right and still on disk. Draft and revealed
+  state are now restored together. Also made the set-field resize
+  non-destructive, gave each row's kana field its own identity, and seeded that
+  field from its binding.
+- **FL-21 — not a bug.** The lesson in question was generated `large + Varied`,
+  and `light` *is* 3 items per set, so the app did what was asked. The fault was
+  that "Varied" reads as a mood rather than a count. Depth labels now carry
+  their number, the generator shows the concrete plan before spending
+  ("8 exercises × 3 items ≈ 24 questions"), and the sizing moved into a shared
+  `LessonPlan` so prompt and preview cannot disagree. One real shortfall did
+  turn up alongside it: `large` asked for 8 exercises and the model returned 6
+  and 4, so the prompt now states both numbers as requirements.
+- **FL-25 — lesson rows show provenance**: question count, size and depth, how
+  long ago it was generated, and state.
 
 ### Lesson labels (2026-08-29)
 - **Name and note on a lesson**, set at generation time or added later via

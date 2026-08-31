@@ -134,7 +134,8 @@ struct ExerciseInputView: View {
     }
 
     private func token(_ text: String, filled: Bool) -> some View {
-        RubyText(annotated: text, showFurigana: model.showFurigana, size: 18)
+        RubyText(annotated: text, showFurigana: model.showFurigana, size: 18,
+                 hugsContent: true)
             .padding(.horizontal, 12).padding(.vertical, 8)
             .background(filled ? palette.accent.opacity(0.18) : palette.surface,
                         in: .rect(cornerRadius: 8))

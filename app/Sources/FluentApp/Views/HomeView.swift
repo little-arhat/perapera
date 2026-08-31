@@ -14,6 +14,18 @@ struct HomeView: View {
     @State private var showUnreadable = false
     @State private var labelling: LessonRecord?
 
+    /// What the current settings would ask for. Needs the profile, so it is
+    /// nil until the databases have loaded.
+    private var plan: LessonPlan? {
+        guard let snapshot = model.snapshot else { return nil }
+        return LessonPlan.plan(
+            size: size, depth: depth,
+            level: snapshot.databases.learner_profile.learner.current_level,
+            totalSessions: snapshot.databases.learner_profile.total_sessions,
+            mode: .lesson,
+            dueCount: snapshot.computed.due_reviews_count)
+    }
+
     private var pending: [LessonRecord] {
         model.records.filter { $0.state != .submitted }
     }
@@ -80,7 +92,7 @@ struct HomeView: View {
                         .foregroundStyle(palette.secondaryText)
                     Picker("Depth", selection: $depth) {
                         ForEach(LessonSpec.Depth.allCases, id: \.self) {
-                            Text($0.label).tag($0)
+                            Text($0.detailedLabel).tag($0)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -88,7 +100,9 @@ struct HomeView: View {
                 }
             }
 
-            Text("\(size.label) covers more ground; \(depth.label.lowercased()) repeats each point \(depth.itemsPerSet) times.")
+            // The concrete number, before anything is spent. Words alone left
+            // no way to tell a small lesson from a misread request.
+            Text(plan?.summary ?? "\(size.label), \(depth.itemsPerSet) items per set")
                 .font(.caption2)
                 .foregroundStyle(palette.secondaryText)
 
@@ -261,7 +275,9 @@ struct LessonRow: View {
                         .foregroundStyle(palette.secondaryText)
                         .lineLimit(1)
                 }
-                Text("\(record.lesson.exercises.count) exercises · ~\(record.lesson.estimatedMinutes) min · \(stateLabel)")
+                // What it is, when it was made, and what it was asked for.
+                // A lesson queued days ahead has to explain itself.
+                Text(subtitle)
                     .font(.caption)
                     .foregroundStyle(palette.secondaryText)
             }
@@ -270,6 +286,23 @@ struct LessonRow: View {
         }
         .padding(14)
         .background(palette.surface, in: .rect(cornerRadius: 10))
+    }
+
+    private var subtitle: String {
+        let spec = record.lesson.spec
+        return [
+            "\(record.lesson.itemCount) questions",
+            "\(spec.size.label.lowercased()) · \(spec.depth.label.lowercased())",
+            LessonRow.relativeDate(record.lesson.generatedAt),
+            stateLabel,
+        ].joined(separator: " · ")
+    }
+
+    /// "2 hours ago", not a timestamp nobody parses at a glance.
+    static func relativeDate(_ date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: date, relativeTo: Date())
     }
 
     private var stateLabel: String {

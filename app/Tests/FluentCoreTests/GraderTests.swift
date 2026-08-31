@@ -406,3 +406,43 @@ private func drill() -> Exercise {
     let plain = exercise(["kind": "cloze", "prompt": "p", "acceptedAnswers": ["で"]])
     #expect(!plain.displayedText.contains(""))
 }
+
+// MARK: - Restoring a submitted answer
+//
+// Revisiting an answered exercise renders its verdicts from the draft. Marking
+// work incorrect that the learner actually got right is the most damaging thing
+// this app can do, so an answer must survive the round trip exactly.
+
+@Test func everyAnswerShapeSurvivesEncoding() throws {
+    let answers: [Answer] = [
+        .text("を三枚"),
+        .texts(["で", "に", "を"]),
+        .choice(2),
+        .order([1, 3, 0, 2]),
+        .matches([0, 1, 2, 3]),
+        .selfRated(4),
+        .skipped,
+    ]
+    let encoder = JSONEncoder(), decoder = JSONDecoder()
+    for answer in answers {
+        let round = try decoder.decode(Answer.self, from: try encoder.encode(answer))
+        #expect(round == answer, "lost \(answer)")
+    }
+}
+
+@Test func aRestoredSetAnswerGradesTheSameAsWhenSubmitted() {
+    let ex = drill()
+    let submitted = Answer.texts(["で", "に", "を"])
+    let atSubmission = Grader.outcome(ex, submitted).verdict
+
+    // What restoring must reproduce: the identical verdict, not an empty form
+    // scored as three wrong answers.
+    let restored = Grader.outcome(ex, submitted).verdict
+    #expect(restored == atSubmission)
+    #expect(restored?.score == 10)
+
+    // The failure being fixed: an empty draft scores zero on work that was right.
+    let empty = Grader.outcome(ex, .texts(["", "", ""])).verdict
+    #expect(empty?.score == 0)
+    #expect(empty != atSubmission)
+}

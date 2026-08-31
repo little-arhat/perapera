@@ -29,8 +29,11 @@ struct SetInputView: View {
             }
         }
         .onAppear {
-            if draft.texts.count != items.count {
-                draft.texts = Array(repeating: "", count: items.count)
+            // Grow to fit without discarding what is already there: a restored
+            // answer arrives before this runs, and replacing the array
+            // wholesale would throw it away.
+            if draft.texts.count < items.count {
+                draft.texts += Array(repeating: "", count: items.count - draft.texts.count)
             }
         }
     }
@@ -101,14 +104,19 @@ struct SetInputView: View {
         let binding = Binding(
             get: { draft.texts.indices.contains(index) ? draft.texts[index] : "" },
             set: { value in
-                if draft.texts.count != items.count {
-                    draft.texts = Array(repeating: "", count: items.count)
+                if draft.texts.count < items.count {
+                    draft.texts += Array(
+                        repeating: "", count: items.count - draft.texts.count)
                 }
                 draft.texts[index] = value
             })
 
         if useKana {
             KanaTextField(text: binding, compact: true)
+                // Per-row identity: without it SwiftUI reuses one field's
+                // internal state across rows, which is how answers leaked
+                // between exercises before.
+                .id(index)
         } else {
             TextField("", text: binding)
                 .textFieldStyle(.roundedBorder)

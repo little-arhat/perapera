@@ -222,8 +222,7 @@ struct LessonPlayerView: View {
         if let next = record.lesson.exercises.firstIndex(where: { record.answers[$0.id] == nil }) {
             index = next
         }
-        draft = ExerciseDraft()
-        revealed = record.answers[exercise.id] != nil
+        restoreDraft()
     }
 
     private func commit(_ answer: Answer) {
@@ -248,9 +247,20 @@ struct LessonPlayerView: View {
             model.screen = .debrief(id: record.id)
         } else {
             index += 1
-            draft = ExerciseDraft()
-            revealed = record.answers[exercise.id] != nil
+            restoreDraft()
         }
+    }
+
+    /// Loads the saved answer for the current exercise back into the draft.
+    ///
+    /// Revealing an answered exercise renders its verdicts from the draft, so
+    /// restoring `revealed` without restoring the answers showed every item as
+    /// wrong with an empty field — the answer was still on disk, just not on
+    /// screen. Marking work incorrect that the learner got right is the most
+    /// damaging thing this app can do, so the two are set together.
+    private func restoreDraft() {
+        draft = ExerciseDraft(answer: record.answers[exercise.id], for: exercise)
+        revealed = record.answers[exercise.id] != nil
     }
 }
 
@@ -262,6 +272,23 @@ struct ExerciseDraft {
     var order: [Int] = []
     var matches: [Int] = []
     var rating: Int?
+
+    init() {}
+
+    /// Rebuilds a draft from an answer already given, so revisiting an exercise
+    /// shows what was actually submitted rather than an empty form.
+    init(answer: Answer?, for exercise: Exercise) {
+        guard let answer else { return }
+        switch answer {
+        case let .text(value): text = value
+        case let .texts(values): texts = values
+        case let .choice(value): choice = value
+        case let .order(values): order = values
+        case let .matches(values): matches = values
+        case let .selfRated(value): rating = value
+        case .skipped: break
+        }
+    }
 
     func isAnswerable(for exercise: Exercise) -> Bool {
         switch exercise.content {

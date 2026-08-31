@@ -33,6 +33,14 @@ struct RubyTextView: NSViewRepresentable {
     /// telling rather than asking.
     let availableWidth: CGFloat
     var isMarkdown: Bool = false
+    /// Whether this text should shrink to its content.
+    ///
+    /// True for a reorder token, which is a word that must sit inline with its
+    /// neighbours. False for everything that wraps — a prompt, a passage, a set
+    /// item — where asking for the natural single-line width of a whole
+    /// sentence makes the view demand more room than the window has, and the
+    /// page overflows.
+    var hugsContent: Bool = false
 
     func makeNSView(context: Context) -> RubyCanvas {
         let view = RubyCanvas()
@@ -48,13 +56,17 @@ struct RubyTextView: NSViewRepresentable {
     func sizeThatFits(
         _ proposal: ProposedViewSize, nsView: RubyCanvas, context: Context
     ) -> CGSize? {
-        // A nil proposal means "how big would you like to be?", which for a
-        // short token is its natural single-line width. Substituting a guessed
-        // number here is what made tokens claim a fixed 600pt each.
-        guard let proposed = proposal.width, proposed > 0, proposed < .infinity else {
-            return nsView.fittingSize(width: .greatestFiniteMagnitude)
+        if let proposed = proposal.width, proposed > 0, proposed < .infinity {
+            return nsView.fittingSize(width: max(proposed, 80))
         }
-        return nsView.fittingSize(width: max(proposed, 80))
+        // No proposal: "how big would you like to be?"
+        //
+        // A token answers with its natural single-line width. Wrapping text
+        // must not — a whole sentence would claim more width than the window
+        // has and push the page off the edge. It defers instead, and SwiftUI
+        // sizes it from `intrinsicContentSize` once the real width is known.
+        guard hugsContent else { return nil }
+        return nsView.fittingSize(width: .greatestFiniteMagnitude)
     }
 
     private var model: RubyCanvas.Model {
