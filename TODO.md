@@ -19,12 +19,6 @@ translations cheaply, since it already knows them.
 Both researched and specced but unbuilt, so lessons are all text. Depends on
 FL-1 (script recognition track) for the kanji side.
 
-### FL-24 — No sense of topic completeness · M
-Every lesson lands on the same material with no indication of progress through
-it. Fluent tracks mastery per skill and per pattern (`mastery-db.json`,
-`spaced-repetition.json`) — the app reads neither. Wants: what this topic is,
-how much of it is mastered, what is left.
-
 ---
 
 ## Blocked on a decision
@@ -174,6 +168,14 @@ since cards hold short lines that do not suffer from width. `TextScale.width`.
 ## Done
 
 ### Reported 2026-08-29, fixed (2026-09-01)
+- **FL-24 — a "Where you are" panel**, least finished first, from Fluent's own
+  spaced-repetition data. It had tracked category and mastery all along;
+  nothing read it. Bands rather than one bar, because "eight items, six new" is
+  a different situation from "eight items, six nearly mastered" and a single
+  percentage hides which. Tapping a topic aims the next lesson at it — writing
+  it into the focus field rather than generating, since spending money on a
+  click is the wrong kind of convenient. Partial progress counts: a half-learned
+  topic must not read the same as an untouched one.
 - **FL-19 — content overflowed the window**, clipping the instruction line. The
   Core Text view answered "how big would you like to be?" with its natural
   single-line width, which is right for a reorder token and wrong for anything

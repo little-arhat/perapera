@@ -35,6 +35,9 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 28) {
                 header
                 generator
+                TopicsView(topics: model.topics) { topic in
+                    focus = topic.name
+                }
                 if !pending.isEmpty { pendingSection }
                 footer
             }

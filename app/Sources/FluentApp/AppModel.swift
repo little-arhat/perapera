@@ -149,6 +149,24 @@ final class AppModel {
         }
     }
 
+    /// What the learner is part-way through, least finished first.
+    ///
+    /// Derived from Fluent's spaced-repetition data on every read rather than
+    /// cached: mastery is written only by `update-db.py`, and a second copy
+    /// here would be a second answer to the same question.
+    var topics: [TopicProgress] {
+        guard let snapshot else { return [] }
+        let today = snapshot.computed.today
+        return TopicBreakdown.from(
+            items: snapshot.databases.spaced_repetition.items.values.map {
+                (
+                    category: $0.category ?? "",
+                    mastery: $0.mastery_level ?? 0,
+                    isDue: ($0.due_date ?? "") <= today
+                )
+            })
+    }
+
     /// BCP-47 code for speech, derived from the profile rather than configured:
     /// the learner already told Fluent what they are learning.
     var voiceLanguage: String? {

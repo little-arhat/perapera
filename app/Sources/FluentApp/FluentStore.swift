@@ -63,6 +63,7 @@ final class FluentStore {
                 let category: String?
                 let priority: String?
                 let mastery_level: Int?
+                let due_date: String?
             }
         }
 
