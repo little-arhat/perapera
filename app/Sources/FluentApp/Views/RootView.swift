@@ -19,16 +19,19 @@ struct RootView: View {
         } detail: {
             VStack(spacing: 0) {
                 ZStack {
-                    palette.background
                     content
                     if let status = model.statusMessage {
                         WorkingOverlay(status: status)
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 Divider()
                 SpendFooter()
             }
-            .ignoresSafeArea(edges: .top)
+            // Only the background reaches under the title bar. Extending the
+            // *content* there — which is what adding the footer did — slid the
+            // first row of every screen beneath the window title.
+            .background(palette.background.ignoresSafeArea())
         }
         .alert("Something went wrong",
                isPresented: Binding(
