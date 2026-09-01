@@ -91,15 +91,24 @@ struct MakePictureSheet: View {
         }
         .padding(20)
         .frame(width: 440)
-        .onAppear { selectedId = selectedId ?? candidates.first?.id }
+        .onAppear {
+            selectedId = selectedId ?? candidates.first?.id
+            // Opening on a source with nothing in it looks like a broken
+            // dialog: the button is disabled and the reason is a line of small
+            // grey text.
+            if candidates.isEmpty { source = .custom }
+        }
     }
 
     @ViewBuilder
     private var savedPicker: some View {
         if candidates.isEmpty {
-            Text("No saved words yet — star one during a lesson, or type "
-                 + "something below instead.")
+            Label("No saved words yet", systemImage: "star")
                 .font(.callout)
+                .foregroundStyle(palette.warning)
+            Text("Star a word during a lesson with ⇧⌘S, or choose "
+                 + "\u{201C}Something else\u{201D} and type one.")
+                .font(.caption)
                 .foregroundStyle(palette.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         } else {
@@ -117,10 +126,21 @@ struct MakePictureSheet: View {
         return item.gloss.isEmpty ? written : "\(written) — \(item.gloss)"
     }
 
+    @ViewBuilder
     private var customField: some View {
         VStack(alignment: .leading, spacing: 4) {
-            TextField("出口", text: $custom)
-                .textFieldStyle(.roundedBorder)
+            if isJapanese {
+                // The kana field, not a plain TextField. Japanese typed through
+                // the system IME sits as uncommitted marked text and never
+                // reaches the binding until Enter is pressed — so the button
+                // stayed disabled while the word was visibly on screen. Latin
+                // text commits per keystroke, which is why English appeared to
+                // work and kana did not.
+                KanaTextField(text: $custom)
+            } else {
+                TextField("exit", text: $custom)
+                    .textFieldStyle(.roundedBorder)
+            }
             // Long strings are where image models start inventing characters,
             // so the limit is a quality guard rather than tidiness.
             Text("A few characters. Longer text comes out wrong more often.")
@@ -128,6 +148,8 @@ struct MakePictureSheet: View {
                 .foregroundStyle(palette.secondaryText)
         }
     }
+
+    private var isJapanese: Bool { model.voiceLanguage == "ja-JP" }
 
     /// Which writing systems the sign may use.
     ///
