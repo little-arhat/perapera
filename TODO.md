@@ -28,6 +28,38 @@ cannot.
 
 ---
 
+## Requested 2026-09-01 — building these
+
+### FL-26 — Somewhere to put things: a sidebar · M
+The app is one screen with an enum. Two new areas (images, dictionary) need a
+home, and stacking more modal screens onto `AppModel.Screen` will not hold.
+A `NavigationSplitView` with Practice / Images / Dictionary / Archive.
+
+### FL-27 — Image gallery and review · M
+Generated photographs are currently used once and never seen again, though they
+are already on disk under `lessons/assets/<id>/`.
+- **27a** Review mode: a random image, type what it says, checked as in a
+  lesson.
+- **27b** Contact sheet: thumbnails with their transcriptions, to browse what
+  has been collected.
+
+Each image cost $0.069 to make; using one once is the waste, not the price.
+
+### FL-28 — Dictionary · L
+`SavedItem` and the Lists screen are the start of this; the rest is missing.
+- **28a** Translations shown on word hover, if they can be had cheaply. Failing
+  that the learner copies and looks it up — the click-to-copy already works.
+- **28b** Add a word to the dictionary from anywhere. (Partly done: ⇧⌘S.)
+- **28c** The teacher proposes vocabulary when a lesson opens a new topic.
+- **28d** Drill mode: 5-10 words shown, fields to translate them, checked in
+  both directions (JA→EN and EN→JA).
+- **28e** An example sentence per word, showing it in use.
+- **28f** Kanji entries, testable, with the furigana toggle.
+- **28g** The teacher revises the dictionary from how the drills went — the same
+  loop Fluent already runs for exercises.
+
+---
+
 ## Blocked on a decision
 
 ### FL-1 — Script recognition: pick a track · L
