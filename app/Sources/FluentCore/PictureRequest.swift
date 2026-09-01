@@ -81,6 +81,24 @@ public struct PictureRequest: Equatable, Sendable {
         }
     }
 
+    /// Which writing systems the picture may use.
+    ///
+    /// A real sign picks one, so this is a filter on what may be *asked for*
+    /// rather than a set to display at once. Turning kanji off is how a learner
+    /// says "I want to practise kana"; leaving only katakana on is how they
+    /// drill the script most likely to be a loanword they could otherwise guess.
+    public struct Scripts: OptionSet, Sendable, Hashable {
+        public let rawValue: Int
+        public init(rawValue: Int) { self.rawValue = rawValue }
+
+        public static let kanji = Scripts(rawValue: 1 << 0)
+        public static let hiragana = Scripts(rawValue: 1 << 1)
+        public static let katakana = Scripts(rawValue: 1 << 2)
+        public static let all: Scripts = [.kanji, .hiragana, .katakana]
+
+        public var isEmpty: Bool { rawValue == 0 }
+    }
+
     /// What the picture should say, and what counts as reading it.
     public let targets: [String]
     public let accepted: [String]
@@ -105,32 +123,92 @@ public struct PictureRequest: Equatable, Sendable {
         }
     }
 
+    /// The forms of a word that the chosen scripts allow.
+    ///
+    /// A kanji form is only available when the word actually has one, and a
+    /// kana form only when the reading is known — a katakana rendering cannot
+    /// be invented from 切符 alone.
+    public static func forms(
+        written: String, reading: String?, scripts: Scripts
+    ) -> [String] {
+        var out: [String] = []
+        if scripts.contains(.kanji), KanaInput.containsKanji(written) {
+            out.append(written)
+        }
+        // Without kanji, the written form may itself already be kana.
+        let kana = (reading?.isEmpty == false ? reading! : nil)
+            ?? (KanaInput.containsKanji(written) ? nil : written)
+        if let kana {
+            if scripts.contains(.hiragana) {
+                out.append(KanaInput.convertKana(kana, to: .hiragana))
+            }
+            if scripts.contains(.katakana) {
+                out.append(KanaInput.convertKana(kana, to: .katakana))
+            }
+        }
+        // Deduplicate: a word already in hiragana yields the same string twice
+        // when both kana scripts are on.
+        var seen = Set<String>()
+        return out.filter { seen.insert($0).inserted }
+    }
+
+    /// Everything that counts as having read the sign.
+    ///
+    /// Always both kana scripts plus the written form, regardless of what the
+    /// picture shows: the learner is reading the word, and answering キップ for
+    /// a hiragana sign is not a mistake.
+    public static func acceptedForms(written: String, reading: String?) -> [String] {
+        var out = [written]
+        if let reading, !reading.isEmpty {
+            out.append(KanaInput.convertKana(reading, to: .hiragana))
+            out.append(KanaInput.convertKana(reading, to: .katakana))
+        } else if !KanaInput.containsKanji(written) {
+            out.append(KanaInput.convertKana(written, to: .hiragana))
+            out.append(KanaInput.convertKana(written, to: .katakana))
+        }
+        var seen = Set<String>()
+        return out.filter { !$0.isEmpty && seen.insert($0).inserted }
+    }
+
     /// Builds a request from a saved word.
     ///
-    /// The written form goes on the sign and the reading is what the learner
-    /// types — which is the whole exercise: recognising the word in the wild,
-    /// then saying it.
-    public static func from(_ item: SavedItem, surface: Surface) -> PictureRequest? {
+    /// One of the allowed forms goes on the sign; every form is accepted as an
+    /// answer. That is the exercise: recognise the word however it is written,
+    /// then say it.
+    public static func from(
+        _ item: SavedItem, surface: Surface, scripts: Scripts = .all
+    ) -> PictureRequest? {
         let written = Furigana.stripped(item.content)
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard !written.isEmpty else { return nil }
 
-        var accepted = [written]
-        if let reading = item.reading, !reading.isEmpty { accepted.append(reading) }
+        let available = forms(written: written, reading: item.reading, scripts: scripts)
+        guard let shown = available.randomElement() else { return nil }
+
         // A gloss is not a reading, so it is never accepted as one.
         return PictureRequest(
-            targets: [written], accepted: accepted, surface: surface,
+            targets: [shown],
+            accepted: acceptedForms(written: written, reading: item.reading),
+            surface: surface,
             sourceLabel: item.gloss.isEmpty ? written : "\(written) — \(item.gloss)")
     }
 
     /// Builds one from free text the learner typed.
-    public static func from(text: String, surface: Surface) -> PictureRequest? {
+    public static func from(
+        text: String, surface: Surface, scripts: Scripts = .all
+    ) -> PictureRequest? {
         let written = Furigana.stripped(text)
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard !written.isEmpty, written.count <= 12 else { return nil }
+
+        let available = forms(written: written, reading: nil, scripts: scripts)
+        // Typed kanji with kanji switched off leaves nothing to show: the
+        // reading cannot be derived from the characters alone.
+        guard let shown = available.randomElement() else { return nil }
         return PictureRequest(
-            targets: [written], accepted: [written], surface: surface,
-            sourceLabel: written)
+            targets: [shown],
+            accepted: acceptedForms(written: written, reading: nil),
+            surface: surface, sourceLabel: written)
     }
 }
 

@@ -17,6 +17,11 @@ struct MakePictureSheet: View {
     @State private var selectedId: String?
     @State private var custom = ""
     @State private var surface: PictureRequest.Surface = .enamelPlate
+    @AppStorage("picture.scripts") private var scriptsRaw = PictureRequest.Scripts.all.rawValue
+
+    private var scripts: PictureRequest.Scripts {
+        PictureRequest.Scripts(rawValue: scriptsRaw)
+    }
 
     private var candidates: [SavedItem] {
         model.savedItems.items
@@ -29,9 +34,9 @@ struct MakePictureSheet: View {
         case .saved:
             guard let item = candidates.first(where: { $0.id == selectedId })
             else { return nil }
-            return PictureRequest.from(item, surface: surface)
+            return PictureRequest.from(item, surface: surface, scripts: scripts)
         case .custom:
-            return PictureRequest.from(text: custom, surface: surface)
+            return PictureRequest.from(text: custom, surface: surface, scripts: scripts)
         }
     }
 
@@ -53,6 +58,15 @@ struct MakePictureSheet: View {
             }
 
             surfacePicker
+            scriptPicker
+
+            if request == nil, hasChosenSomething {
+                // Why the button is disabled, rather than leaving it a mystery.
+                Text(unavailableReason)
+                    .font(.caption)
+                    .foregroundStyle(palette.warning)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
 
             Text("The app writes the scene itself, so this costs one image — "
                  + "about $0.07 — and is checked before you see it. If the "
@@ -113,6 +127,57 @@ struct MakePictureSheet: View {
                 .font(.caption2)
                 .foregroundStyle(palette.secondaryText)
         }
+    }
+
+    /// Which writing systems the sign may use.
+    ///
+    /// A real sign picks one, so these choose what may be *asked for* rather
+    /// than what appears together. Turning kanji off is how a learner says "let
+    /// me practise kana"; leaving only katakana is how they drill the script
+    /// whose words they might otherwise guess from English.
+    private var scriptPicker: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Written in").font(.caption)
+                .foregroundStyle(palette.secondaryText)
+            HStack(spacing: 14) {
+                toggle("Kanji", .kanji)
+                toggle("Hiragana", .hiragana)
+                toggle("Katakana", .katakana)
+            }
+        }
+    }
+
+    private func toggle(_ label: String, _ script: PictureRequest.Scripts) -> some View {
+        Toggle(label, isOn: Binding(
+            get: { scripts.contains(script) },
+            set: { isOn in
+                var updated = scripts
+                if isOn { updated.insert(script) } else { updated.remove(script) }
+                // Never leave nothing selected: an empty set can produce no
+                // sign at all, and a control that can disable itself is a trap.
+                if !updated.isEmpty { scriptsRaw = updated.rawValue }
+            }))
+        .toggleStyle(.checkbox)
+    }
+
+    private var hasChosenSomething: Bool {
+        source == .custom ? !custom.isEmpty : selectedId != nil
+    }
+
+    /// Named honestly: the usual cause is asking for a form the word has no way
+    /// of taking.
+    private var unavailableReason: String {
+        if !scripts.contains(.kanji), source == .custom,
+           KanaInput.containsKanji(custom) {
+            return "That word is written with kanji. Turn Kanji on, or type it in kana."
+        }
+        if source == .saved,
+           let item = candidates.first(where: { $0.id == selectedId }),
+           item.reading == nil, !scripts.contains(.kanji) {
+            return "No reading saved for this word, so it can only be shown in "
+                + "kanji. Turn Kanji on, or add a reading to the entry."
+        }
+        return "Nothing to put on the sign with those settings."
     }
 
     private var surfacePicker: some View {

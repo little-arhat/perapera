@@ -140,6 +140,37 @@ public enum KanaInput {
         return Conversion(kana: kana, pending: "")
     }
 
+    /// Converts between the two kana scripts.
+    ///
+    /// They sit exactly 0x60 apart in Unicode, so this is a shift rather than a
+    /// table. Anything that is not kana — kanji, latin, punctuation, the
+    /// long-vowel mark — passes through untouched, which is what makes it safe
+    /// to run over a whole phrase.
+    public static func convertKana(_ text: String, to script: Script) -> String {
+        let hiragana = 0x3041...0x3096
+        let katakana = 0x30A1...0x30F6
+        return String(String.UnicodeScalarView(text.unicodeScalars.map { scalar in
+            switch script {
+            case .katakana where hiragana.contains(Int(scalar.value)):
+                Unicode.Scalar(scalar.value + 0x60) ?? scalar
+            case .hiragana where katakana.contains(Int(scalar.value)):
+                Unicode.Scalar(scalar.value - 0x60) ?? scalar
+            default:
+                scalar
+            }
+        }))
+    }
+
+    /// Whether a string contains any kanji — i.e. whether it can be read at all
+    /// without knowing them.
+    public static func containsKanji(_ text: String) -> Bool {
+        text.unicodeScalars.contains { scalar in
+            (0x4E00...0x9FFF).contains(scalar.value)
+                || (0x3400...0x4DBF).contains(scalar.value)
+                || scalar.value == 0x3005
+        }
+    }
+
     private static func small(_ script: Script) -> String {
         script == .katakana ? "ッ" : "っ"
     }
