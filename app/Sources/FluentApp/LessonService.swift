@@ -45,7 +45,8 @@ struct LessonService {
     /// deliberate practice of a list. Empty means the usual selection.
     func generate(
         spec: LessonSpec, seedItems: [SavedItem] = [],
-        progress: (@Sendable (ClaudeClient.Progress) -> Void)? = nil
+        progress: (@Sendable (ClaudeClient.Progress) -> Void)? = nil,
+        onSpend: (@Sendable (String, Double, String) -> Void)? = nil
     ) async throws -> LessonRecord {
         let snapshot = try await store.load()
         let prompt = try buildGenerationPrompt(
@@ -53,7 +54,8 @@ struct LessonService {
         let schema = try resources.text("Schemas/lesson.schema.json")
 
         let generated = try await claude.request(
-            GeneratedLesson.self, prompt: prompt, schema: schema, progress: progress)
+            GeneratedLesson.self, prompt: prompt, schema: schema, progress: progress,
+            onSpend: { cost, model in onSpend?("Lesson", cost, model) })
 
         let lesson = Lesson(
             id: newLessonID(spec: spec),
@@ -74,7 +76,7 @@ struct LessonService {
 
         var record = LessonRecord(lesson: lesson)
         try lessons.save(record)
-        record = try await buildImages(for: record, progress: progress)
+        record = try await buildImages(for: record, progress: progress, onSpend: onSpend)
         try lessons.save(record)
         return record
     }
@@ -91,7 +93,8 @@ struct LessonService {
     /// usable text lesson rather than nothing.
     private func buildImages(
         for record: LessonRecord,
-        progress: (@Sendable (ClaudeClient.Progress) -> Void)?
+        progress: (@Sendable (ClaudeClient.Progress) -> Void)?,
+        onSpend: (@Sendable (String, Double, String) -> Void)? = nil
     ) async throws -> LessonRecord {
         let needing = record.lesson.exercises.compactMap { exercise -> (Exercise, Exercise.ImageSpec)? in
             exercise.content.imageSpec.map { (exercise, $0) }
@@ -121,6 +124,7 @@ struct LessonService {
                 let fileName = try lessons.saveImage(
                     built.jpeg, lessonId: record.id, exerciseId: exercise.id)
                 updated.images[exercise.id] = fileName
+                onSpend?("Picture", built.costUSD, images.config.generationModel)
             } catch {
                 failed.append(exercise.id)
             }
@@ -231,7 +235,8 @@ struct LessonService {
     /// to Fluent; they enter spaced repetition with this session.
     func submit(
         _ record: LessonRecord, saved: [SavedItem] = [],
-        progress: (@Sendable (ClaudeClient.Progress) -> Void)? = nil
+        progress: (@Sendable (ClaudeClient.Progress) -> Void)? = nil,
+        onSpend: (@Sendable (String, Double, String) -> Void)? = nil
     ) async throws -> LessonRecord {
         let snapshot = try await store.load()
         // Only built when grading is actually needed.
@@ -249,7 +254,8 @@ struct LessonService {
             feedback = existing
         } else {
             feedback = try await claude.request(
-                Feedback.self, prompt: prompt, schema: schema, progress: progress)
+                Feedback.self, prompt: prompt, schema: schema, progress: progress,
+                onSpend: { cost, model in onSpend?("Grading", cost, model) })
             // Persist before writing to Fluent: grading is the expensive half,
             // and a crash between the two must not throw it away.
             updated.feedback = feedback

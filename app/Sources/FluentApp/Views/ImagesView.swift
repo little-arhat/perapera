@@ -17,6 +17,7 @@ struct ImagesView: View {
     @State private var typed = ""
     @State private var verdict: Verdict?
     @State private var inspecting: LibraryImage?
+    @State private var making = false
 
     private var images: [LibraryImage] { model.imageLibrary }
 
@@ -34,6 +35,7 @@ struct ImagesView: View {
         }
         .onAppear(perform: pickIfNeeded)
         .sheet(item: $inspecting) { detail($0) }
+        .sheet(isPresented: $making) { MakePictureSheet() }
     }
 
     private var header: some View {
@@ -49,6 +51,14 @@ struct ImagesView: View {
             Text("^[\(images.count) picture](inflect: true)")
                 .font(.caption)
                 .foregroundStyle(palette.secondaryText)
+
+            Button { making = true } label: {
+                Label("Make one", systemImage: "camera")
+            }
+            .disabled(!model.canGenerateImages || model.isMakingPicture)
+            .help(model.canGenerateImages
+                  ? "Generate a picture of a word you are learning — about $0.07."
+                  : "Needs OPENROUTER_FLUENT in .env")
         }
         .padding(20)
     }
@@ -61,9 +71,18 @@ struct ImagesView: View {
             Text("No photographs yet")
                 .font(.headline)
                 .foregroundStyle(palette.emphasizedText)
-            Text("Generate a lesson with photographs turned on, and they collect here.")
+            Text("Generate a lesson with photographs turned on, or make one now "
+                 + "from a word you have saved.")
                 .font(.callout)
                 .foregroundStyle(palette.secondaryText)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 380)
+            Button { making = true } label: {
+                Label("Make one", systemImage: "camera")
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(palette.accent)
+            .disabled(!model.canGenerateImages)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

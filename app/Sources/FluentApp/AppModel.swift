@@ -82,6 +82,10 @@ final class AppModel {
     }
 
     var savedItems = SavedItems()
+    var pictures: [StandalonePicture] = []
+    /// What the app has spent on the learner's behalf.
+    var spending = SpendLog()
+    var isMakingPicture = false
 
     /// Target-language text size, persisted. Asked for repeatedly: the default
     /// is too small to read comfortably for a whole session.
@@ -272,6 +276,8 @@ final class AppModel {
 
     func refresh() async {
         savedItems = (try? lessonStore.loadSavedItems()) ?? SavedItems()
+        pictures = (try? lessonStore.loadPictures()) ?? []
+        spending = (try? lessonStore.loadSpending()) ?? SpendLog()
         do {
             let loaded = try lessonStore.loadAll()
             records = loaded.records
@@ -306,7 +312,7 @@ final class AppModel {
             var record = try await lessons.generate(
                 spec: LessonSpec(mode: mode, size: size, depth: depth,
                                  focus: focus, photoExercises: photoExercises),
-                progress: progressSink())
+                progress: progressSink(), onSpend: spendSink())
             // The label is the learner's, so it is attached after generation
             // rather than sent to the model.
             record.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -367,7 +373,7 @@ final class AppModel {
             let record = try await lessons.generate(
                 spec: LessonSpec(mode: .lesson, size: size, depth: depth,
                                  focus: "these specific saved items"),
-                seedItems: items, progress: progressSink())
+                seedItems: items, progress: progressSink(), onSpend: spendSink())
             records.insert(record, at: 0)
             screen = .lesson(id: record.id)
         } catch {
@@ -421,8 +427,60 @@ final class AppModel {
         update(record)
     }
 
-    /// Every photograph collected so far, newest first.
-    var imageLibrary: [LibraryImage] { ImageLibrary.collect(from: records) }
+    /// Every photograph collected so far, newest first — from lessons and made
+    /// on demand alike.
+    var imageLibrary: [LibraryImage] {
+        ImageLibrary.collect(from: records, standalone: pictures)
+    }
+
+    /// Makes one picture now, outside any lesson.
+    ///
+    /// The scene is composed locally from a surface template, so this costs one
+    /// image call and nothing for a model to write the description.
+    func makePicture(_ request: PictureRequest) async {
+        guard canGenerateImages else {
+            error = "No OpenRouter key. Add OPENROUTER_FLUENT to .env in the Fluent repo."
+            return
+        }
+        isMakingPicture = true
+        beginProgress("Making a picture of \(request.sourceLabel)…")
+        defer { isMakingPicture = false; endProgress() }
+
+        let pipeline = ImagePipeline(config: .init(apiKey: openRouterKey))
+        let language = snapshot?.databases.learner_profile.learner.target_language
+            ?? "Japanese"
+        let spec = Exercise.ImageSpec(
+            scene: request.surface.scene(language: language),
+            targets: request.targets,
+            question: "What does it say?")
+
+        do {
+            let built = try await pipeline.build(
+                for: Exercise.placeholder(id: UUID().uuidString), spec: spec
+            ) { [weak self] note in
+                self?.progressPhase = note
+            }
+            noteSpend("Picture", built.costUSD, pipeline.config.generationModel)
+            let picture = StandalonePicture(
+                fileName: "",
+                targets: request.targets, accepted: request.accepted,
+                question: spec.question, sourceLabel: request.sourceLabel)
+            let fileName = try lessonStore.saveImage(
+                built.jpeg, lessonId: ImageLibrary.standaloneFolder,
+                exerciseId: picture.id)
+            pictures.insert(
+                StandalonePicture(
+                    id: picture.id, fileName: fileName, targets: picture.targets,
+                    accepted: picture.accepted, question: picture.question,
+                    sourceLabel: picture.sourceLabel, createdAt: picture.createdAt),
+                at: 0)
+            try lessonStore.savePictures(pictures)
+        } catch {
+            // The pipeline throws when the writing came out wrong, which is the
+            // point — a picture spelling the word incorrectly is worse than none.
+            self.error = error.localizedDescription
+        }
+    }
 
     func imageURL(lessonId: String, fileName: String) -> URL? {
         let url = lessonStore.imageURL(lessonId: lessonId, fileName: fileName)
@@ -461,6 +519,21 @@ final class AppModel {
         }
     }
 
+    /// Records one paid call and shows it. Every call the app makes on the
+    /// learner's behalf lands here — a cost only met on a bill is one nobody
+    /// can act on.
+    func noteSpend(_ purpose: String, _ cost: Double, _ model: String) {
+        guard cost > 0 else { return }
+        spending.record(Spend(purpose: purpose, model: model, costUSD: cost))
+        try? lessonStore.saveSpending(spending)
+    }
+
+    nonisolated private func spendSink() -> @Sendable (String, Double, String) -> Void {
+        { [weak self] purpose, cost, model in
+            Task { @MainActor in self?.noteSpend(purpose, cost, model) }
+        }
+    }
+
     func record(id: String) -> LessonRecord? {
         records.first { $0.id == id }
     }
@@ -483,7 +556,8 @@ final class AppModel {
 
         do {
             record = try await lessons.submit(record, saved: savedItems.pending,
-                                              progress: progressSink())
+                                              progress: progressSink(),
+                                              onSpend: spendSink())
             // Saved items ride along with the session report, so they enter
             // spaced repetition through Fluent rather than a parallel schedule.
             savedItems.markPromoted(ids: Set(savedItems.pending.map(\.id)))

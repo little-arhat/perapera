@@ -281,3 +281,45 @@ private func recognition(_ extra: [String: Any] = [:]) -> [String: Any] {
     #expect(trimmed.images[victim] == nil)
     #expect(trimmed.answers[victim] == nil)
 }
+
+// MARK: - Spending
+//
+// The app spends the learner's money on their behalf, in amounts too small to
+// notice one at a time. The log exists so that is checkable rather than
+// discovered on a bill.
+
+@Test func spendingTotalsAcrossCalls() {
+    var log = SpendLog()
+    log.record(Spend(purpose: "Lesson", model: "opus", costUSD: 0.58))
+    log.record(Spend(purpose: "Picture", model: "flash-image", costUSD: 0.069))
+    #expect(abs(log.total - 0.649) < 0.0001)
+    #expect(log.latest?.purpose == "Picture", "newest first")
+}
+
+@Test func trimmingKeepsTheTotalHonest() {
+    // Dropping old entries must not quietly reduce what the learner has been
+    // told they spent.
+    var log = SpendLog()
+    for index in 0..<(SpendLog.keepEntries + 50) {
+        log.record(Spend(purpose: "call \(index)", model: "m", costUSD: 0.01))
+    }
+    #expect(log.entries.count == SpendLog.keepEntries)
+    #expect(abs(log.total - Double(SpendLog.keepEntries + 50) * 0.01) < 0.0001)
+}
+
+@Test func tinyCostsAreNotRoundedToNothing() {
+    // Two decimal places would show most calls as $0.00, which reads as free.
+    #expect(SpendLog.format(0.00059) == "$0.0006")
+    #expect(SpendLog.format(0.069) == "$0.069")
+    #expect(SpendLog.format(1.5) == "$1.50")
+    #expect(SpendLog.format(0) == "$0")
+}
+
+@Test func todayCountsOnlyToday() {
+    var log = SpendLog()
+    log.record(Spend(purpose: "old", model: "m", costUSD: 5,
+                     at: Date().addingTimeInterval(-60 * 60 * 48)))
+    log.record(Spend(purpose: "new", model: "m", costUSD: 0.07))
+    #expect(abs(log.today - 0.07) < 0.0001)
+    #expect(abs(log.total - 5.07) < 0.0001)
+}

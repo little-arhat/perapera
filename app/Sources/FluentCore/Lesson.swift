@@ -247,6 +247,33 @@ public struct Exercise: Codable, Sendable, Identifiable {
 
     public var isAutoGradable: Bool { content.isAutoGradable }
 
+    /// A stand-in for a picture made outside any lesson, so `ImagePipeline`
+    /// can take an exercise without a second entry point that would drift.
+    public static func placeholder(id: String) -> Exercise {
+        Exercise(
+            id: id, skill: .reading, prompt: "", instruction: nil,
+            explanation: nil, audioText: nil, passage: nil, reviewItemIds: [],
+            content: .recognition(
+                image: ImageSpec(scene: "", targets: [], question: nil),
+                accepted: []))
+    }
+
+    init(
+        id: String, skill: Skill, prompt: String, instruction: String?,
+        explanation: String?, audioText: String?, passage: String?,
+        reviewItemIds: [String], content: Content
+    ) {
+        self.id = id
+        self.skill = skill
+        self.prompt = prompt
+        self.instruction = instruction
+        self.explanation = explanation
+        self.audioText = audioText
+        self.passage = passage
+        self.reviewItemIds = reviewItemIds
+        self.content = content
+    }
+
     /// Every target-language string this exercise puts on screen.
     ///
     /// Used to decide whether the readings toggle is worth offering. Checking

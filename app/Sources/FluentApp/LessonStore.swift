@@ -103,6 +103,47 @@ final class LessonStore {
         try? FileManager.default.removeItem(at: assetsDirectory(for: lessonId))
     }
 
+    // MARK: - On-demand pictures
+
+    private var picturesURL: URL {
+        directory.deletingLastPathComponent().appending(path: "pictures.json")
+    }
+
+    func loadPictures() throws -> [StandalonePicture] {
+        guard FileManager.default.fileExists(atPath: picturesURL.path) else { return [] }
+        return try decoder.decode(
+            [StandalonePicture].self, from: Data(contentsOf: picturesURL))
+    }
+
+    func savePictures(_ pictures: [StandalonePicture]) throws {
+        try prepare()
+        let data = try encoder.encode(pictures)
+        let temp = picturesURL.appendingPathExtension("tmp")
+        try data.write(to: temp, options: .atomic)
+        _ = try FileManager.default.replaceItemAt(picturesURL, withItemAt: temp)
+    }
+
+    // MARK: - Spending
+
+    private var spendingURL: URL {
+        directory.deletingLastPathComponent().appending(path: "spending.json")
+    }
+
+    func loadSpending() throws -> SpendLog {
+        guard FileManager.default.fileExists(atPath: spendingURL.path) else {
+            return SpendLog()
+        }
+        return try decoder.decode(SpendLog.self, from: Data(contentsOf: spendingURL))
+    }
+
+    func saveSpending(_ log: SpendLog) throws {
+        try prepare()
+        let data = try encoder.encode(log)
+        let temp = spendingURL.appendingPathExtension("tmp")
+        try data.write(to: temp, options: .atomic)
+        _ = try FileManager.default.replaceItemAt(spendingURL, withItemAt: temp)
+    }
+
     // MARK: - Saved items
     //
     // One file beside the lessons, for the same reasons: readable without the

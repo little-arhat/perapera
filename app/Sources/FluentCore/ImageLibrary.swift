@@ -43,7 +43,9 @@ public enum ImageLibrary {
     /// Built by walking the records rather than kept as its own index: the
     /// records are the source of truth, and a parallel index would be a second
     /// thing to keep in step for no gain at this size.
-    public static func collect(from records: [LessonRecord]) -> [LibraryImage] {
+    public static func collect(
+        from records: [LessonRecord], standalone: [StandalonePicture] = []
+    ) -> [LibraryImage] {
         var images: [LibraryImage] = []
         for record in records {
             for exercise in record.lesson.exercises {
@@ -63,8 +65,27 @@ public enum ImageLibrary {
                         lessonTitle: record.displayTitle))
             }
         }
+        // Pictures made outside a lesson live under a reserved lesson id, so
+        // the rest of the app — file paths, review, the contact sheet — needs
+        // no special case for them.
+        for picture in standalone {
+            images.append(
+                LibraryImage(
+                    lessonId: standaloneFolder,
+                    exerciseId: picture.id,
+                    fileName: picture.fileName,
+                    targets: picture.targets,
+                    accepted: picture.accepted,
+                    question: picture.question,
+                    capturedAt: picture.createdAt,
+                    lessonTitle: picture.sourceLabel))
+        }
         return images.sorted { $0.capturedAt > $1.capturedAt }
     }
+
+    /// Where on-demand pictures are stored. Not a lesson id any lesson can
+    /// have: lesson ids are timestamped and always start "lesson-".
+    public static let standaloneFolder = "on-demand"
 
     /// Picks the next image to review, avoiding the one just shown.
     ///

@@ -17,13 +17,18 @@ struct RootView: View {
             }
             .navigationSplitViewColumnWidth(min: 160, ideal: 180, max: 240)
         } detail: {
-            ZStack {
-                palette.background.ignoresSafeArea()
-                content
-                if let status = model.statusMessage {
-                    WorkingOverlay(status: status)
+            VStack(spacing: 0) {
+                ZStack {
+                    palette.background
+                    content
+                    if let status = model.statusMessage {
+                        WorkingOverlay(status: status)
+                    }
                 }
+                Divider()
+                SpendFooter()
             }
+            .ignoresSafeArea(edges: .top)
         }
         .alert("Something went wrong",
                isPresented: Binding(

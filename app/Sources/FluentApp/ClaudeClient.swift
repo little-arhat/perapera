@@ -51,13 +51,18 @@ final class ClaudeClient {
         _ type: T.Type,
         prompt: String,
         schema: String,
-        progress: (@Sendable (Progress) -> Void)? = nil
+        progress: (@Sendable (Progress) -> Void)? = nil,
+        onSpend: (@Sendable (Double, String) -> Void)? = nil
     ) async throws -> T {
         do {
-            return try await attempt(type, prompt: prompt, schema: schema, progress: progress)
+            return try await attempt(type, prompt: prompt, schema: schema,
+                                     progress: progress, onSpend: onSpend)
         } catch Failure.malformedJSON {
             progress?(Progress(phase: .retrying, text: "", thinkingTokens: 0))
-            return try await attempt(type, prompt: prompt, schema: schema, progress: progress)
+            // A retry is charged too, so its cost is reported separately rather
+            // than replacing the first attempt's.
+            return try await attempt(type, prompt: prompt, schema: schema,
+                                     progress: progress, onSpend: onSpend)
         }
     }
 
@@ -91,7 +96,8 @@ final class ClaudeClient {
         _ type: T.Type,
         prompt: String,
         schema: String,
-        progress: (@Sendable (Progress) -> Void)?
+        progress: (@Sendable (Progress) -> Void)?,
+        onSpend: (@Sendable (Double, String) -> Void)? = nil
     ) async throws -> T {
         let collector = StreamCollector(report: progress)
         let result = try await Subprocess.runStreaming(
@@ -115,6 +121,9 @@ final class ClaudeClient {
         )
 
         progress?(Progress(phase: .finishing, text: collector.answer, thinkingTokens: 0))
+        if let cost = collector.cost, cost > 0 {
+            onSpend?(cost, config.model)
+        }
 
         // The last `result` event carries the finished value; the accumulated
         // text deltas are the fallback if the envelope shape ever changes.
@@ -177,6 +186,7 @@ final class StreamCollector: @unchecked Sendable {
     private var text = ""
     private var thinkingTokens = 0
     private var finalResult: String?
+    private var totalCost: Double?
     private let report: (@Sendable (ClaudeClient.Progress) -> Void)?
 
     init(report: (@Sendable (ClaudeClient.Progress) -> Void)?) {
@@ -185,6 +195,7 @@ final class StreamCollector: @unchecked Sendable {
 
     var answer: String { lock.withLock { text } }
     var result: String? { lock.withLock { finalResult } }
+    var cost: Double? { lock.withLock { totalCost } }
 
     func consume(_ line: String) {
         guard let data = line.data(using: .utf8),
@@ -196,9 +207,12 @@ final class StreamCollector: @unchecked Sendable {
         case "stream_event":
             handleStreamEvent(event["event"] as? [String: Any])
         case "result":
-            // The finished, schema-validated value.
+            // The finished, schema-validated value, and what it cost.
             if let value = event["result"] as? String {
                 lock.withLock { finalResult = value }
+            }
+            if let spent = event["total_cost_usd"] as? Double {
+                lock.withLock { totalCost = spent }
             }
         default:
             break

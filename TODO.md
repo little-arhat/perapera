@@ -168,6 +168,22 @@ since cards hold short lines that do not suffer from width. `TextScale.width`.
 
 ## Done
 
+### On-demand pictures and visible spending (2026-09-01)
+- **Make a picture now**, from the Pictures section, of a word already in the
+  dictionary. The scene is composed locally from surface templates — enamel
+  plate, noren, menu board, station sign, shop window, handwritten note, ordered
+  by how much harder than a screen they are — so it costs one image call and
+  nothing for a model to write the description. Verified like any other, and
+  discarded if the writing comes out wrong.
+- **A spend footer.** Every paid call now records what it was for, which model,
+  and what it cost, with today's and the running total. Ambient rather than a
+  popup: the point is that it is checkable, not that it interrupts. Amounts are
+  shown to four places when tiny, because two would render most calls as $0.00
+  and read as free.
+- On-demand pictures are stored apart from lessons rather than under a
+  fabricated lesson record — the archive is the one place that has to stay
+  literally true.
+
 ### Sidebar, pictures and the dictionary (2026-09-01)
 - **FL-26 — a sidebar.** Practice / Pictures / Saved / Archive. The app was one
   screen with an enum, which two new areas would not have fitted. Sections are
