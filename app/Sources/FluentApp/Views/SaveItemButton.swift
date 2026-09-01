@@ -55,6 +55,8 @@ struct SaveItemButton: View {
             pairs.first?.left ?? exercise.prompt
         case let .set(items):
             items.first?.acceptedAnswers.first ?? exercise.prompt
+        case let .recognition(_, accepted):
+            accepted.first ?? exercise.prompt
         }
     }
 

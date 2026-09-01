@@ -113,12 +113,22 @@ public struct LessonSpec: Codable, Sendable, Equatable {
     public let size: Size
     public let depth: Depth
     public let focus: String
+    /// How many photograph-based exercises to include.
+    ///
+    /// A spending decision, so it is explicit and defaults to none. Each image
+    /// costs about $0.07 to make and verify; nothing else in a lesson costs
+    /// per-unit, so this is the only control where the number is money.
+    public let photoExercises: Int
 
-    public init(mode: Mode, size: Size, depth: Depth = .standard, focus: String) {
+    public init(
+        mode: Mode, size: Size, depth: Depth = .standard, focus: String,
+        photoExercises: Int = 0
+    ) {
         self.mode = mode
         self.size = size
         self.depth = depth
         self.focus = focus
+        self.photoExercises = max(0, photoExercises)
     }
 
     /// Lessons written before `depth` existed decode as `.standard` rather than
@@ -129,6 +139,7 @@ public struct LessonSpec: Codable, Sendable, Equatable {
         size = try c.decode(Size.self, forKey: .size)
         depth = try c.decodeIfPresent(Depth.self, forKey: .depth) ?? .standard
         focus = try c.decode(String.self, forKey: .focus)
+        photoExercises = try c.decodeIfPresent(Int.self, forKey: .photoExercises) ?? 0
     }
 }
 
@@ -165,6 +176,13 @@ public struct Exercise: Codable, Sendable, Identifiable {
         /// because repetition on one point is the thing that builds fluency and
         /// scoring eight items as one pass/fail throws that signal away.
         case set(items: [SetItem])
+        /// Read text off a photograph of the real world.
+        ///
+        /// The stimulus is an image, generated and verified at lesson build
+        /// time. Screen kana and street kana are different perceptual tasks —
+        /// brush on a noren, marker on a menu board, weathered enamel — and
+        /// only this kind trains the second.
+        case recognition(image: ImageSpec, accepted: [String])
 
         /// Whether the app can decide this without the teacher.
         public var isAutoGradable: Bool {
@@ -172,6 +190,32 @@ public struct Exercise: Codable, Sendable, Identifiable {
             case .translation, .freeResponse: false
             default: true
             }
+        }
+
+        /// The image this exercise needs built before it can be shown.
+        public var imageSpec: ImageSpec? {
+            if case let .recognition(image, _) = self { return image }
+            return nil
+        }
+    }
+
+    /// What image to make, and what must be legible in it.
+    ///
+    /// `targets` is not decoration: it is checked against a read-back of the
+    /// finished image, and an image that fails is discarded. A wrong glyph in a
+    /// reading drill teaches a wrong letterform, which is worse than no drill.
+    public struct ImageSpec: Codable, Sendable, Hashable {
+        /// Scene description handed to the image model.
+        public let scene: String
+        /// Exact strings that must appear in the image.
+        public let targets: [String]
+        /// Which of the visible text the learner is asked to read.
+        public let question: String?
+
+        public init(scene: String, targets: [String], question: String?) {
+            self.scene = scene
+            self.targets = targets
+            self.question = question
         }
     }
 
@@ -223,6 +267,11 @@ public struct Exercise: Codable, Sendable, Identifiable {
             texts += items.flatMap { [$0.prompt, $0.hint ?? "", $0.explanation ?? ""] }
         case let .translation(reference), let .freeResponse(reference):
             texts.append(reference)
+        case let .recognition(image, _):
+            // The image's own text is not listed: the learner is meant to read
+            // it off the picture, and offering it as selectable text alongside
+            // would answer the question.
+            texts.append(image.question ?? "")
         case .cloze, .digitEntry:
             break
         }
@@ -244,12 +293,12 @@ extension Exercise {
         case id, kind, skill, prompt, instruction, explanation, audioText
         case passage, reviewItemIds
         case options, correctIndex, acceptedAnswers, tokens, correctOrder, pairs
-        case front, back, referenceAnswer, items
+        case front, back, referenceAnswer, items, image
     }
 
     private enum Kind: String, Codable {
         case multipleChoice, cloze, reorder, matching, digitEntry, flashcard
-        case translation, freeResponse, set
+        case translation, freeResponse, set, recognition
     }
 
     public init(from decoder: Decoder) throws {
@@ -359,6 +408,20 @@ extension Exercise {
             content = .freeResponse(reference: try require(
                 try c.decodeIfPresent(String.self, forKey: .referenceAnswer), "referenceAnswer"))
 
+        case .recognition:
+            let image = try require(
+                try c.decodeIfPresent(ImageSpec.self, forKey: .image), "image")
+            let accepted = dropBlanks(try require(
+                try c.decodeIfPresent([String].self, forKey: .acceptedAnswers),
+                "acceptedAnswers"))
+            guard !image.targets.isEmpty, !accepted.isEmpty else {
+                throw DecodingError.dataCorrupted(.init(
+                    codingPath: path,
+                    debugDescription: "exercise '\(exerciseID)': a recognition exercise needs both image targets and accepted answers"
+                ))
+            }
+            content = .recognition(image: image, accepted: accepted)
+
         case .set:
             let raw = try require(
                 try c.decodeIfPresent([SetItem].self, forKey: .items), "items")
@@ -418,6 +481,10 @@ extension Exercise {
         case let .set(items):
             try c.encode(Kind.set, forKey: .kind)
             try c.encode(items, forKey: .items)
+        case let .recognition(image, accepted):
+            try c.encode(Kind.recognition, forKey: .kind)
+            try c.encode(image, forKey: .image)
+            try c.encode(accepted, forKey: .acceptedAnswers)
         }
     }
 }
@@ -496,6 +563,21 @@ extension Lesson {
             case let .reorder(tokens, _):
                 if tokens.count < 2 {
                     defects.append(.blankPadding(exerciseID: exercise.id, field: "tokens"))
+                }
+            case let .recognition(image, accepted):
+                if image.targets.isEmpty || accepted.isEmpty {
+                    defects.append(.blankPadding(
+                        exerciseID: exercise.id, field: "recognition"))
+                }
+                // The answer must be among what the picture will show,
+                // otherwise the learner is asked to read something that was
+                // never drawn.
+                let shown = image.targets.map(Furigana.stripped)
+                if !accepted.isEmpty, !shown.isEmpty,
+                   !accepted.contains(where: { answer in
+                       shown.contains { $0.contains(Furigana.stripped(answer)) }
+                   }) {
+                    defects.append(.leakedAnswer(exerciseID: exercise.id))
                 }
             case let .set(items):
                 if items.count < 2 {

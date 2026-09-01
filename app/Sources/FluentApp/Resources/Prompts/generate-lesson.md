@@ -26,6 +26,7 @@ items than asked defeats the repetition it exists for. If the focus feels too
 narrow for the breadth requested, widen it with adjacent material rather than
 returning fewer exercises.
 - Focus requested: {{FOCUS}}
+- Photographs: {{IMAGE_BUDGET}}
 
 ## What the learner is currently working on
 
@@ -115,6 +116,22 @@ Recent session notes:
    Mix question types over one passage: a multipleChoice for gist, a cloze for
    detail, a freeResponse for inference.
 
-12. **Ground every exercise in a real situation** the learner will actually meet,
+12. **Reading in the wild — use `recognition` when it is asked for.**
+   Kana on a screen and kana on a noren are different skills. A `recognition`
+   exercise shows a photograph the app generates, and the learner types what it
+   says. {{IMAGE_BUDGET}}
+
+   Make each one count:
+   - Choose surfaces that are genuinely harder than a screen: brush-painted
+     noren, handwritten menu board, weathered enamel plate, display katakana in
+     a shop window, a vertical wooden sign.
+   - Keep `targets` short — two or three words. Long text is where image models
+     start inventing characters, and an image whose writing is wrong is thrown
+     away at your expense.
+   - `acceptedAnswers` are the readings in kana, since that is what the learner
+     types. They must correspond to what `targets` actually says.
+   - Never name a real company or brand in `scene`.
+
+13. **Ground every exercise in a real situation** the learner will actually meet,
    given their stated goal. Not "translate this sentence" but "you are at the
    ticket window and want two tickets to Kyoto".

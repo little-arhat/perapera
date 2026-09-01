@@ -36,6 +36,12 @@ struct LessonPlayerView: View {
                     if let passage = exercise.passage, !passage.isEmpty {
                         passageView(passage)
                     }
+                    if let spec = exercise.content.imageSpec {
+                        RecognitionView(
+                            image: spec,
+                            fileURL: model.imageURL(for: record, exercise: exercise),
+                            revealed: revealed)
+                    }
                     prompt
                     if let audioText = exercise.audioText, !audioText.isEmpty {
                         AudioPromptView(
@@ -293,7 +299,7 @@ struct ExerciseDraft {
     func isAnswerable(for exercise: Exercise) -> Bool {
         switch exercise.content {
         case .multipleChoice: choice != nil
-        case .cloze, .digitEntry, .translation, .freeResponse:
+        case .cloze, .digitEntry, .translation, .freeResponse, .recognition:
             !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case let .reorder(tokens, _): order.count == tokens.count
         case let .matching(pairs): matches.count == pairs.count && !matches.contains(-1)
@@ -307,7 +313,7 @@ struct ExerciseDraft {
     func answer(for exercise: Exercise) -> Answer {
         switch exercise.content {
         case .multipleChoice: .choice(choice ?? -1)
-        case .cloze, .digitEntry, .translation, .freeResponse: .text(text)
+        case .cloze, .digitEntry, .translation, .freeResponse, .recognition: .text(text)
         case .reorder: .order(order)
         case .matching: .matches(matches)
         case .flashcard: .selfRated(rating ?? 0)

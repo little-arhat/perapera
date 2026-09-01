@@ -200,9 +200,18 @@ final class AppModel {
                 workingDirectory: pluginRoot)),
             store: FluentStore(config: .init(pluginRoot: pluginRoot)),
             lessons: lessonStore,
-            resources: ResourceLoader(pluginRoot: pluginRoot)
+            resources: ResourceLoader(pluginRoot: pluginRoot),
+            images: openRouterKey.isEmpty
+                ? nil
+                : ImagePipeline(config: .init(apiKey: openRouterKey))
         )
     }
+
+    /// Empty when no key is configured, which disables photo exercises rather
+    /// than failing a lesson halfway through generating one.
+    var openRouterKey: String { Secrets.openRouter(repoRoot: pluginRoot) }
+
+    var canGenerateImages: Bool { !openRouterKey.isEmpty }
 
     func start() async {
         rebuildServices()
@@ -230,7 +239,7 @@ final class AppModel {
     func generate(
         mode: LessonSpec.Mode, size: LessonSpec.Size,
         depth: LessonSpec.Depth = .standard, focus: String,
-        name: String = "", note: String = ""
+        name: String = "", note: String = "", photoExercises: Int = 0
     ) async {
         guard let lessons else { return }
         guard !claudePath.isEmpty else {
@@ -243,7 +252,8 @@ final class AppModel {
 
         do {
             var record = try await lessons.generate(
-                spec: LessonSpec(mode: mode, size: size, depth: depth, focus: focus),
+                spec: LessonSpec(mode: mode, size: size, depth: depth,
+                                 focus: focus, photoExercises: photoExercises),
                 progress: progressSink())
             // The label is the learner's, so it is attached after generation
             // rather than sent to the model.
@@ -323,6 +333,12 @@ final class AppModel {
         record.name = name.trimmingCharacters(in: .whitespacesAndNewlines).nilWhenEmpty
         record.note = note.trimmingCharacters(in: .whitespacesAndNewlines).nilWhenEmpty
         update(record)
+    }
+
+    /// Where a recognition exercise's picture lives on disk.
+    func imageURL(for record: LessonRecord, exercise: Exercise) -> URL? {
+        guard let fileName = record.images[exercise.id] else { return nil }
+        return lessonStore.imageURL(lessonId: record.id, fileName: fileName)
     }
 
     func record(id: String) -> LessonRecord? {

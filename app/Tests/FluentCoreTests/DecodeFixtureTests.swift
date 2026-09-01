@@ -37,6 +37,7 @@ import Foundation
         case .translation: "translation"
         case .freeResponse: "freeResponse"
         case .set: "set"
+        case .recognition: "recognition"
         }
     })
     #expect(kinds.contains("reorder"))

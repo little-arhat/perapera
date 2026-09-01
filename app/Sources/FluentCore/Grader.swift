@@ -130,6 +130,12 @@ public enum Grader {
             return .decided(Verdict(isCorrect: clamped >= 3, score: clamped * 2,
                                     correctVersion: back))
 
+        case let .recognition(_, accepted):
+            // Reading a sign is a text answer like any other, so it reuses the
+            // same grading — including deferring a close call to the teacher.
+            return gradeText(accepted: accepted, answer: answer,
+                             prompt: exercise.prompt, allowDeferral: true)
+
         case let .set(items):
             return gradeSet(items, answer)
 

@@ -54,9 +54,10 @@
               "flashcard",
               "translation",
               "freeResponse",
-              "set"
+              "set",
+              "recognition"
             ],
-            "description": "The first seven grade locally and work offline. 'translation' and 'freeResponse' need the teacher. Use 'set' for a numbered drill: several short items under one instruction, the way a textbook groups practice."
+            "description": "The first seven grade locally and work offline. 'translation' and 'freeResponse' need the teacher. Use 'set' for a numbered drill: several short items under one instruction, the way a textbook groups practice. Use 'recognition' to make the learner read Japanese off a photograph of the real world — a shop sign, a handwritten menu, a station board."
           },
           "skill": {
             "type": "string",
@@ -99,7 +100,7 @@
               "type": "string",
               "minLength": 1
             },
-            "description": "cloze and digitEntry. Every spelling that counts as correct; the grader normalizes whitespace and full/half-width forms before comparing. Write these WITHOUT furigana -- they are compared against what the learner types.",
+            "description": "cloze and digitEntry. Every spelling that counts as correct; the grader normalizes whitespace and full/half-width forms before comparing. Write these WITHOUT furigana -- they are compared against what the learner types. For 'recognition' these are the readings of the text in the image, in kana — that is what the learner types.",
             "minItems": 1
           },
           "tokens": {
@@ -210,6 +211,36 @@
                 "explanation": {
                   "type": "string"
                 }
+              }
+            }
+          },
+          "image": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scene",
+              "targets"
+            ],
+            "description": "'recognition' only. Describes a photograph the app will generate and then verify by reading it back. Each image costs real money, so use these sparingly and make each one carry its weight.",
+            "properties": {
+              "scene": {
+                "type": "string",
+                "minLength": 20,
+                "description": "The photograph, described for an image model: what object, what material, what lighting, what angle. Favour the surfaces that are genuinely hard to read — brush on a noren, marker on a wooden menu board, weathered enamel, a shop window poster in display katakana. Do NOT name real companies or brands."
+              },
+              "targets": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 4,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "The exact text that must appear in the image, without furigana. Checked against a read-back of the finished picture; an image that does not contain all of these is discarded and regenerated. Keep to a few short strings — long text is where image models start inventing characters."
+              },
+              "question": {
+                "type": "string",
+                "description": "What to ask about the picture, e.g. 'What does the noren say?'"
               }
             }
           }

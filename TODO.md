@@ -15,24 +15,16 @@ Hovering a word already highlights it; showing a gloss there would be the
 natural home. Needs a source of glosses — the generator could supply per-item
 translations cheaply, since it already knows them.
 
-### FL-23 — No images or kanji drills yet · L · **BLOCKED**
-Lessons are all text. Both halves are researched and costed
-(`docs/research/script-recognition.md`) but neither is built, and both wait on
-one decision — **FL-1: which track**.
+### FL-23b — Kanji/script drills from fonts (Track A) · M
+Track B shipped; this is the free half still outstanding. Render the same word
+in brush, signage, rounded and textbook faces — 57 already installed — and drill
+the confusable pairs (シ/ツ, ソ/ン, ね/れ/わ, ぬ/め, る/ろ). No network, no
+verification, no cost, so it can appear in every lesson where photographs
+cannot.
 
-Nothing else blocks them. Concretely, what each needs once the call is made:
+### FL-23 — Photographs (Track B) · DONE, see below
 
-- **Track A (kanji/script drills, fonts)** — free, offline, no new service, no
-  verification, ~2 days. Needs a Core Text renderer for the stimulus (the ruby
-  view already does most of this), a `recognition` exercise kind, and prompt
-  work. Grading reuses the existing text grader unchanged.
-- **Track B (photographs)** — ~1 week and it costs money. Needs three things
-  the app does not have: per-lesson image assets on disk, a direct OpenRouter
-  path (`OPENROUTER_FLUENT` is already in `.env`), and a verification step,
-  since a wrong glyph teaches a wrong letterform. $0.069 per image on
-  `gemini-3.1-flash-image`, ~$0.0006 to verify.
 
-**Recommendation unchanged: ship A first.** It needs nothing new.
 
 ---
 
@@ -164,6 +156,24 @@ since cards hold short lines that do not suffer from width. `TextScale.width`.
 ---
 
 ## Done
+
+### Track B — reading Japanese off photographs (2026-09-01)
+- **`recognition` exercises**: the app generates a photograph, verifies it, and
+  the learner reads the sign. Proven end to end — a lesson asking for one
+  produced a weathered enamel 駐車場 plate that verified on the first attempt
+  for $0.068.
+- **Verification is mandatory, not optional.** A model asked for みなみぐち has
+  been observed drawing みなみりぢち. An image ships only if a read-back finds
+  every requested string; otherwise it is retried once, then the exercise is
+  dropped. Losing one exercise is the cheapest of the three bad outcomes —
+  showing an unanswerable question or a wrong letterform are both worse.
+- **Spending is explicit.** Photographs default to zero and the control states
+  the cost ("about $0.21, generated and checked"); it is the only number in the
+  app that is money. Capped per lesson.
+- **Images live beside the lesson JSON**, one directory per lesson, deleted with
+  it. Not embedded as base64, which would make the record unreadable in an
+  editor and undiffable — the archive outliving the app is the point.
+- **`imgbench suggest`** tracks whether a cheaper model has become viable.
 
 ### Speech and controls (2026-09-01)
 - **FL-4/5/6 — a Speech section in Settings**: voice picker labelled by quality,

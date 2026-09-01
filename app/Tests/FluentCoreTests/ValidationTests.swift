@@ -6,7 +6,7 @@ import Foundation
 // picky is free. The one thing it must never do is pass an exercise the learner
 // cannot answer.
 
-private func lesson(_ exercises: [[String: Any]]) throws -> Lesson {
+func lesson(_ exercises: [[String: Any]]) throws -> Lesson {
     let data = try JSONSerialization.data(withJSONObject: exercises)
     let decoded = try JSONDecoder().decode([Exercise].self, from: data)
     return Lesson(id: "l", title: "t", focus: "f", estimatedMinutes: 5,
@@ -201,4 +201,83 @@ private func base(_ extra: [String: Any]) -> [String: Any] {
 @Test func aDepthLabelCarriesItsNumber() {
     #expect(LessonSpec.Depth.light.detailedLabel.contains("3"))
     #expect(LessonSpec.Depth.drill.detailedLabel.contains("9"))
+}
+
+// MARK: - Recognition exercises
+//
+// The stimulus is a photograph, so the thing that must not slip is the link
+// between what the picture will show and what the learner is asked to read.
+
+private func recognition(_ extra: [String: Any] = [:]) -> [String: Any] {
+    var d: [String: Any] = [
+        "id": "ex-01", "skill": "reading", "kind": "recognition",
+        "prompt": "Read the sign.",
+        "image": [
+            "scene": "A weathered enamel station sign, angled, daylight.",
+            "targets": ["でぐち"],
+            "question": "What does it say?",
+        ],
+        "acceptedAnswers": ["でぐち"],
+    ]
+    d.merge(extra) { _, new in new }
+    return d
+}
+
+@Test func acceptsAWellFormedRecognitionExercise() throws {
+    #expect(try lesson([recognition()]).validate().isEmpty)
+}
+
+@Test func flagsAnAnswerThatIsNotInThePicture() throws {
+    // Asking the learner to read something the image was never told to draw is
+    // unanswerable, and the failure is silent without this check.
+    let mismatched = try lesson([recognition([
+        "image": [
+            "scene": "A sign.",
+            "targets": ["でぐち"],
+            "question": "What does it say?",
+        ],
+        "acceptedAnswers": ["いりぐち"],
+    ])])
+    #expect(mismatched.validate() == [.leakedAnswer(exerciseID: "ex-01")])
+}
+
+@Test func rejectsARecognitionExerciseWithNothingToRead() {
+    #expect(throws: (any Error).self) {
+        try decodeExercise([
+            "kind": "recognition",
+            "image": ["scene": "A sign.", "targets": [], "question": nil],
+            "acceptedAnswers": ["でぐち"],
+        ])
+    }
+}
+
+@Test func recognitionIsGradedLocallyLikeAnyTypedAnswer() throws {
+    let ex = try decodeExercise(recognition())
+    #expect(Grader.outcome(ex, .text("でぐち")).verdict?.isCorrect == true)
+    #expect(Grader.outcome(ex, .text("いりぐち")).verdict?.isCorrect == false)
+}
+
+@Test func theImageTextIsNotOfferedAsSelectableText() throws {
+    // Otherwise the answer sits on screen beside the question.
+    let ex = try decodeExercise(recognition())
+    #expect(!ex.displayedText.contains("でぐち"))
+    #expect(ex.displayedText.contains("What does it say?"))
+}
+
+@Test func droppingAnExerciseRemovesItsAnswersAndImage() throws {
+    let url = try #require(Bundle.module.url(
+        forResource: "real-lesson-record", withExtension: "json",
+        subdirectory: "Fixtures"))
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    var record = try decoder.decode(LessonRecord.self, from: Data(contentsOf: url))
+
+    let victim = record.lesson.exercises[0].id
+    record.images[victim] = "\(victim).jpg"
+    let before = record.lesson.exercises.count
+
+    let trimmed = record.droppingExercises([victim])
+    #expect(trimmed.lesson.exercises.count == before - 1)
+    #expect(trimmed.images[victim] == nil)
+    #expect(trimmed.answers[victim] == nil)
 }

@@ -35,6 +35,9 @@ struct LessonService {
     let store: FluentStore
     let lessons: LessonStore
     let resources: ResourceLoader
+    /// Nil when no OpenRouter key is configured, in which case recognition
+    /// exercises are dropped rather than shipped without their picture.
+    var images: ImagePipeline?
 
     // MARK: - Generation
 
@@ -69,9 +72,60 @@ struct LessonService {
             throw GenerationDefect(defects: defects)
         }
 
-        let record = LessonRecord(lesson: lesson)
+        var record = LessonRecord(lesson: lesson)
+        try lessons.save(record)
+        record = try await buildImages(for: record, progress: progress)
         try lessons.save(record)
         return record
+    }
+
+    /// Builds and verifies the photograph each recognition exercise needs.
+    ///
+    /// An exercise whose image cannot be produced *correctly* is dropped from
+    /// the lesson rather than shown without one — a recognition exercise with no
+    /// picture is unanswerable, and one whose picture spells the word wrong
+    /// teaches the wrong letterform. Losing an exercise is the cheapest of the
+    /// three outcomes.
+    ///
+    /// The lesson is saved before this runs, so a crash mid-generation leaves a
+    /// usable text lesson rather than nothing.
+    private func buildImages(
+        for record: LessonRecord,
+        progress: (@Sendable (ClaudeClient.Progress) -> Void)?
+    ) async throws -> LessonRecord {
+        let needing = record.lesson.exercises.compactMap { exercise -> (Exercise, Exercise.ImageSpec)? in
+            exercise.content.imageSpec.map { (exercise, $0) }
+        }
+        guard !needing.isEmpty else { return record }
+
+        guard let images else {
+            // No key: keep the text exercises, drop the ones that need pictures.
+            return record.droppingExercises(needing.map(\.0.id))
+        }
+
+        var updated = record
+        var failed: [String] = []
+        let capped = needing.prefix(images.config.maxImagesPerLesson)
+        if needing.count > capped.count {
+            failed += needing.dropFirst(capped.count).map(\.0.id)
+        }
+
+        for (index, pair) in capped.enumerated() {
+            let (exercise, spec) = pair
+            let label = "Picture \(index + 1) of \(capped.count)"
+            do {
+                let built = try await images.build(for: exercise, spec: spec) { note in
+                    progress?(.init(phase: .writing, text: "\(label): \(note)",
+                                    thinkingTokens: 0))
+                }
+                let fileName = try lessons.saveImage(
+                    built.jpeg, lessonId: record.id, exerciseId: exercise.id)
+                updated.images[exercise.id] = fileName
+            } catch {
+                failed.append(exercise.id)
+            }
+        }
+        return failed.isEmpty ? updated : updated.droppingExercises(failed)
     }
 
     /// What the schema produces, before the app adds its own identity and
@@ -142,6 +196,7 @@ struct LessonService {
             .replacingOccurrences(of: "{{ERROR_PATTERNS}}", with: patternText)
             .replacingOccurrences(of: "{{DUE_ITEMS}}", with: dueText)
             .replacingOccurrences(of: "{{RECENT_NOTES}}", with: "(see error patterns above)")
+            .replacingOccurrences(of: "{{IMAGE_BUDGET}}", with: imageBudget(spec))
     }
 
     /// Delegates to `LessonPlan` so the prompt and the on-screen preview cannot
@@ -157,6 +212,17 @@ struct LessonService {
             mode: spec.mode,
             dueCount: snapshot.computed.due_reviews_count)
         return (plan.exercises, plan.itemsPerSet, plan.minutes)
+    }
+
+    /// How many photographs this lesson may use, stated to the generator in
+    /// plain terms. Each costs about $0.07, so the cap is a spending decision
+    /// and belongs with the learner, not the model.
+    private func imageBudget(_ spec: LessonSpec) -> String {
+        guard images != nil, spec.photoExercises > 0 else {
+            return "None. Do not use the `recognition` kind in this lesson."
+        }
+        return "Use exactly \(spec.photoExercises) `recognition` exercise(s). "
+            + "Each is a real photograph the app will generate and verify."
     }
 
     // MARK: - Submission

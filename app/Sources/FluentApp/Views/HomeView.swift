@@ -8,6 +8,7 @@ struct HomeView: View {
 
     @State private var size: LessonSpec.Size = .medium
     @State private var depth: LessonSpec.Depth = .standard
+    @State private var photos = 0
     @State private var focus = ""
     @State private var name = ""
     @State private var note = ""
@@ -117,6 +118,26 @@ struct HomeView: View {
                 .font(.caption2)
                 .foregroundStyle(palette.secondaryText)
 
+            // The only control in the app where the number is money, so it
+            // starts at zero and states the cost rather than burying it.
+            if model.canGenerateImages {
+                HStack(spacing: 10) {
+                    Stepper(
+                        "Photographs: \(photos)",
+                        value: $photos, in: 0...4)
+                        .fixedSize()
+                        .help("Read Japanese off a generated photo of a sign, "
+                              + "menu or noren — the skill a screen cannot train.")
+                    Text(photos == 0
+                         ? "none — free"
+                         : String(format: "about $%.2f, generated and checked",
+                                  Double(photos) * 0.07))
+                        .font(.caption2)
+                        .foregroundStyle(photos == 0
+                                         ? palette.secondaryText : palette.warning)
+                }
+            }
+
             TextField("Focus (optional) — e.g. counters, train station, kanji reading",
                       text: $focus)
                 .textFieldStyle(.roundedBorder)
@@ -169,7 +190,8 @@ struct HomeView: View {
     /// carrying a stale name into the following lesson is worse than no name.
     private func generate(_ mode: LessonSpec.Mode) async {
         await model.generate(mode: mode, size: size, depth: depth,
-                             focus: focus, name: name, note: note)
+                             focus: focus, name: name, note: note,
+                             photoExercises: photos)
         name = ""
         note = ""
     }

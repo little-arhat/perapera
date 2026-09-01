@@ -21,7 +21,7 @@ struct ExerciseInputView: View {
             switch exercise.content {
             case let .multipleChoice(options, _):
                 choices(options)
-            case .cloze, .digitEntry:
+            case .cloze, .digitEntry, .recognition:
                 shortText
             case .translation, .freeResponse:
                 longText
@@ -85,7 +85,7 @@ struct ExerciseInputView: View {
         guard kanaLanguage else { return false }
         switch exercise.content {
         case .digitEntry: return false
-        case .cloze: return true
+        case .cloze, .recognition: return true
         default: return false
         }
     }

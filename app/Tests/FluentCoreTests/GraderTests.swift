@@ -7,14 +7,14 @@ import Foundation
 /// Builds an exercise the way the app really gets one: from generated JSON,
 /// through the real decoder. Production code never constructs one any other way,
 /// so neither do these tests.
-private func decodeExercise(_ fields: [String: Any]) throws -> Exercise {
+func decodeExercise(_ fields: [String: Any]) throws -> Exercise {
     var object: [String: Any] = ["id": "ex", "skill": "grammar", "prompt": "p"]
     object.merge(fields) { _, new in new }
     let data = try JSONSerialization.data(withJSONObject: object)
     return try JSONDecoder().decode(Exercise.self, from: data)
 }
 
-private func exercise(_ fields: [String: Any]) -> Exercise {
+func exercise(_ fields: [String: Any]) -> Exercise {
     try! decodeExercise(fields)
 }
 

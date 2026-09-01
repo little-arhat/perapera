@@ -22,7 +22,7 @@ public struct LessonRecord: Codable, Sendable, Identifiable {
         case submitted
     }
 
-    public let lesson: Lesson
+    public internal(set) var lesson: Lesson
     public var state: State
     public var answers: [String: Answer]         // exercise id → answer
     public var verdicts: [String: Verdict]       // exercise id → locally-decided verdict
@@ -32,6 +32,11 @@ public struct LessonRecord: Codable, Sendable, Identifiable {
     /// generated artifact and does not change; the name is the learner's, so it
     /// can be added or corrected long after generation. It is also never sent
     /// to the model — `LessonSpec.focus` is the instruction, this is the label.
+    /// Exercise id → image file name, for recognition exercises.
+    ///
+    /// On the record rather than the lesson: the lesson is what the model
+    /// returned, the images are what this machine then built from it.
+    public var images: [String: String] = [:]
     public var name: String?
     /// A note to self: why this lesson exists, when to do it.
     public var note: String?
@@ -52,7 +57,7 @@ public struct LessonRecord: Codable, Sendable, Identifiable {
 
     private enum CodingKeys: String, CodingKey {
         case lesson, state, answers, verdicts, startedAt, finishedAt
-        case activeSeconds, feedback, sessionId, name, note
+        case activeSeconds, feedback, sessionId, name, note, images
     }
 
     /// Records written before a field existed must still open. The archive's
@@ -63,6 +68,7 @@ public struct LessonRecord: Codable, Sendable, Identifiable {
         state = try c.decode(State.self, forKey: .state)
         answers = try c.decodeIfPresent([String: Answer].self, forKey: .answers) ?? [:]
         verdicts = try c.decodeIfPresent([String: Verdict].self, forKey: .verdicts) ?? [:]
+        images = try c.decodeIfPresent([String: String].self, forKey: .images) ?? [:]
         name = try c.decodeIfPresent(String.self, forKey: .name)
         note = try c.decodeIfPresent(String.self, forKey: .note)
         startedAt = try c.decodeIfPresent(Date.self, forKey: .startedAt)
@@ -106,6 +112,29 @@ public struct LessonRecord: Codable, Sendable, Identifiable {
     public var displayTitle: String {
         let trimmed = name?.trimmingCharacters(in: .whitespacesAndNewlines)
         return (trimmed?.isEmpty == false ? trimmed! : lesson.title)
+    }
+
+    /// A copy without the named exercises.
+    ///
+    /// Used when an exercise cannot be built — its picture failed verification,
+    /// or no key was configured. Removing it is better than showing an
+    /// unanswerable question, and better than discarding the whole lesson for
+    /// one bad image.
+    public func droppingExercises(_ ids: [String]) -> LessonRecord {
+        guard !ids.isEmpty else { return self }
+        let removed = Set(ids)
+        var copy = self
+        copy.lesson = Lesson(
+            id: lesson.id, title: lesson.title, focus: lesson.focus,
+            estimatedMinutes: lesson.estimatedMinutes, preamble: lesson.preamble,
+            exercises: lesson.exercises.filter { !removed.contains($0.id) },
+            spec: lesson.spec, generatedAt: lesson.generatedAt)
+        for id in removed {
+            copy.answers[id] = nil
+            copy.verdicts[id] = nil
+            copy.images[id] = nil
+        }
+        return copy
     }
 
     /// Whether this lesson still owes work to Fluent. Both states offer the

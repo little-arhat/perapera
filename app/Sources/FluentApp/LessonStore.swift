@@ -73,6 +73,36 @@ final class LessonStore {
         return (records, unreadable)
     }
 
+    // MARK: - Lesson images
+
+    /// Images live beside the lessons, one directory per lesson.
+    ///
+    /// Separate from the JSON rather than embedded in it: a base64 image would
+    /// make the record unreadable in a text editor and undiffable, and the whole
+    /// point of a JSON archive is that it outlives the app.
+    func assetsDirectory(for lessonId: String) -> URL {
+        directory.appending(path: "assets/\(lessonId)")
+    }
+
+    func saveImage(_ data: Data, lessonId: String, exerciseId: String) throws -> String {
+        let folder = assetsDirectory(for: lessonId)
+        try FileManager.default.createDirectory(
+            at: folder, withIntermediateDirectories: true)
+        let name = "\(exerciseId).jpg"
+        try data.write(to: folder.appending(path: name), options: .atomic)
+        return name
+    }
+
+    func imageURL(lessonId: String, fileName: String) -> URL {
+        assetsDirectory(for: lessonId).appending(path: fileName)
+    }
+
+    /// Deleting a lesson must take its images too, or the directory grows
+    /// without bound with files nothing references.
+    func deleteAssets(for lessonId: String) {
+        try? FileManager.default.removeItem(at: assetsDirectory(for: lessonId))
+    }
+
     // MARK: - Saved items
     //
     // One file beside the lessons, for the same reasons: readable without the
@@ -99,6 +129,7 @@ final class LessonStore {
     }
 
     func delete(id: String) throws {
+        deleteAssets(for: id)
         try FileManager.default.removeItem(at: url(for: id))
     }
 }
