@@ -50,11 +50,6 @@ struct ArchiveView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Button { model.screen = .home } label: {
-                    Label("Home", systemImage: "chevron.left")
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(palette.secondaryText)
                 Spacer()
                 Picker("", selection: $filter) {
                     ForEach(Filter.allCases, id: \.self) { Text($0.rawValue).tag($0) }

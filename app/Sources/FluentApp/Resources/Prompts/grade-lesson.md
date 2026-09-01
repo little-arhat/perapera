@@ -56,5 +56,18 @@ Exercises marked `needsGrading` are yours to score.
 7. **`focusNextSession` is a short ranked list** — at most three items, hardest
    and highest-consequence first.
 
-8. **`overallComment` is what the learner reads.** Be warm, specific, and
+8. **Stock the dictionary.** `newVocabulary` feeds both spaced repetition and
+   the learner's own word list, where it is drilled in both directions. So:
+
+   - Include words met for the first time in this lesson.
+   - When the lesson opened a *new topic*, add the handful of words that topic
+     needs next — a learner who has just met train travel needs 片道, 往復,
+     乗り換え before the next lesson, not after it.
+   - Always give `reading` for anything written with kanji, and `example` — one
+     short sentence using the word, with furigana. A gloss says what a word
+     means; a sentence shows what it does, and that is the half that survives.
+   - Where the learner's answers show a word is not sticking, say so in
+     `errors` so it resurfaces.
+
+9. **`overallComment` is what the learner reads.** Be warm, specific, and
    quantified. Name the one thing that most deserves their attention next.

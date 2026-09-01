@@ -27,6 +27,24 @@ struct HomeView: View {
             dueCount: snapshot.computed.due_reviews_count)
     }
 
+    /// Collapsed summaries. Each names the state you would otherwise have to
+    /// open the panel to see.
+    private var generatorSummary: String {
+        let photoNote = photos > 0 ? " · \(photos) photo\(photos == 1 ? "" : "s")" : ""
+        return "\(size.label.lowercased()) · \(depth.label.lowercased())"
+            + photoNote
+            + (focus.isEmpty ? "" : " · \(focus)")
+    }
+
+    private var topicsSummary: String {
+        let all = model.topics
+        guard let weakest = all.first else { return "nothing tracked yet" }
+        let due = all.reduce(0) { $0 + $1.due }
+        let dueNote = due > 0 ? " · \(due) due" : ""
+        return "\(all.count) topics · weakest \(weakest.name) \(Int(weakest.completion * 100))%"
+            + dueNote
+    }
+
     private var pending: [LessonRecord] {
         model.records.filter { $0.state != .submitted }
     }
@@ -35,9 +53,19 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 header
-                generator
-                TopicsView(topics: model.topics) { topic in
-                    focus = topic.name
+                CollapsibleSection(
+                    title: "New lesson",
+                    summary: generatorSummary,
+                    storageKey: "generator"
+                ) { generator }
+                CollapsibleSection(
+                    title: "Where you are",
+                    summary: topicsSummary,
+                    storageKey: "topics"
+                ) {
+                    TopicsView(topics: model.topics) { topic in
+                        focus = topic.name
+                    }
                 }
                 if !pending.isEmpty { pendingSection }
                 footer
@@ -220,17 +248,6 @@ struct HomeView: View {
 
     private var footer: some View {
         HStack(spacing: 16) {
-            Button("Archive") { model.screen = .archive }
-            Button {
-                model.screen = .lists
-            } label: {
-                if model.savedItems.pending.isEmpty {
-                    Text("Saved (\(model.savedItems.items.count))")
-                } else {
-                    Label("Saved (\(model.savedItems.items.count))",
-                          systemImage: "star.fill")
-                }
-            }
             Spacer()
             if !model.unreadableLessons.isEmpty {
                 Button {

@@ -215,6 +215,11 @@ public struct Feedback: Codable, Sendable {
         public let difficulty: String?
         public let initialQuality: Int?
         public let priority: String?
+        /// Reading in kana, for an entry written with kanji.
+        public let reading: String?
+        /// The word in use — the half of a definition that survives.
+        public let example: String?
+        public let exampleGloss: String?
     }
 
     public let graded: [Graded]

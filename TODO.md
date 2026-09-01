@@ -30,33 +30,12 @@ cannot.
 
 ## Requested 2026-09-01 — building these
 
-### FL-26 — Somewhere to put things: a sidebar · M
-The app is one screen with an enum. Two new areas (images, dictionary) need a
-home, and stacking more modal screens onto `AppModel.Screen` will not hold.
-A `NavigationSplitView` with Practice / Images / Dictionary / Archive.
-
-### FL-27 — Image gallery and review · M
-Generated photographs are currently used once and never seen again, though they
-are already on disk under `lessons/assets/<id>/`.
-- **27a** Review mode: a random image, type what it says, checked as in a
-  lesson.
-- **27b** Contact sheet: thumbnails with their transcriptions, to browse what
-  has been collected.
-
-Each image cost $0.069 to make; using one once is the waste, not the price.
-
-### FL-28 — Dictionary · L
-`SavedItem` and the Lists screen are the start of this; the rest is missing.
-- **28a** Translations shown on word hover, if they can be had cheaply. Failing
-  that the learner copies and looks it up — the click-to-copy already works.
-- **28b** Add a word to the dictionary from anywhere. (Partly done: ⇧⌘S.)
-- **28c** The teacher proposes vocabulary when a lesson opens a new topic.
-- **28d** Drill mode: 5-10 words shown, fields to translate them, checked in
-  both directions (JA→EN and EN→JA).
-- **28e** An example sentence per word, showing it in use.
-- **28f** Kanji entries, testable, with the furigana toggle.
-- **28g** The teacher revises the dictionary from how the drills went — the same
-  loop Fluent already runs for exercises.
+### FL-28a — Translation on hover · M
+Hovering already highlights a word and clicking copies it. Showing its meaning
+there needs a gloss source: the dictionary can answer for saved words at no
+cost, but an arbitrary word in a passage cannot be looked up without either a
+dictionary file or a call. Do the free half first — hover a word that is already
+saved, see its gloss — and decide about the rest afterwards.
 
 ---
 
@@ -188,6 +167,33 @@ since cards hold short lines that do not suffer from width. `TextScale.width`.
 ---
 
 ## Done
+
+### Sidebar, pictures and the dictionary (2026-09-01)
+- **FL-26 — a sidebar.** Practice / Pictures / Saved / Archive. The app was one
+  screen with an enum, which two new areas would not have fitted. Sections are
+  kept separate from screens: a debrief is somewhere you are *sent*, not a
+  destination you pick, and folding them together would have put "debrief of
+  lesson 7" in the sidebar.
+- **FL-27 — pictures are kept and reused.** A Review mode (random photo, type
+  what it says, graded exactly as in a lesson) and a contact sheet with
+  transcriptions. Each picture cost about $0.07 and was previously seen once;
+  nothing about a sign goes stale, so re-reading one later is free practice.
+- **FL-28d/e/f — word drills.** 5-10 saved words with fields, in either
+  direction. JA→EN tests recognition, EN→JA tests recall — harder, and the one
+  that matters for speaking, so answering in Japanese uses the kana field rather
+  than an IME candidate list. Example sentences are revealed *after* answering,
+  never before, since seeing the word in use gives the answer away. Kanji
+  entries follow the same furigana toggle as lessons.
+- **FL-28g — the teacher stocks the dictionary.** `newVocabulary` already went
+  to Fluent's scheduler; it now also lands in the word list, with a reading and
+  an example, and the prompt asks for the words a *newly opened topic* needs
+  next rather than only those already met. Existing entries are enriched, never
+  overwritten — the learner's own note outranks a generated one.
+- Drill order is three tiers: answered-wrong first, then never-tried, then
+  always-right. Demonstrated failure is stronger evidence of need than no
+  evidence, which a test caught me getting backwards.
+- **Collapsible home sections** with summaries, so a folded panel still says
+  what it holds.
 
 ### Track B — reading Japanese off photographs (2026-09-01)
 - **`recognition` exercises**: the app generates a photograph, verifies it, and

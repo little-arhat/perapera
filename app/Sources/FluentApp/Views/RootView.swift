@@ -8,32 +8,21 @@ struct RootView: View {
     var body: some View {
         @Bindable var model = model
 
-        ZStack {
-            palette.background.ignoresSafeArea()
-
-            switch model.screen {
-            case .home:
-                HomeView()
-            case let .lesson(id):
-                if let record = model.record(id: id) {
-                    LessonPlayerView(record: record)
-                } else {
-                    missing
-                }
-            case .archive:
-                ArchiveView()
-            case .lists:
-                ListsView()
-            case let .debrief(id):
-                if let record = model.record(id: id) {
-                    DebriefView(record: record)
-                } else {
-                    missing
+        NavigationSplitView {
+            List(selection: sectionBinding) {
+                ForEach(AppModel.Section.allCases) { section in
+                    Label(section.rawValue, systemImage: section.icon)
+                        .tag(section)
                 }
             }
-
-            if let status = model.statusMessage {
-                WorkingOverlay(status: status)
+            .navigationSplitViewColumnWidth(min: 160, ideal: 180, max: 240)
+        } detail: {
+            ZStack {
+                palette.background.ignoresSafeArea()
+                content
+                if let status = model.statusMessage {
+                    WorkingOverlay(status: status)
+                }
             }
         }
         .alert("Something went wrong",
@@ -43,6 +32,40 @@ struct RootView: View {
             Button("OK") { model.error = nil }
         } message: {
             Text(model.error ?? "")
+        }
+    }
+
+    /// Selecting a row navigates; the reverse mapping keeps the highlight
+    /// correct when the app moves itself, as it does after generating a lesson.
+    private var sectionBinding: Binding<AppModel.Section?> {
+        Binding(
+            get: { model.section },
+            set: { if let new = $0 { model.screen = new.screen } })
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch model.screen {
+        case .home:
+            HomeView()
+        case let .lesson(id):
+            if let record = model.record(id: id) {
+                LessonPlayerView(record: record)
+            } else {
+                missing
+            }
+        case .archive:
+            ArchiveView()
+        case .lists:
+            ListsView()
+        case .images:
+            ImagesView()
+        case let .debrief(id):
+            if let record = model.record(id: id) {
+                DebriefView(record: record)
+            } else {
+                missing
+            }
         }
     }
 

@@ -215,7 +215,7 @@ extension Grader {
     ///
     /// Anything close but not equal is handed to the teacher rather than
     /// guessed at — it may be a correct variant the generator never listed.
-    static func gradeText(
+    public static func gradeText(
         accepted: [String], answer: Answer, prompt: String, allowDeferral: Bool
     ) -> Grading {
         let canonical = accepted.first ?? ""

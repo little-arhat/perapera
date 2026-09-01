@@ -17,6 +17,50 @@ final class AppModel {
         case archive
         case debrief(id: String)
         case lists
+        case images
+    }
+
+    /// Top-level areas, as the sidebar lists them.
+    ///
+    /// Separate from `Screen` on purpose: `Screen` includes places you are sent
+    /// (a lesson, a debrief) that are not destinations you pick. Folding the two
+    /// together would put "debrief of lesson 7" in the sidebar.
+    enum Section: String, CaseIterable, Identifiable {
+        case practice = "Practice"
+        case images = "Pictures"
+        case dictionary = "Saved"
+        case archive = "Archive"
+
+        public var id: String { rawValue }
+
+        var icon: String {
+            switch self {
+            case .practice: "graduationcap"
+            case .images: "photo.on.rectangle.angled"
+            case .dictionary: "star"
+            case .archive: "tray.full"
+            }
+        }
+
+        var screen: Screen {
+            switch self {
+            case .practice: .home
+            case .images: .images
+            case .dictionary: .lists
+            case .archive: .archive
+            }
+        }
+    }
+
+    /// Which sidebar row is highlighted for the current screen. A lesson keeps
+    /// Practice selected, because that is where it came from.
+    var section: Section {
+        switch screen {
+        case .home, .lesson, .debrief: .practice
+        case .images: .images
+        case .lists: .dictionary
+        case .archive: .archive
+        }
     }
 
     // Settings, persisted in UserDefaults -- per-machine preferences, not
@@ -159,6 +203,8 @@ final class AppModel {
             return "Archive"
         case .lists:
             return "Saved items"
+        case .images:
+            return "Pictures"
         }
     }
 
@@ -279,6 +325,14 @@ final class AppModel {
         persistSavedItems()
     }
 
+    /// Stores how a drill went, so the weakest words come up first next time.
+    func recordDrill(_ outcomes: [String: Bool]) {
+        for (id, wasCorrect) in outcomes {
+            savedItems.record(id: id, wasCorrect: wasCorrect)
+        }
+        persistSavedItems()
+    }
+
     func unsave(id: String) {
         savedItems.remove(id: id)
         persistSavedItems()
@@ -335,10 +389,44 @@ final class AppModel {
         update(record)
     }
 
+    /// Every photograph collected so far, newest first.
+    var imageLibrary: [LibraryImage] { ImageLibrary.collect(from: records) }
+
+    func imageURL(lessonId: String, fileName: String) -> URL? {
+        let url = lessonStore.imageURL(lessonId: lessonId, fileName: fileName)
+        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
     /// Where a recognition exercise's picture lives on disk.
     func imageURL(for record: LessonRecord, exercise: Exercise) -> URL? {
         guard let fileName = record.images[exercise.id] else { return nil }
         return lessonStore.imageURL(lessonId: record.id, fileName: fileName)
+    }
+
+    /// Takes the vocabulary the teacher proposed into the dictionary.
+    ///
+    /// The teacher already returns `newVocabulary` for Fluent's scheduler; the
+    /// same words are what the learner would want to drill, and asking them to
+    /// re-type words the teacher just named would be absurd. Existing entries
+    /// are enriched rather than replaced — the learner's own note outranks a
+    /// generated one.
+    private func absorbTeacherVocabulary(from feedback: Feedback?) {
+        guard let proposed = feedback?.newVocabulary else { return }
+        for entry in proposed {
+            let kind: SavedItem.Kind = switch entry.itemType {
+            case "grammar_rule": .grammar
+            default: Furigana.stripped(entry.content).count == 1 ? .kanji : .word
+            }
+            let item = SavedItem(
+                content: entry.content, gloss: entry.answer, kind: kind,
+                sourceLessonId: nil,
+                reading: entry.reading, example: entry.example,
+                exampleGloss: entry.exampleGloss)
+            savedItems.add(item)
+            savedItems.enrich(
+                id: item.id, gloss: entry.answer, reading: entry.reading,
+                example: entry.example, exampleGloss: entry.exampleGloss)
+        }
     }
 
     func record(id: String) -> LessonRecord? {
@@ -367,6 +455,7 @@ final class AppModel {
             // Saved items ride along with the session report, so they enter
             // spaced repetition through Fluent rather than a parallel schedule.
             savedItems.markPromoted(ids: Set(savedItems.pending.map(\.id)))
+            absorbTeacherVocabulary(from: record.feedback)
             persistSavedItems()
             update(record)
             screen = .debrief(id: record.id)

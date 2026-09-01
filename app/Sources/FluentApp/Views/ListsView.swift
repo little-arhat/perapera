@@ -16,6 +16,7 @@ struct ListsView: View {
     @State private var filter: SavedItem.Kind?
     @State private var size: LessonSpec.Size = .small
     @State private var depth: LessonSpec.Depth = .drill
+    @State private var drilling = false
 
     private var items: [SavedItem] {
         let all = model.savedItems.items.sorted { $0.savedAt > $1.savedAt }
@@ -41,12 +42,6 @@ struct ListsView: View {
 
     private var header: some View {
         HStack {
-            Button { model.screen = .home } label: {
-                Label("Home", systemImage: "chevron.left")
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(palette.secondaryText)
-
             Spacer()
 
             Picker("", selection: $filter) {
@@ -120,6 +115,11 @@ struct ListsView: View {
                         .lineLimit(2)
                         .selectableIf(scale.selectable)
                 }
+                if let example = item.example, !example.isEmpty {
+                    RubyText(annotated: example,
+                             showFurigana: model.showFurigana, size: 13)
+                        .foregroundStyle(palette.secondaryText)
+                }
             }
 
             Spacer()
@@ -132,6 +132,15 @@ struct ListsView: View {
 
             // "Pending" is a real distinction: until it is promoted, Fluent has
             // never seen this item and it has no review schedule.
+            // How the drills have gone, when there have been any.
+            if let accuracy = item.accuracy {
+                Text("\(item.correct)/\(item.attempts)")
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(accuracy >= 0.8 ? palette.correct
+                                     : accuracy >= 0.5 ? palette.warning : palette.wrong)
+                    .frame(width: 36, alignment: .trailing)
+            }
+
             Text(item.isPending ? "pending" : "scheduled")
                 .font(.caption2)
                 .foregroundStyle(item.isPending ? palette.warning : palette.correct)
@@ -187,6 +196,17 @@ struct ListsView: View {
             .frame(width: 200)
             .help("How many times each topic is practised.")
 
+            // Free and instant, so it comes first: drilling what is already
+            // saved costs nothing, while generating a lesson costs a call.
+            Button {
+                drilling = true
+            } label: {
+                Label("Drill", systemImage: "list.bullet.rectangle")
+            }
+            .buttonStyle(.bordered)
+            .disabled(chosen.isEmpty)
+            .help("Translate these words both ways. No network, no cost.")
+
             Button {
                 Task { await model.practice(items: chosen, size: size, depth: depth) }
             } label: {
@@ -199,5 +219,10 @@ struct ListsView: View {
         .controlSize(.large)
         .padding(20)
         .background(palette.surface)
+        .sheet(isPresented: $drilling) {
+            DrillView(items: model.savedItems.drillCandidates(limit: 10)) { outcomes in
+                model.recordDrill(outcomes)
+            }
+        }
     }
 }

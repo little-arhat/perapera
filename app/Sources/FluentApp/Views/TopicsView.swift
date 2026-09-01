@@ -28,9 +28,9 @@ struct TopicsView: View {
         } else {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("Where you are")
-                        .font(.headline)
-                        .foregroundStyle(palette.emphasizedText)
+                    Text("Least finished first — tap one to aim the next lesson at it.")
+                        .font(.footnote)
+                        .foregroundStyle(palette.secondaryText)
                     Spacer()
                     if topics.count > 5 {
                         Button(expanded ? "Show less" : "All \(topics.count)") {
@@ -41,10 +41,6 @@ struct TopicsView: View {
                         .foregroundStyle(palette.secondaryText)
                     }
                 }
-
-                Text("Least finished first — tap one to aim the next lesson at it.")
-                    .font(.footnote)
-                    .foregroundStyle(palette.secondaryText)
 
                 ForEach(visible) { topic in
                     Button { onPick(topic) } label: { row(topic) }
