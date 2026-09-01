@@ -3,10 +3,20 @@
 Which image model can actually draw Japanese, and what it costs.
 
 ```bash
-python3 tools/imgbench/cli.py list          # models, catalog price, discount
-python3 tools/imgbench/cli.py run           # benchmark the shortlist (costs money)
-python3 tools/imgbench/cli.py report        # last measurements, ranked
-python3 tools/imgbench/cli.py suggest       # cheaper swaps, moves, what to measure
+cd tools/imgbench
+uv run cli.py list          # models, catalog price, discount
+uv run cli.py run           # benchmark the shortlist (costs money)
+uv run cli.py report        # last measurements, ranked
+uv run cli.py suggest       # cheaper swaps, moves, what to measure
+```
+
+uv manages this tool only, not the rest of the repo — `uv sync --group dev`
+gets pytest and ruff. It is stdlib-only, so `python3 cli.py list` works just as
+well; uv is convenience, not a gate.
+
+```bash
+uv run pytest         # 28 tests, no network
+uv run ruff check .
 ```
 
 Adapted from the `llm` price watch in the options repo, which keeps two facts

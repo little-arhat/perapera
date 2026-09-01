@@ -1,0 +1,36 @@
+[project]
+name = "imgbench"
+version = "0.1.0"
+description = "Pick an image model on fidelity, not price"
+requires-python = ">=3.10"
+
+# Stdlib only. Nothing here needs a package, and keeping it that way means the
+# tool runs with a bare `python3 cli.py` too — uv is for convenience, not a
+# gate.
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+python_files = ["test_*.py"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# Flat scripts that fix sys.path before importing siblings, so the imports
+# cannot all sit at the top of the file.
+"*.py" = ["E402"]

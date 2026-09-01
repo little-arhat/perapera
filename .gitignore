@@ -58,7 +58,7 @@ _probes/
 .env.*
 !.env.example
 
-# uv / Python
+# Python tooling
 .venv/
 __pycache__/
 .pytest_cache/
