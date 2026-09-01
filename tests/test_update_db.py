@@ -9,10 +9,8 @@ Usage:
     python3 tests/test_update_db.py
 """
 import json
-import os
 import shutil
 import subprocess
-import sys
 import tempfile
 import unittest
 from pathlib import Path

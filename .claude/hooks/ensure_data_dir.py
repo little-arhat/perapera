@@ -11,6 +11,5 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fluent_paths import ensure_data_dir  # noqa: E402
 
-
 if __name__ == "__main__":
     print(ensure_data_dir())

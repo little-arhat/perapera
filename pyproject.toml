@@ -1,0 +1,62 @@
+[project]
+name = "fluent"
+version = "0.3.0"
+description = "AI language tutor — Claude Code plugin, with a macOS app and image-model tooling"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+
+# No runtime dependencies, deliberately.
+#
+# The hooks are invoked by Claude Code as `python3 "${CLAUDE_PLUGIN_ROOT}/..."`
+# against whatever interpreter the learner happens to have — no venv, no
+# install step. A single third-party import would break the plugin for everyone
+# who installs it, so the runtime code is stdlib-only and `test_stdlib_only`
+# enforces that rather than trusting a comment.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[project.urls]
+Homepage = "https://github.com/m98/fluent"
+
+[tool.uv]
+# uv manages the dev tooling. It is not needed to *run* Fluent.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "tools"]
+python_files = ["test_*.py"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py310"
+# Set to what this codebase already is, not to a default. p95 of the existing
+# lines is 81 and the tail reaches ~107; adopting a linter is not a licence to
+# reformat working, tested code for no behavioural gain.
+line-length = 100
+extend-exclude = ["_probes", "app/.build"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = [
+    # Hook filenames are kebab-case by convention (read-db.py), which ruff
+    # would otherwise flag as invalid module names.
+    "N999",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# The tools are flat scripts that fix sys.path before importing siblings, so
+# imports cannot all sit at the top.
+"tools/imgbench/*.py" = ["E402"]
+"tests/*.py" = ["E402"]
+
+# The hooks are upstream code this fork inherited. Correctness rules (F) still
+# apply — a real bug is worth a conflict. Style rules do not: reformatting
+# working, tested code to satisfy a linter added afterwards buys nothing and
+# makes every future merge from upstream harder.
+".claude/hooks/*.py" = ["E501", "SIM105", "SIM102", "UP031", "B905"]

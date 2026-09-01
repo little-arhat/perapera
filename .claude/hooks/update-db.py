@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fluent_paths import ensure_data_dir, ensure_backups_dir, force_utf8_io  # noqa: E402
+from fluent_paths import ensure_backups_dir, ensure_data_dir, force_utf8_io  # noqa: E402
 
 force_utf8_io()
 DATA_DIR = ensure_data_dir()
@@ -31,7 +31,7 @@ BACKUP_DIR = ensure_backups_dir()
 # --- Utility functions ---
 
 def load_json(path: Path) -> dict:
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(path, encoding='utf-8') as f:
         return json.load(f)
 
 

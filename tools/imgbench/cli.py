@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import contextlib
 import datetime as dt
 import json
 import os
@@ -35,6 +36,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
+import store
 from catalog import (
     ImageModel,
     Observation,
@@ -46,7 +48,6 @@ from catalog import (
     worth_measuring,
 )
 from fidelity import PROBES, ModelResult, ProbeResult, missing, score_transcription
-import store
 
 ROOT = pathlib.Path(__file__).resolve().parent
 BASE = "https://openrouter.ai/api/v1"
@@ -214,7 +215,9 @@ def cmd_list(args: argparse.Namespace) -> int:
                 discount=discount_from_endpoints(p, m.quoted_image or m.quoted_prompt),
                 context=m.context,
             )
-            for m, p in zip(models, payloads)
+            # strict: a payload per model, or the discounts would silently
+            # attach to the wrong rows.
+            for m, p in zip(models, payloads, strict=True)
         ]
 
     history = store.latest_by_model(store.read(store.history_path(ROOT)))
@@ -232,8 +235,8 @@ def cmd_list(args: argparse.Namespace) -> int:
         fidelity = seen.get("fidelity")
         print(
             f"{model.id:<44} {quoted:>12} {discount:>6} "
-            f"{('$%.4f' % measured) if measured else '—':>10} "
-            f"{('%.0f%%' % (fidelity * 100)) if fidelity is not None else '—':>9}"
+            f"{f'${measured:.4f}' if measured else '—':>10} "
+            f"{f'{fidelity:.0%}' if fidelity is not None else '—':>9}"
         )
     print(
         "\nquoted is unreliable for image models: often blank, and when present it\n"
@@ -244,10 +247,11 @@ def cmd_list(args: argparse.Namespace) -> int:
 
 
 def _endpoints_safe(model_id: str, key: str) -> dict:
-    try:
+    # A model can be listed but not served, which is a 404 rather than an error
+    # worth stopping for: no endpoints simply means no discount to report.
+    with contextlib.suppress(urllib.error.HTTPError):
         return get_json(f"{BASE}/models/{model_id}/endpoints", key)
-    except urllib.error.HTTPError:
-        return {}
+    return {}
 
 
 def cmd_run(args: argparse.Namespace) -> int:
@@ -261,10 +265,9 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     estimate = len(models) * len(probes) * 0.069
     print(f"{len(models)} model(s) x {len(probes)} probe(s) — roughly ${estimate:.2f}")
-    if not args.yes:
-        if input("proceed? [y/N] ").strip().lower() not in ("y", "yes"):
-            print("nothing spent")
-            return 0
+    if not args.yes and input("proceed? [y/N] ").strip().lower() not in ("y", "yes"):
+        print("nothing spent")
+        return 0
 
     out_dir = ROOT / "samples"
     out_dir.mkdir(parents=True, exist_ok=True)

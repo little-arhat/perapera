@@ -41,7 +41,7 @@ def main():
     profile_path = data / "learner-profile.json"
     if profile_path.exists():
         try:
-            with open(profile_path, 'r') as f:
+            with open(profile_path) as f:
                 profile = json.load(f)
 
             streak = profile.get("current_streak_days", 0)
@@ -49,7 +49,7 @@ def main():
 
             print(f"[Fluent] 🔥 Current streak: {streak} days")
             print(f"[Fluent] 📊 Total sessions: {total_sessions}")
-            print(f"[Fluent] 👋 Great work today!")
+            print("[Fluent] 👋 Great work today!")
 
         except Exception as e:
             print(f"[Fluent] Could not read stats: {e}", file=sys.stderr)
