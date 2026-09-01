@@ -17,6 +17,14 @@ struct ArchiveView: View {
         case todo = "To do"
         case graded = "Graded"
 
+        var help: String {
+            switch self {
+            case .all: "Every lesson, finished or not."
+            case .todo: "Started or waiting — still owes you work."
+            case .graded: "Finished and marked by your teacher."
+            }
+        }
+
         func matches(_ record: LessonRecord) -> Bool {
             switch self {
             case .all: true
@@ -52,11 +60,15 @@ struct ArchiveView: View {
             HStack {
                 Spacer()
                 Picker("", selection: $filter) {
-                    ForEach(Filter.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    ForEach(Filter.allCases, id: \.self) {
+                        Text($0.rawValue).tag($0).help($0.help)
+                    }
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .frame(width: 220)
+                .help(Filter.allCases.map { "\($0.rawValue) — \($0.help)" }
+                    .joined(separator: "\n"))
                 TextField("Search lessons, notes, feedback", text: $query)
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 240)

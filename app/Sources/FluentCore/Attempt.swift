@@ -137,6 +137,9 @@ public struct LessonRecord: Codable, Sendable, Identifiable {
         return copy
     }
 
+    /// How many photographs this lesson carries, for a glance at a row.
+    public var photoCount: Int { images.count }
+
     /// Whether this lesson still owes work to Fluent. Both states offer the
     /// same "Finish" action; what differs is how much of it is left to do.
     public var awaitsSubmission: Bool {

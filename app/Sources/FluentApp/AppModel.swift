@@ -123,6 +123,12 @@ final class AppModel {
     }
 
     var screen: Screen = .home
+    /// Where a Back button should return to.
+    ///
+    /// A lesson opened from the Archive belongs back in the Archive, not on the
+    /// home screen. The sidebar cannot express that — it selects areas, and a
+    /// debrief is not an area — so the origin is remembered when navigating in.
+    private(set) var returnTo: Screen?
     var snapshot: FluentStore.Snapshot?
     var records: [LessonRecord] = []
     var unreadableLessons: [String] = []
@@ -375,9 +381,35 @@ final class AppModel {
     /// the learner would have to click through every exercise again to reach
     /// the Finish button.
     func open(_ record: LessonRecord) {
+        returnTo = screen
         screen = record.state == .generated || record.state == .inProgress
             ? .lesson(id: record.id)
             : .debrief(id: record.id)
+    }
+
+    /// Goes back to wherever the current lesson or debrief was opened from,
+    /// falling back to Practice.
+    /// Navigates to a sidebar area, clearing any remembered origin — picking a
+    /// row is a fresh start, not a step in a trail.
+    func show(_ section: Section) {
+        returnTo = nil
+        screen = section.screen
+    }
+
+    func goBack() {
+        screen = returnTo ?? .home
+        returnTo = nil
+    }
+
+    /// What the Back button should say, so it names the destination rather than
+    /// making the learner guess.
+    var backDestination: String {
+        switch returnTo {
+        case .archive: "Archive"
+        case .lists: "Saved"
+        case .images: "Pictures"
+        default: "Practice"
+        }
     }
 
     /// Renames or annotates a lesson after the fact. Queuing lessons ahead of

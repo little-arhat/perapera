@@ -40,7 +40,7 @@ struct RootView: View {
     private var sectionBinding: Binding<AppModel.Section?> {
         Binding(
             get: { model.section },
-            set: { if let new = $0 { model.screen = new.screen } })
+            set: { if let new = $0 { model.show(new) } })
     }
 
     @ViewBuilder

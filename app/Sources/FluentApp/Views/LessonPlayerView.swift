@@ -71,11 +71,13 @@ struct LessonPlayerView: View {
     private var progressBar: some View {
         VStack(spacing: 8) {
             HStack {
-                Button { model.screen = .home } label: {
-                    Label("Home", systemImage: "chevron.left")
+                Button { model.goBack() } label: {
+                    Label("Back to \(model.backDestination)",
+                          systemImage: "chevron.left")
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(palette.secondaryText)
+                .keyboardShortcut("[", modifiers: .command)
 
                 Spacer()
                 Text("\(index + 1) / \(record.lesson.exercises.count)")

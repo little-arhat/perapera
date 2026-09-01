@@ -16,13 +16,21 @@ struct DebriefView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                Button { model.goBack() } label: {
+                    Label("Back to \(model.backDestination)",
+                          systemImage: "chevron.left")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(palette.secondaryText)
+                .keyboardShortcut("[", modifiers: .command)
+
                 header
                 if let feedback = live.feedback {
                     graded(feedback)
                 } else {
                     unsubmitted
                 }
-                Button("Home") { model.screen = .home }
+                Button("Back to \(model.backDestination)") { model.goBack() }
                     .buttonStyle(.plain)
                     .foregroundStyle(palette.secondaryText)
             }

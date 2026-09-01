@@ -312,9 +312,19 @@ struct LessonRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: record.lesson.spec.mode == .review
-                  ? "arrow.triangle.2.circlepath" : "sparkles")
-                .foregroundStyle(record.lesson.spec.mode == .review ? palette.review : palette.accent)
+            // A word, not just a pictogram. "Lesson" and "Review" are the two
+            // things a row can be, and an icon alone left that a guess — the
+            // symbols for "new material" and "spaced repetition" are not
+            // conventions anyone knows.
+            VStack(spacing: 3) {
+                Image(systemName: kind.icon)
+                    .foregroundStyle(kind.tint(palette))
+                Text(kind.label)
+                    .font(.caption2)
+                    .foregroundStyle(palette.secondaryText)
+            }
+            .frame(width: 52)
+            .help(kind.explanation)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(record.displayTitle)
@@ -325,17 +335,60 @@ struct LessonRow: View {
                         .foregroundStyle(palette.secondaryText)
                         .lineLimit(1)
                 }
-                // What it is, when it was made, and what it was asked for.
-                // A lesson queued days ahead has to explain itself.
                 Text(subtitle)
                     .font(.caption)
                     .foregroundStyle(palette.secondaryText)
             }
             Spacer()
+
+            if record.photoCount > 0 {
+                Label("\(record.photoCount)", systemImage: "photo")
+                    .font(.caption2)
+                    .foregroundStyle(palette.secondaryText)
+                    .help("^[\(record.photoCount) photograph](inflect: true) to read")
+            }
+
             Image(systemName: "chevron.right").foregroundStyle(palette.secondaryText)
         }
         .padding(14)
         .background(palette.surface, in: .rect(cornerRadius: 10))
+    }
+
+    /// What kind of lesson this is, said in words.
+    private enum Kind {
+        case lesson, review
+
+        var label: String {
+            switch self {
+            case .lesson: "Lesson"
+            case .review: "Review"
+            }
+        }
+
+        var icon: String {
+            switch self {
+            case .lesson: "sparkles"
+            case .review: "arrow.triangle.2.circlepath"
+            }
+        }
+
+        var explanation: String {
+            switch self {
+            case .lesson: "New material, chosen around your focus and weak spots."
+            case .review: "Items spaced repetition says are due now."
+            }
+        }
+
+        func tint(_ palette: Palette) -> Color {
+            switch self {
+            case .lesson: palette.accent
+            case .review: palette.review
+            }
+        }
+    }
+
+    private var kind: Kind {
+        record.lesson.spec.mode == .review ? .review : .lesson
     }
 
     private var subtitle: String {
