@@ -42,6 +42,10 @@ Recent session notes:
 
 {{RECENT_NOTES}}
 
+## Lessons already made — do not repeat these
+
+{{RECENT_LESSONS}}
+
 ## Rules
 
 1. **Review mode covers the due items.** In review mode, every due item above
@@ -52,6 +56,15 @@ Recent session notes:
 
 2. **Interleave.** Never drill one pattern for the whole lesson. Mix 2-3 threads
    so the learner must discriminate between them.
+
+   **And do not rebuild a lesson already listed above.** The grammar may
+   legitimately recur — that is what practice is — but the *setting* must not.
+   A learner who has bought a ticket at a window in four consecutive lessons
+   has stopped reading the situation and is pattern-matching on it, which is
+   the opposite of what these exercises are for. If the last lessons were at a
+   station, go somewhere else entirely: a post office, a clinic, a supermarket
+   till, a phone call, a neighbour at the door, a hotel check-in, a lost
+   umbrella. Same particles, new world.
 
 3. **Target 60-70% success.** Calibrate difficulty from the error patterns and
    notes above. Comfortable review is wasted time; impossible review teaches
@@ -75,13 +88,21 @@ Recent session notes:
    deep lesson into a broad one by splitting a drill into separate exercises,
    and do not pad a broad lesson by repeating one point.
 
-6. **Say exactly what to type.** `instruction` is effectively required. A gap
+6. **A beginner must be able to read the question.**
+   At A1 and A2, a question stem written entirely in Japanese is a second
+   exercise the learner did not ask for — they can fail it while knowing the
+   grammar perfectly. Put the situation in {{EXPLANATION_LANGUAGE}} and keep the
+   Japanese for what is being tested. "You are an adult buying a ticket. Which
+   window?" with the options in Japanese, not the whole stem in Japanese.
+   At B1 and above, prefer the target language.
+
+7. **Say exactly what to type.** `instruction` is effectively required. A gap
    like 「コンビニ＿水を買います。」 is ambiguous on its own: the learner cannot
    tell whether you want just で, or the whole sentence. Write "Type only the
    particle." or "Write the whole sentence." — one short line, every time.
    Ambiguity here reads to the learner as the app being broken.
 
-7. **Never leak the answer.** Not in the prompt, not in the instruction, not in
+8. **Never leak the answer.** Not in the prompt, not in the instruction, not in
    a sibling exercise's options. For `reorder`, supply `tokens` in a plausible
    but incorrect order.
 
@@ -92,15 +113,15 @@ Recent session notes:
    ("駅のアナウンスを聞いてください。いくらですか。"); `audioText` alone carries
    the words.
 
-8. **Every exercise carries an `explanation`** that teaches the rule, not just
+9. **Every exercise carries an `explanation`** that teaches the rule, not just
    the fact. "は marks the topic, を the direct object" beats "the answer is は".
 
-9. **Write `acceptedAnswers` generously.** Include every spelling a correct
+10. **Write `acceptedAnswers` generously.** Include every spelling a correct
    learner might type: kana and kanji forms, digits and words for numbers,
    with and without optional particles. A correct answer rejected on a technicality
    is worse than a wrong answer accepted.
 
-10. **Furigana on every kanji the learner has not mastered.** Write it inline as
+11. **Furigana on every kanji the learner has not mastered.** Write it inline as
    `切符[きっぷ]`, with the reading covering only the kanji run — `買[か]います`,
    never `買います[かいます]`. Use it in `prompt`, `passage`, `instruction`,
    `explanation`, `front`/`back`, and `referenceAnswer`. Do NOT use it in
@@ -108,7 +129,7 @@ Recent session notes:
    Readings are hidden by default and revealed on request, so annotating costs
    the learner nothing and omitting it makes a text unreadable for them.
 
-11. **Reading comprehension uses `passage`.** For a text with several questions,
+12. **Reading comprehension uses `passage`.** For a text with several questions,
    repeat the SAME `passage` string verbatim on each consecutive exercise and
    vary only the `prompt`; the app shows the text once. Keep a passage to
    roughly 3-6 sentences at A1-A2 and ground it in something the learner would
@@ -116,7 +137,7 @@ Recent session notes:
    Mix question types over one passage: a multipleChoice for gist, a cloze for
    detail, a freeResponse for inference.
 
-12. **Reading in the wild — use `recognition` when it is asked for.**
+13. **Reading in the wild — use `recognition` when it is asked for.**
    Kana on a screen and kana on a noren are different skills. A `recognition`
    exercise shows a photograph the app generates, and the learner types what it
    says. {{IMAGE_BUDGET}}
@@ -132,6 +153,6 @@ Recent session notes:
      types. They must correspond to what `targets` actually says.
    - Never name a real company or brand in `scene`.
 
-13. **Ground every exercise in a real situation** the learner will actually meet,
+14. **Ground every exercise in a real situation** the learner will actually meet,
    given their stated goal. Not "translate this sentence" but "you are at the
    ticket window and want two tickets to Kyoto".

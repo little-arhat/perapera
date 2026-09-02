@@ -19,6 +19,9 @@ struct RubyText: View {
     @Environment(\.textScale) private var scale
     @Environment(AppModel.self) private var model
 
+    @State private var tappedWord: String?
+    @State private var wordRect: CGRect = .zero
+
     var body: some View {
         // Plain text with no readings needs none of the machinery, and a real
         // SwiftUI Text composes better (Dynamic Type, accessibility, layout).
@@ -37,9 +40,29 @@ struct RubyText: View {
                 selectable: scale.selectable,
                 highlightWords: model.highlightWords,
                 availableWidth: 0,
+                // Only offered when word highlighting is on: without it there
+                // is no indication a word is a target, and a click that opens a
+                // menu out of nowhere is a surprise rather than a feature.
+                onWordTapped: model.highlightWords
+                    ? { word, rect in
+                        tappedWord = word
+                        wordRect = rect
+                    }
+                    : nil,
                 hugsContent: hugsContent
             )
             .fixedSize(horizontal: hugsContent, vertical: true)
+            .popover(
+                isPresented: Binding(
+                    get: { tappedWord != nil },
+                    set: { if !$0 { tappedWord = nil } }),
+                attachmentAnchor: .rect(.rect(wordRect)),
+                arrowEdge: .top
+            ) {
+                if let tappedWord {
+                    WordActionsPopover(word: tappedWord) { self.tappedWord = nil }
+                }
+            }
         }
     }
 }
@@ -58,6 +81,9 @@ struct MarkdownRubyText: View {
     @Environment(\.palette) private var palette
     @Environment(\.textScale) private var scale
     @Environment(AppModel.self) private var model
+
+    @State private var tappedWord: String?
+    @State private var wordRect: CGRect = .zero
 
     var body: some View {
         RubyTextView(

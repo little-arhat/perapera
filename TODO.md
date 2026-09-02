@@ -30,12 +30,12 @@ cannot.
 
 ## Requested 2026-09-01 — building these
 
-### FL-28a — Translation on hover · M
-Hovering already highlights a word and clicking copies it. Showing its meaning
-there needs a gloss source: the dictionary can answer for saved words at no
-cost, but an arbitrary word in a passage cannot be looked up without either a
-dictionary file or a call. Do the free half first — hover a word that is already
-saved, see its gloss — and decide about the rest afterwards.
+### FL-28a — Automatic glosses · M
+Clicking a word now shows its meaning if it is already saved, and otherwise
+offers Add, Copy and a Jisho lookup. What is still missing is a meaning for a
+word the dictionary has never seen, without leaving the app. Options: bundle a
+JMdict subset (free, offline, large), or a batched call per lesson (cheap, but
+a call). Jisho covers the case well enough that this is not urgent.
 
 ---
 
@@ -167,6 +167,20 @@ since cards hold short lines that do not suffer from width. `TextScale.width`.
 ---
 
 ## Done
+
+### Word actions and lesson variety (2026-09-01)
+- **Click a word (with Words on) for its meaning, Add, Copy or a Jisho lookup.**
+  Word-level saving did not exist before: the star saved the whole exercise's
+  answer, which is not what a learner points at a word to keep. Words already in
+  the dictionary show their meaning and reading straight away.
+- **The generator now sees its last six lessons and is told not to repeat them.**
+  It had no memory, so every request looked like the first and the same ticket
+  window came back repeatedly — the obvious scene for the learner's stated goal.
+  Grammar may recur, since that is what practice is; the setting must not.
+- **A beginner has to be able to read the question.** At A1/A2 a stem written
+  entirely in Japanese is a second exercise nobody asked for, and can be failed
+  by someone who knows the grammar perfectly. The situation now goes in the
+  learner's language, the Japanese stays on what is being tested.
 
 ### On-demand pictures and visible spending (2026-09-01)
 - **Make a picture now**, from the Pictures section, of a word already in the

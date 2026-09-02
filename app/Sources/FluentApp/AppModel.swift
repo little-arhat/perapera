@@ -312,6 +312,7 @@ final class AppModel {
             var record = try await lessons.generate(
                 spec: LessonSpec(mode: mode, size: size, depth: depth,
                                  focus: focus, photoExercises: photoExercises),
+                recent: Array(records.prefix(6)),
                 progress: progressSink(), onSpend: spendSink())
             // The label is the learner's, so it is attached after generation
             // rather than sent to the model.

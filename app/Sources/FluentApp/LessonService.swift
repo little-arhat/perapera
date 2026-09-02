@@ -45,12 +45,13 @@ struct LessonService {
     /// deliberate practice of a list. Empty means the usual selection.
     func generate(
         spec: LessonSpec, seedItems: [SavedItem] = [],
+        recent: [LessonRecord] = [],
         progress: (@Sendable (ClaudeClient.Progress) -> Void)? = nil,
         onSpend: (@Sendable (String, Double, String) -> Void)? = nil
     ) async throws -> LessonRecord {
         let snapshot = try await store.load()
         let prompt = try buildGenerationPrompt(
-            spec: spec, snapshot: snapshot, seedItems: seedItems)
+            spec: spec, snapshot: snapshot, seedItems: seedItems, recent: recent)
         let schema = try resources.text("Schemas/lesson.schema.json")
 
         let generated = try await claude.request(
@@ -150,7 +151,8 @@ struct LessonService {
     }
 
     private func buildGenerationPrompt(
-        spec: LessonSpec, snapshot: FluentStore.Snapshot, seedItems: [SavedItem]
+        spec: LessonSpec, snapshot: FluentStore.Snapshot, seedItems: [SavedItem],
+        recent: [LessonRecord] = []
     ) throws -> String {
         let learner = snapshot.databases.learner_profile.learner
         let target = exerciseTarget(spec: spec, snapshot: snapshot)
@@ -201,6 +203,7 @@ struct LessonService {
             .replacingOccurrences(of: "{{DUE_ITEMS}}", with: dueText)
             .replacingOccurrences(of: "{{RECENT_NOTES}}", with: "(see error patterns above)")
             .replacingOccurrences(of: "{{IMAGE_BUDGET}}", with: imageBudget(spec))
+            .replacingOccurrences(of: "{{RECENT_LESSONS}}", with: recentSummary(recent))
     }
 
     /// Delegates to `LessonPlan` so the prompt and the on-screen preview cannot
@@ -216,6 +219,20 @@ struct LessonService {
             mode: spec.mode,
             dueCount: snapshot.computed.due_reviews_count)
         return (plan.exercises, plan.itemsPerSet, plan.minutes)
+    }
+
+    /// The last few lessons, so the generator can avoid repeating them.
+    ///
+    /// Without this it has no memory: every request looks like the first, and
+    /// the same ticket window comes back for the fifth time because it is the
+    /// obvious scene for the learner's stated goal. The setting is not the
+    /// point — the grammar is — so what has to vary is the setting.
+    private func recentSummary(_ recent: [LessonRecord]) -> String {
+        let entries = recent.prefix(6).map { record -> String in
+            let focus = record.lesson.focus.isEmpty ? "" : " — \(record.lesson.focus)"
+            return "- \(record.lesson.title)\(focus)"
+        }
+        return entries.isEmpty ? "(none yet)" : entries.joined(separator: "\n")
     }
 
     /// How many photographs this lesson may use, stated to the generator in

@@ -33,6 +33,9 @@ struct RubyTextView: NSViewRepresentable {
     /// telling rather than asking.
     let availableWidth: CGFloat
     var isMarkdown: Bool = false
+    /// Called when a word is clicked, with the word and where it sits in the
+    /// view — enough for the caller to anchor a menu to it.
+    var onWordTapped: ((String, CGRect) -> Void)?
     /// Whether this text should shrink to its content.
     ///
     /// True for a reorder token, which is a word that must sit inline with its
@@ -44,11 +47,13 @@ struct RubyTextView: NSViewRepresentable {
 
     func makeNSView(context: Context) -> RubyCanvas {
         let view = RubyCanvas()
+        view.onWordTapped = onWordTapped
         view.configure(with: model)
         return view
     }
 
     func updateNSView(_ view: RubyCanvas, context: Context) {
+        view.onWordTapped = onWordTapped
         view.configure(with: model)
     }
 
@@ -123,6 +128,7 @@ final class RubyCanvas: NSView {
     private var anchor: Int?
     private var hoveredWord: Range<Int>?
     private var trackingArea: NSTrackingArea?
+    var onWordTapped: ((String, CGRect) -> Void)?
 
     override var isFlipped: Bool { false }
     override var acceptsFirstResponder: Bool { model.selectable }
@@ -474,6 +480,31 @@ final class RubyCanvas: NSView {
         return String(plainText[lower..<upper])
     }
 
+    /// Where a character range sits in the view, for anchoring a popover.
+    private func rect(for range: Range<Int>) -> CGRect {
+        let headroom = hasRuby ? model.fontSize * 0.6 : 0
+        let offset = bounds.height - textHeight - headroom
+        for (line, origin) in lines {
+            let lineRange = CTLineGetStringRange(line)
+            let start = lineRange.location
+            let end = start + lineRange.length
+            let from = max(range.lowerBound, start)
+            let to = min(range.upperBound, end)
+            guard from < to else { continue }
+
+            let x1 = CTLineGetOffsetForStringIndex(line, from, nil)
+            let x2 = CTLineGetOffsetForStringIndex(line, to, nil)
+            var ascent: CGFloat = 0, descent: CGFloat = 0, leading: CGFloat = 0
+            CTLineGetTypographicBounds(line, &ascent, &descent, &leading)
+            return CGRect(
+                x: origin.x + min(x1, x2),
+                y: origin.y - descent + offset,
+                width: max(abs(x2 - x1), 1),
+                height: ascent + descent)
+        }
+        return .zero
+    }
+
     // MARK: - Mouse
 
     override func updateTrackingAreas() {
@@ -510,12 +541,17 @@ final class RubyCanvas: NSView {
         let point = convert(event.locationInWindow, from: nil)
         guard let index = characterIndex(at: point) else { return }
 
-        // A click takes the word; a drag takes a range. Copying the word on a
-        // single click is the dictionary-lookup gesture, and it costs nothing
-        // because a click that turns into a drag replaces the selection anyway.
+        // A click takes the word. When someone is listening for it, the word
+        // is offered up with its position so a menu can be anchored to it —
+        // looking a word up and keeping it are the two things a learner wants
+        // from a word they do not know, and neither should need a detour.
         if event.clickCount == 1, let word = wordRange(containing: index) {
             selection = word
-            copySelection()
+            if let onWordTapped {
+                onWordTapped(text(in: word), rect(for: word))
+            } else {
+                copySelection()
+            }
         }
         anchor = index
         window?.makeFirstResponder(self)
