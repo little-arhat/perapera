@@ -63,3 +63,7 @@ _probes/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
+
+# Personal working notes — churn constantly and would conflict on every merge
+# from upstream. Kept on disk, out of the history.
+TODO.md
