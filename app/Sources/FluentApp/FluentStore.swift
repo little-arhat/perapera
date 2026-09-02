@@ -33,6 +33,36 @@ final class FluentStore {
             let learner_profile: Profile
             let spaced_repetition: SpacedRepetition
             let mistakes_db: MistakesDB
+            let mastery_db: MasteryDB
+            let session_log: SessionLog
+        }
+
+        /// What Fluent recorded about each finished session.
+        ///
+        /// `focus_next_session` is the important one: it is the teacher's own
+        /// written instruction for what to do next, decided while looking at
+        /// the learner's actual answers. The app ignored it for weeks.
+        struct SessionLog: Decodable {
+            let sessions: [Session]
+
+            struct Session: Decodable {
+                let session_id: String?
+                let date: String?
+                let accuracy: Double?
+                let topics_covered: [String]?
+                let focus_next_session: [String]?
+                let breakthroughs: [String]?
+                let notes: String?
+            }
+        }
+
+        struct MasteryDB: Decodable {
+            let skills: [String: Skill]?
+
+            struct Skill: Decodable {
+                let mastery_level: Int?
+                let avg_accuracy: Double?
+            }
         }
 
         struct Profile: Decodable {

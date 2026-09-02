@@ -201,7 +201,9 @@ struct LessonService {
             .replacingOccurrences(of: "{{FOCUS}}", with: spec.focus.isEmpty ? "(no specific focus — choose what serves the learner most)" : spec.focus)
             .replacingOccurrences(of: "{{ERROR_PATTERNS}}", with: patternText)
             .replacingOccurrences(of: "{{DUE_ITEMS}}", with: dueText)
-            .replacingOccurrences(of: "{{RECENT_NOTES}}", with: "(see error patterns above)")
+            .replacingOccurrences(of: "{{TEACHER_PLAN}}", with: teacherPlan(snapshot))
+            .replacingOccurrences(of: "{{RECENT_NOTES}}", with: recentNotes(snapshot))
+            .replacingOccurrences(of: "{{SKILL_MASTERY}}", with: skillMastery(snapshot))
             .replacingOccurrences(of: "{{IMAGE_BUDGET}}", with: imageBudget(spec))
             .replacingOccurrences(of: "{{RECENT_LESSONS}}", with: recentSummary(recent))
     }
@@ -219,6 +221,53 @@ struct LessonService {
             mode: spec.mode,
             dueCount: snapshot.computed.due_reviews_count)
         return (plan.exercises, plan.itemsPerSet, plan.minutes)
+    }
+
+    /// What the teacher said to do next, from Fluent's session log.
+    ///
+    /// The single most valuable input here and previously discarded entirely —
+    /// the prompt substituted the literal string "(see error patterns above)".
+    /// These lines were written by a teacher looking at the learner's actual
+    /// answers, and they are specific in a way no summary of error patterns is:
+    /// "the 百-series shifts — listening was the only 0 of the lesson and the
+    /// one with real-world cost".
+    ///
+    /// Newest first, because the most recent instruction has not been acted on
+    /// yet by definition.
+    private func teacherPlan(_ snapshot: FluentStore.Snapshot) -> String {
+        let sessions = snapshot.databases.session_log.sessions.reversed()
+        var lines: [String] = []
+        for session in sessions {
+            guard let focus = session.focus_next_session, !focus.isEmpty else { continue }
+            let when = session.date.map { " (after \($0))" } ?? ""
+            lines.append(contentsOf: focus.map { "- \($0)\(when)" })
+            // Two sessions' worth. Older instructions have usually been
+            // overtaken, and a long list stops reading as a priority.
+            if lines.count >= 6 { break }
+        }
+        return lines.isEmpty ? "(nothing recorded yet)" : lines.joined(separator: "\n")
+    }
+
+    /// What the last sessions covered and how they went.
+    private func recentNotes(_ snapshot: FluentStore.Snapshot) -> String {
+        let sessions = snapshot.databases.session_log.sessions.suffix(4).reversed()
+        let lines = sessions.map { session -> String in
+            let accuracy = session.accuracy.map { " — \(Int($0 * 100))% correct" } ?? ""
+            let topics = (session.topics_covered ?? []).joined(separator: "; ")
+            return "- \(session.date ?? "?")\(accuracy): \(topics.isEmpty ? "—" : topics)"
+        }
+        return lines.isEmpty ? "(no sessions yet)" : lines.joined(separator: "\n")
+    }
+
+    /// Mastery per skill, 0-5, so the lesson can lean on what is weak.
+    private func skillMastery(_ snapshot: FluentStore.Snapshot) -> String {
+        guard let skills = snapshot.databases.mastery_db.skills, !skills.isEmpty else {
+            return "(not yet assessed)"
+        }
+        return skills
+            .sorted { ($0.value.mastery_level ?? 0) < ($1.value.mastery_level ?? 0) }
+            .map { "\($0.key) \($0.value.mastery_level ?? 0)/5" }
+            .joined(separator: " · ")
     }
 
     /// The last few lessons, so the generator can avoid repeating them.

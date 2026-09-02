@@ -38,9 +38,18 @@ Spaced-repetition items due now (id, type, content, answer, priority):
 
 {{DUE_ITEMS}}
 
-Recent session notes:
+## What the teacher said to do next
+
+Written after the learner's last sessions, looking at their actual answers.
+Treat these as the brief for this lesson, newest first:
+
+{{TEACHER_PLAN}}
+
+## Recent sessions
 
 {{RECENT_NOTES}}
+
+Skill mastery (0-5): {{SKILL_MASTERY}}
 
 ## Lessons already made — do not repeat these
 
@@ -48,13 +57,23 @@ Recent session notes:
 
 ## Rules
 
-1. **Review mode covers the due items.** In review mode, every due item above
+1. **Follow the teacher's brief.** The lines above under *What the teacher said
+   to do next* were written by a teacher who had just read this learner's
+   answers. They name the exact thing that failed and why it matters. Build the
+   lesson around them unless the requested focus says otherwise — and if the
+   learner asked for something else, cover their request first and the brief
+   second, rather than dropping it.
+
+   An instruction that has been carried out in a later session is spent; the
+   recent-sessions list shows which.
+
+2. **Review mode covers the due items.** In review mode, every due item above
    must be tested by at least one exercise, and each such exercise must list the
    item's id in `reviewItemIds`. Bundle closely-related items into one exercise
    rather than repeating near-identical questions. In lesson mode, weave in due
    items where they fit naturally but prioritise the requested focus.
 
-2. **Interleave.** Never drill one pattern for the whole lesson. Mix 2-3 threads
+3. **Interleave.** Never drill one pattern for the whole lesson. Mix 2-3 threads
    so the learner must discriminate between them.
 
    **And do not rebuild a lesson already listed above.** The grammar may
@@ -66,16 +85,16 @@ Recent session notes:
    till, a phone call, a neighbour at the door, a hotel check-in, a lost
    umbrella. Same particles, new world.
 
-3. **Target 60-70% success.** Calibrate difficulty from the error patterns and
+4. **Target 60-70% success.** Calibrate difficulty from the error patterns and
    notes above. Comfortable review is wasted time; impossible review teaches
    nothing.
 
-4. **Prefer offline-gradable kinds.** multipleChoice, cloze, reorder, matching,
+5. **Prefer offline-gradable kinds.** multipleChoice, cloze, reorder, matching,
    digitEntry, flashcard, and set grade instantly on-device. Use translation and
    freeResponse where genuine production is the point, but keep them to roughly
    a quarter of the lesson so it stays useful without a network.
 
-5. **Default to sets. A singleton needs a reason.** Nearly every exercise
+6. **Default to sets. A singleton needs a reason.** Nearly every exercise
    should be a `set`: one instruction, then numbered items a, b, c… — the shape
    a textbook uses. Automaticity comes from doing a pattern {{ITEMS_PER_SET}}
    times in a row, not once. Use a standalone exercise only where an item
@@ -88,7 +107,7 @@ Recent session notes:
    deep lesson into a broad one by splitting a drill into separate exercises,
    and do not pad a broad lesson by repeating one point.
 
-6. **A beginner must be able to read the question.**
+7. **A beginner must be able to read the question.**
    At A1 and A2, a question stem written entirely in Japanese is a second
    exercise the learner did not ask for — they can fail it while knowing the
    grammar perfectly. Put the situation in {{EXPLANATION_LANGUAGE}} and keep the
@@ -96,13 +115,13 @@ Recent session notes:
    window?" with the options in Japanese, not the whole stem in Japanese.
    At B1 and above, prefer the target language.
 
-7. **Say exactly what to type.** `instruction` is effectively required. A gap
+8. **Say exactly what to type.** `instruction` is effectively required. A gap
    like 「コンビニ＿水を買います。」 is ambiguous on its own: the learner cannot
    tell whether you want just で, or the whole sentence. Write "Type only the
    particle." or "Write the whole sentence." — one short line, every time.
    Ambiguity here reads to the learner as the app being broken.
 
-8. **Never leak the answer.** Not in the prompt, not in the instruction, not in
+9. **Never leak the answer.** Not in the prompt, not in the instruction, not in
    a sibling exercise's options. For `reorder`, supply `tokens` in a plausible
    but incorrect order.
 
@@ -113,15 +132,15 @@ Recent session notes:
    ("駅のアナウンスを聞いてください。いくらですか。"); `audioText` alone carries
    the words.
 
-9. **Every exercise carries an `explanation`** that teaches the rule, not just
+10. **Every exercise carries an `explanation`** that teaches the rule, not just
    the fact. "は marks the topic, を the direct object" beats "the answer is は".
 
-10. **Write `acceptedAnswers` generously.** Include every spelling a correct
+11. **Write `acceptedAnswers` generously.** Include every spelling a correct
    learner might type: kana and kanji forms, digits and words for numbers,
    with and without optional particles. A correct answer rejected on a technicality
    is worse than a wrong answer accepted.
 
-11. **Furigana on every kanji the learner has not mastered.** Write it inline as
+12. **Furigana on every kanji the learner has not mastered.** Write it inline as
    `切符[きっぷ]`, with the reading covering only the kanji run — `買[か]います`,
    never `買います[かいます]`. Use it in `prompt`, `passage`, `instruction`,
    `explanation`, `front`/`back`, and `referenceAnswer`. Do NOT use it in
@@ -129,7 +148,7 @@ Recent session notes:
    Readings are hidden by default and revealed on request, so annotating costs
    the learner nothing and omitting it makes a text unreadable for them.
 
-12. **Reading comprehension uses `passage`.** For a text with several questions,
+13. **Reading comprehension uses `passage`.** For a text with several questions,
    repeat the SAME `passage` string verbatim on each consecutive exercise and
    vary only the `prompt`; the app shows the text once. Keep a passage to
    roughly 3-6 sentences at A1-A2 and ground it in something the learner would
@@ -137,7 +156,7 @@ Recent session notes:
    Mix question types over one passage: a multipleChoice for gist, a cloze for
    detail, a freeResponse for inference.
 
-13. **Reading in the wild — use `recognition` when it is asked for.**
+14. **Reading in the wild — use `recognition` when it is asked for.**
    Kana on a screen and kana on a noren are different skills. A `recognition`
    exercise shows a photograph the app generates, and the learner types what it
    says. {{IMAGE_BUDGET}}
@@ -153,6 +172,6 @@ Recent session notes:
      types. They must correspond to what `targets` actually says.
    - Never name a real company or brand in `scene`.
 
-14. **Ground every exercise in a real situation** the learner will actually meet,
+15. **Ground every exercise in a real situation** the learner will actually meet,
    given their stated goal. Not "translate this sentence" but "you are at the
    ticket window and want two tickets to Kyoto".
