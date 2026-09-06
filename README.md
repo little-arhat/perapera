@@ -1,16 +1,19 @@
-# Fluent — macOS app
+# Perapera
 
-A SwiftUI front end for Fluent. Claude generates lessons, the app renders and
-grades them (offline), and finished lessons are written back through Fluent's
-existing database scripts.
+A macOS app for learning Japanese, built on [Fluent](https://github.com/m98/fluent).
+Claude writes the lessons, the app renders and grades them offline, and finished
+lessons are written back through Fluent's database scripts.
+
+- [INSTALL.md](INSTALL.md) — build it, run it, point it at your data
+- [USAGE.md](USAGE.md) — the daily loop
+- [CLAUDE.md](CLAUDE.md) — how the code is organised
 
 ## Why it exists
 
-The terminal is a poor exercise surface. It has no audio, no lesson archive, no
-offline practice, and — the reason that actually forced this — the system IME
-silently converts kana to kanji, so typing Japanese tests *recognition* rather
-than *recall*. The app fixes the surface. Fluent's databases, SM-2 scheduling,
-and skills remain the system of record.
+The terminal is a poor exercise surface. It has no audio, no lesson archive and no
+offline practice, and the system IME silently converts kana to kanji, so typing
+Japanese tests recognition instead of recall. The app fixes the surface. Fluent's
+databases, SM-2 scheduling and skills stay the system of record.
 
 ## Design
 
@@ -29,75 +32,88 @@ Generate ──► claude -p --json-schema ──► lesson JSON (validated)
                                               │
                                 claude -p ──► feedback JSON (validated)
                                               │
-                                     update-db.py  ← the single writer
+                                update-db.py  ← the single writer
 ```
 
-Two rules hold the design together:
+Two rules hold this together.
 
-**The app owns writes.** Claude is a pure function — a prompt and a schema go
-in, a validated value comes out. It never touches a database. A bad generation
-is a retry, not a corruption.
+**The app owns writes.** Claude is a pure function: a prompt and a schema go in, a
+validated value comes out. It never touches a database, so a bad generation costs a
+retry rather than a corruption.
 
-**Fluent owns the learning state.** SM-2, streaks, atomic writes, and backups
-stay in `update-db.py`, which is tested and already authoritative. Nothing here
-reimplements them; duplicating that logic in Swift would create a second source
-of truth that drifts.
+**Fluent owns the learning state.** SM-2, streaks, atomic writes and backups live in
+`update-db.py`, which is tested and already authoritative. A Swift reimplementation
+would be a second source of truth that drifts away from the first.
 
-The split extends to grading: the app supplies every fact it can *measure*
-(which answers were right, how long the lesson took, which items were reviewed),
-and the teacher supplies only *judgement* (which mistakes are worth tracking,
-what to focus on next). Neither is asked for the other's half.
+Grading splits the same way. The app supplies what it can measure: which answers were
+right, how long the lesson took, which items were reviewed. The teacher supplies
+judgement: which mistakes are worth tracking, what to work on next. Neither is asked
+for the other's half.
 
 ## Layout
 
 | Path | What |
 |---|---|
 | `Sources/FluentCore/` | Pure values: `Lesson`, `Exercise`, `Grader`, `SessionReport`. No SwiftUI, no subprocesses. |
-| `Sources/FluentApp/` | The shell: views, plus the two effectful edges (`ClaudeClient`, `FluentStore`). |
-| `Sources/FluentApp/Resources/Prompts/` | Prompt text. Content, not code — edit without rebuilding. |
+| `Sources/FluentApp/` | The shell: views, plus the effectful edges `ClaudeClient`, `FluentStore` and `ImagePipeline`. |
+| `Sources/FluentApp/Resources/Prompts/` | Prompt text. Content, not code. |
 | `Sources/FluentApp/Resources/Schemas/` | The JSON contracts passed to `claude --json-schema`. |
-| `Tests/FluentCoreTests/` | Grading rules and the `update-db.py` wire format. |
+| `Tests/FluentCoreTests/` | Grading rules and the `update-db.py` wire format. 127 tests, no network. |
+| `tools/imgbench/` | Image-model benchmark. Its own `uv` project, 28 tests. |
+| `fluent/` | Fluent: skills, hooks, six databases, methodology, 22 Python tests. |
 
-`Exercise` decodes flat JSON into a Swift sum type. The schema is flat because
-models generate flat objects far more reliably than discriminated unions; the
-boundary validates, and the interior gets a real sum type with no optionals to
-thread through the UI.
+`Exercise` decodes flat JSON into a Swift sum type. The schema is flat because models
+generate flat objects far more reliably than discriminated unions. The boundary
+validates; the interior gets a real sum type with no optionals to thread through the UI.
 
-## Build
+## Credits
+
+This app is a front end. Everything that makes it teach anything comes from
+**[Fluent](https://github.com/m98/fluent)** by Mohammad Kermani — 396 stars, MIT licensed,
+and the reason this project exists at all.
+
+Fluent supplies the parts that are hard to get right:
+
+- the SM-2 spaced-repetition implementation, and `update-db.py`, which has stayed the
+  single writer of every database through this whole project
+- the six-database schema: profile, progress, mistakes, mastery, review queue, session log
+- the teaching methodology — active recall, desirable difficulty at 60–70%, interleaving,
+  comprehensible input — and the error taxonomy the feedback is graded against
+- twelve skills, including the `/fluent-setup` interview that still creates every profile
+  this app reads
+
+I did not improve on any of that. I put a window in front of it, because the terminal
+cannot play audio, cannot hold a lesson archive, and lets the system IME turn your kana
+into kanji before you have learned them. Fluent remains the system of record; if you want
+the tutor without the window, install it directly and skip this repo:
 
 ```bash
-make app     # build + assemble Fluent.app + ad-hoc sign
-make run     # and launch it
-make test    # swift test
+claude plugin marketplace add m98/fluent && claude plugin install fluent@m98
 ```
 
-Requires Xcode (for the SDK and the test frameworks) and Swift 6. There is no
-`.xcodeproj` on purpose — this is a plain Swift package, and the bundle is four
-files of metadata rather than a reason to adopt a project format.
+## Relationship to Fluent
 
-The app spawns `claude` and `python3`, so **App Sandbox is off**. A sandboxed
-build cannot work.
+`fluent/` is our copy of Fluent, and `upstream` points at the original. It carries about
+244 lines of changes, of which one matters: upstream keys the streak off `last_updated`,
+which `/fluent-setup` stamps at profile creation, so a streak could never start. We added
+`last_session_date` and a backfill. That fix belongs upstream and has not been sent yet.
 
-## Settings
+```bash
+git diff upstream/main -- fluent/     # what we changed
+git merge upstream/main               # take their improvements
+```
 
-`claude` is located on PATH at first launch, including the usual Homebrew
-locations, since a GUI app inherits a minimal PATH. Repo path, `claude` path,
-and model are editable in Settings (⌘,).
+## Licence
 
-Opus generates and grades by default. Generation is the high-volume call, so
-switching *it* to Sonnet is the main cost lever; every call carries a
-`--max-budget-usd` ceiling.
-
-## Offline
-
-Generation and feedback need the network. Everything between them does not.
-Generate several lessons, do them on a plane, and press **Finish lesson** when
-you land — a completed lesson waits in `completed` state until it can be sent.
-One lesson becomes one Fluent session.
+MIT, inherited from Fluent. See [LICENSE](LICENSE).
 
 ## Status
 
-Phase 1 (core loop) is built. Not yet done:
+The core loop works end to end: generate a lesson, do it offline, finish it, and the
+results land in Fluent's six databases. Japanese TTS, kana input with the IME bypassed,
+Core Text furigana, generated photographs with the writing verified before you see it,
+word drills, a picture library, saved words and per-call spending are all live.
 
-- **Phase 2** — Japanese TTS, and kana input with the IME bypassed.
-- **Phase 3** — progress dashboard, furigana, kanji reading drills.
+Outstanding work is tracked in `TODO.md`. The next structural change moves learner state
+out of `~/.claude/fluent-data` into an XDG data directory with named profiles; see
+[TransitionPlan.md](TransitionPlan.md).
