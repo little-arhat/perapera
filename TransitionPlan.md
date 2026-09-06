@@ -2055,9 +2055,10 @@ make run
 ```bash
 export FB="$(cat "$HOME/fluent-transition-backup/LATEST")"
 export P="$HOME/.local/share/perapera/profiles/roma-japanese"
-# -print0/-0: $P contains a space ("the XDG data directory"), and a plain
-# `find | xargs` word-splits on it, silently producing an empty digest list and
-# a diff that fails for the wrong reason.
+# -print0/-0 throughout: $XDG_DATA_HOME is whatever the learner set it to, and
+# a plain `find | xargs` word-splits on any space in it, silently producing an
+# empty digest list and a diff that fails for the wrong reason. The first draft
+# of this check did exactly that against "Application Support".
 find "$P" -type f -print0 | sort -z | xargs -0 shasum -a 256 \
   | awk '{print $1}' | sort > /tmp/after.txt
 awk '{print $1}' "$FB/fluent-data.sha256.post-2.2" | sort > /tmp/before.txt
@@ -2095,15 +2096,15 @@ keep writing to it."
 - [ ] **Step 1: Update the untracked local settings**
 
 Set `FLUENT_DATA_DIR` in `.claude/settings.local.json` to
-`/Users/r/Library/the XDG data directory/Fluent/profiles/roma-japanese`.
+`/Users/r/.local/share/perapera/profiles/roma-japanese`.
 
 - [ ] **Step 2: Move the OpenRouter key out of the repo**
 
 ```bash
 mkdir -p "$HOME/.local/share/perapera"
-cp .env "$HOME/Library/the XDG data directory/Fluent/credentials.env"
-chmod 600 "$HOME/Library/the XDG data directory/Fluent/credentials.env"
-grep -c OPENROUTER_FLUENT "$HOME/Library/the XDG data directory/Fluent/credentials.env"
+cp .env "$HOME/.local/share/perapera/credentials.env"
+chmod 600 "$HOME/.local/share/perapera/credentials.env"
+grep -c OPENROUTER_FLUENT "$HOME/.local/share/perapera/credentials.env"
 ```
 
 Leave `.env` in place for `tools/imgbench`, which reads it independently — and write down
@@ -2689,7 +2690,7 @@ make run
 Create `Test Learner / Spanish`. Then:
 
 ```bash
-ls "$HOME/Library/the XDG data directory/Fluent/profiles/"
+ls "$HOME/.local/share/perapera/profiles/"
 python3 - <<'PY'
 import json, os
 p = os.path.expanduser("~/.local/share/perapera/profiles/test-learner-spanish")
@@ -2720,7 +2721,7 @@ is the bug this step exists to catch.**
 - [ ] **Step 7: Remove the test profile and commit**
 
 ```bash
-rm -rf "$HOME/Library/the XDG data directory/Fluent/profiles/test-learner-spanish"
+rm -rf "$HOME/.local/share/perapera/profiles/test-learner-spanish"
 git add -A
 git commit -m "feat(app): create and switch learner profiles"
 ```
@@ -3111,8 +3112,8 @@ None of these block a start; each changes one later task.
 3. **Retiring `~/.claude/fluent-data`.** The plan renames it after a verified copy (D6). If
    it should be left in place instead, drop `Migrator.retire` — and accept that the CLI and
    the app can then diverge silently.
-4. **the XDG data directory directory name.** `Fluent` (human-navigable) rather than
-   `dev.fluent.app` (bundle-identifier convention). Easy to change now, awkward later.
+4. ~~**State directory location.**~~ **Settled 2026-09-06:**
+   `${XDG_DATA_HOME:-~/.local/share}/perapera/`, see D5a.
 5. **What the teacher's brief contains.** `Resources/teacher-context.json` currently names
    `docs/METHODOLOGY.md` for generation and adds the feedback template for grading. It
    deliberately excludes `fluent/CLAUDE.md` and `LEARNING_SYSTEM.md` (D3, D4). If "all of
@@ -3155,7 +3156,7 @@ would each have stopped execution:
 | 1 | `git submodule add` with a local path dies on `fatal: transport 'file' not allowed` (git ≥ 2.38, CVE-2022-39253) | Moot: the design moved to one repository plus an `upstream` remote, so no submodule is ever added (D2) |
 | 2 | `ProfileSlug.make`'s fallback used `String.hashValue`, which Swift seeds per process — a learner named `ローマ` would get a new directory every launch and orphan their history each time | SHA-256 prefix, with a test asserting the literal value across three separate runs (Task 3.1) |
 | 3 | `git rm -r tests` leaves an untracked `__pycache__`, so `git mv app/Tests Tests` means "move *into* `tests/`" and lands the Swift suite at `Tests/Tests/` — exit 0, no warning | `rm -rf tests` plus an explicit `test ! -e tests` gate (Tasks 2.1, 2.3) |
-| 4 | The migration's primary verification `find "$P" … \| xargs shasum` word-splits on the space in *the XDG data directory*, producing an empty digest list and a failure that looks like data loss | `-print0 \| sort -z \| xargs -0` (Task 3.4) |
+| 4 | The migration's primary verification `find "$P" … \| xargs shasum` word-splits on the space in the then-planned *Application Support* path, producing an empty digest list and a failure that looks like data loss | `-print0 \| sort -z \| xargs -0` (Task 3.4) |
 
 The rest were of a kind: enumerations taken from memory rather than from `rg`. The
 "three call sites" for `dataDirectory` were six; `lessonStore` is non-optional and cannot
