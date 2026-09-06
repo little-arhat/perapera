@@ -92,7 +92,7 @@ Recorded 2026-09-02. The executor re-measures these in Task 0.1 and compares.
 | Commits ahead of `origin/main` (m98/fluent) | 38 |
 | Merge base with upstream | `86fb80f` |
 | Swift tests | 127, all passing |
-| Kit Python tests | 19, all passing (`python3 -m unittest discover -s tests`) |
+| Fluent Python tests | 19, all passing (`python3 -m unittest discover -s tests`) |
 | imgbench tests | 28, all passing (`uv run pytest` in `tools/imgbench`) |
 | Live data directory | `~/.claude/fluent-data` (1.7 MB) |
 | Lesson records | 7 JSON + 2 asset folders |
@@ -651,7 +651,7 @@ FLUENT_DATA_DIR="$HOME/.claude/fluent-data" python3 fluent/.claude/hooks/read-db
 ```
 
 Expected: the baseline due count and next session id from `$FB/baseline.txt`, then
-`Ran 19 tests ... OK`. The tests resolve the repo root from `__file__`, so they follow the
+`Ran 20 tests ... OK`. The tests resolve the repo root from `__file__`, so they follow the
 move without edits.
 
 - [ ] **Step 5: Commit**
@@ -666,7 +666,7 @@ git commit -m "refactor: move fluent into fluent/"
       `tools`, and no `tests`/`data`/`results`/`LEARNING_SYSTEM.md`.
 - [ ] `git log --follow --oneline fluent/.claude/hooks/update-db.py | wc -l` is at least 5 —
       history walks through the move.
-- [ ] 19 Python tests pass from `fluent/`.
+- [ ] 20 Python tests pass from `fluent/`.
 - [ ] `cd app && swift test` still reports 127 tests.
 
 ### Task 1.3: Move the app to the root
@@ -846,7 +846,7 @@ git bundle verify "$FB/perapera-after-phase1.bundle"
 
 **Verification for Phase 1**
 - [ ] `swift test` gives 127 passing tests.
-- [ ] `cd fluent && python3 -m unittest discover -s tests -q` gives 19 passing tests.
+- [ ] `cd fluent && python3 -m unittest discover -s tests -q` gives 20 passing tests.
 - [ ] `python3 fluent/.claude/hooks/read-db.py` reports the baseline six numbers —
       **no learner state has moved yet.**
 - [ ] `du -sh ~/.claude/fluent-data` unchanged from Phase 0.
@@ -930,7 +930,7 @@ git commit -m "docs(fluent): separate teaching methodology from CLI choreography
 - [ ] `grep -nE '/data|update-db|/dutch|one at a time|[Gg]reet' fluent/docs/METHODOLOGY.md`
       returns nothing.
 - [ ] `fluent/LEARNING_SYSTEM.md` links to `docs/METHODOLOGY.md` at least five times.
-- [ ] 19 Python tests still pass.
+- [ ] 20 Python tests still pass.
 
 ### Task 2.2: Send CLI session transcripts to the data directory
 
@@ -998,7 +998,7 @@ the checkout. Update the module docstring's path-resolution summary to mention t
 python3 -m unittest discover -s tests -q 2>&1 | tail -3
 ```
 
-Expected: `Ran 21 tests ... OK`.
+Expected: `Ran 22 tests ... OK`.
 
 - [ ] **Step 5: Point the skills and docs at the new location**
 
@@ -1042,7 +1042,7 @@ git push
 ```
 
 **Verification for Phase 2**
-- [ ] 21 Python tests pass.
+- [ ] 22 Python tests pass.
 - [ ] `grep -rn '/results/\|results/session' fluent/.claude fluent/*.md | grep -v FLUENT_DATA_DIR`
       returns nothing.
 - [ ] `swift test` gives 127 passing tests.

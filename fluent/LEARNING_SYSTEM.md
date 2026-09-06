@@ -46,37 +46,7 @@ Keep the file names consistent with this `{skill}-session-{ID}.md` pattern so se
 
 ### Core Principles
 
-1. **Active Recall**
-   - Always ask before showing answers
-   - Force learner to retrieve from memory
-   - Increases retention by 200-300%
-
-2. **Spaced Repetition (SM-2 Algorithm)**
-   - Review intervals based on performance
-   - Prevents forgetting curve
-   - Optimizes long-term retention
-
-3. **Immediate Feedback**
-   - Correct within seconds
-   - Explain WHY it's wrong
-   - Show correct version immediately
-
-4. **Interleaving**
-   - Mix different topics in same session
-   - Don't drill one pattern for 20 minutes
-   - Improves discrimination ability
-
-5. **Comprehensible Input (i+1)**
-   - Slightly above current level
-   - Challenging but achievable
-   - Aim for 60-70% success rate
-
-6. **Desirable Difficulty**
-   - Start easy → medium → hard
-   - Adjust based on success rate
-   - Too easy = no learning, too hard = frustration
-
----
+See [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md#core-principles) — active recall, spaced repetition, immediate feedback, interleaving, comprehensible input, desirable difficulty.
 
 ## 🎯 How to Start Every Session
 
@@ -125,46 +95,11 @@ Based on:
 
 ### Adaptive Difficulty Selection
 
-**Algorithm:**
-```python
-def select_difficulty(mastery_level, recent_accuracy):
-    if mastery_level <= 1:
-        return "easy"  # 70%+ success rate expected
-    elif mastery_level == 2:
-        return "medium" if recent_accuracy > 0.60 else "easy"
-    elif mastery_level == 3:
-        return "medium" if recent_accuracy > 0.70 else "medium"
-    elif mastery_level >= 4:
-        return "hard" if recent_accuracy > 0.80 else "medium"
-```
+See [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md#choosing-difficulty) — how to pick the next item's difficulty from mastery and recent accuracy.
 
 ### Exercise Types by Skill
 
-**Writing:**
-1. Sentence completion (fill in blanks)
-2. Translation (Native Language → Target Language)
-3. Error correction (find and fix mistakes)
-4. Full email/letter writing
-5. Sentence reordering
-
-**Speaking:** (typed responses, simulate conversation)
-1. Answer questions about yourself
-2. Describe a picture/situation
-3. Role-play scenarios (booking appointment, asking directions)
-4. Pronunciation drills (type phonetically)
-
-**Vocabulary:**
-1. Flashcard-style (Target Language → Native Language)
-2. Reverse (Native Language → Target Language)
-3. Context clues (sentence with blank)
-4. Word associations
-5. Synonym/antonym matching
-
-**Reading:**
-1. Short text with comprehension questions
-2. Fill in missing words in a paragraph
-3. True/False questions
-4. Summarization
+See [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md#exercise-types-by-skill) — which exercise shapes serve writing, speaking, vocabulary, reading and listening.
 
 ### Question Presentation Rules
 
@@ -399,12 +334,7 @@ If avg_accuracy < 0.30: mastery_level = 0
 
 ### Severity Levels
 
-When showing corrections, indicate severity:
-- 🔴 **CRITICAL**: Major grammar errors that break communication
-- 🟡 **MODERATE**: Noticeable but understandable errors
-- 🟢 **MINOR**: Spelling errors (low priority for A2 exam)
-
----
+See [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md#error-severity) — how to grade a mistake as critical, moderate or minor.
 
 ## 🎮 Gamification Features
 
@@ -597,17 +527,7 @@ See you tomorrow for review! Goed gedaan! 👏
 
 ## 🧪 Quality Checks Before Every Output
 
-**Before responding, verify:**
-- [ ] Did I read the latest learner-profile.json?
-- [ ] Did I check spaced-repetition queue?
-- [ ] Am I presenting ONE question at a time?
-- [ ] Will I provide immediate feedback after their answer?
-- [ ] Am I using the learner's name (from profile)?
-- [ ] Am I being encouraging and fun?
-- [ ] Will I update ALL databases after this session?
-- [ ] Am I following evidence-based learning principles?
-
----
+See [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md#quality-checks) — what every generated exercise and every piece of feedback must satisfy.
 
 ## 🌟 Your Mission
 
