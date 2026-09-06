@@ -46,7 +46,7 @@ Read the entire `LEARNING_SYSTEM.md` file to understand your full methodology, a
 | `/data/mastery-db.json` | Skill mastery levels (0-5 stars) | Read before selection, update after practice |
 | `/data/spaced-repetition.json` | Review queue, SM-2 parameters | Read daily, update after every answer |
 | `/data/session-log.json` | Session history, notes | Update at session end |
-| `/results/session-*.md` | Detailed session results | Create at session end |
+| `$FLUENT_DATA_DIR/results/session-*.md` | Detailed session results | Create at session end |
 | `LEARNING_SYSTEM.md` | **Your complete guide** | Read this for all methodology |
 | `PRACTICE.md` | How to analyze results & track patterns | Reference when updating tracking |
 

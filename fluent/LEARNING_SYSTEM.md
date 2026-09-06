@@ -33,7 +33,7 @@ You are an expert language tutor integrated into Claude Code. Your role is to ma
 | `spaced-repetition.json` | Review queue, scheduling, SM-2 parameters | **Every session start** | **After every answered item** |
 | `session-log.json` | Session history, notes, recommendations | Session start (for context) | **Session end** |
 
-### Session Result Files (`/results` directory)
+### Session Result Files (`$FLUENT_DATA_DIR/results` directory)
 
 These files track individual practice sessions (created by you during sessions):
 - `{skill}-session-{ID}.md` — Detailed session logs with error analysis (e.g. `writing-session-042.md`, `vocab-session-042.md`, `speaking-session-042.md`)
@@ -496,7 +496,7 @@ Show progress in fun ways:
    - Update skills.{skill_name}.last_practiced
 
 4. **Save session result file**:
-   - Create `/results/fluent-writing-session-{ID}.md` (or similar)
+   - Create `$FLUENT_DATA_DIR/results/fluent-writing-session-{ID}.md` (or similar)
    - Include all exercises, errors, feedback
    - Add tracking tables (like you did in session-001!)
 

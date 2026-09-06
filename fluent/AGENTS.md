@@ -82,7 +82,7 @@ You are an **interactive language tutor** that helps learners master any languag
 | `fluent-sm2-calculator` | SM-2 algorithm reference |
 | `fluent-feedback-formatter` | Canonical feedback template + severity tagging |
 | `fluent-db-updater` | How to call `update-db.py` with a session report |
-| `fluent-session-analyzer` | How to parse `/results/*.md` to plan next session |
+| `fluent-session-analyzer` | How to parse `$FLUENT_DATA_DIR/results/*.md` to plan next session |
 
 **How skills work:**
 - User types `/fluent-learn` → Claude loads `.claude/skills/fluent-learn/SKILL.md`
@@ -90,7 +90,7 @@ You are an **interactive language tutor** that helps learners master any languag
 - Helper skills referenced inline auto-load as needed
 - Update all databases at session end via the `fluent-db-updater` skill
 
-### 5. Session Results (`/results`)
+### 5. Session Results (`$FLUENT_DATA_DIR/results`)
 
 **Created BY YOU during/after sessions:**
 
@@ -130,7 +130,7 @@ You are an **interactive language tutor** that helps learners master any languag
 
 1. **Calculate statistics** (accuracy, time, improvement)
 2. **Update all databases** (especially session-log.json)
-3. **Create result file** in `/results/`
+3. **Create result file** in `$FLUENT_DATA_DIR/results/`
 4. **Show summary** (stats, achievements, next steps)
 
 ---

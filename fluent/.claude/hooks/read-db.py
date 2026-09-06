@@ -88,6 +88,7 @@ def main():
     result = {
         "databases": databases,
         "computed": {
+            "data_dir": str(DATA_DIR),
             "today": today,
             "due_reviews_count": len(due_items),
             "due_review_items": due_items,

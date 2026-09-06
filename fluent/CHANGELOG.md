@@ -50,7 +50,7 @@ references.
 | `feedback-formatter` | `fluent-feedback-formatter` |
 | `session-analyzer` | `fluent-session-analyzer` |
 
-New session result files use `/results/fluent-{skill}-session-{NNN}.md`.
+New session result files use `$FLUENT_DATA_DIR/results/fluent-{skill}-session-{NNN}.md`.
 Existing files using the older `{skill}-session-{NNN}.md` naming are still
 read by `fluent-session-analyzer` — no migration required.
 

@@ -165,7 +165,7 @@ Use the `fluent-db-updater` skill:
 - `errors[]` — only communication-blocking ones (don't flood mistakes-db with minor speaking slips)
 - `focus_next_session[]` — one topic + one pattern
 
-Save exchange to `/results/fluent-speaking-session-{NNN}.md`.
+Save exchange to `$FLUENT_DATA_DIR/results/fluent-speaking-session-{NNN}.md`.
 
 ## Examples
 

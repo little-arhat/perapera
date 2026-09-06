@@ -7,7 +7,7 @@
 ## 📁 File Structure You Will Work With
 
 ### Result Files Location
-- **Path:** `/results/fluent-writing-session-[ID].md`
+- **Path:** `$FLUENT_DATA_DIR/results/fluent-writing-session-[ID].md`
 - **Format:** Markdown with structured sections
 - **Created:** One per practice session
 - **Naming:** Sequential IDs (001, 002, 003...)
@@ -71,7 +71,7 @@ Every result file MUST contain these sections:
 ## 🔍 How to Analyze Result Files
 
 ### Step 1: Read the Latest Session File
-Always start by reading `/results/fluent-writing-session-[latest].md`
+Always start by reading `$FLUENT_DATA_DIR/results/fluent-writing-session-[latest].md`
 
 ### Step 2: Extract Error Patterns
 Categorize every ❌ error into:

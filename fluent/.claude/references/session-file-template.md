@@ -1,11 +1,24 @@
 # Session Result File Template
 
-Every practice skill saves its session to `/results/fluent-{skill}-session-{NNN}.md`. The `fluent-session-analyzer` skill parses these files to plan future sessions — so the format must be consistent.
+## Where transcripts go
+
+`$FLUENT_DATA_DIR/results/` — beside the databases they describe, never inside the
+checkout. A transcript is learner state: written into the project directory it puts the
+learner's own words in a git repository, and it collides the moment one machine holds more
+than one profile.
+
+If `$FLUENT_DATA_DIR` is not set, ask for the directory rather than guessing. Fluent is
+stdlib-only Python and must run on an unprepared machine, so this is a `python3 -c`, not a
+`jq` pipeline:
+
+    python3 -c "import sys; sys.path.insert(0, '.claude/hooks'); from fluent_paths import ensure_results_dir; print(ensure_results_dir())"
+
+Every practice skill saves its session to `$FLUENT_DATA_DIR/results/fluent-{skill}-session-{NNN}.md`. The `fluent-session-analyzer` skill parses these files to plan future sessions — so the format must be consistent.
 
 ## File naming
 
 ```
-/results/fluent-{skill}-session-{NNN}.md
+$FLUENT_DATA_DIR/results/fluent-{skill}-session-{NNN}.md
 ```
 
 Examples:

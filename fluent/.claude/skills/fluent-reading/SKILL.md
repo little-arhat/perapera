@@ -202,7 +202,7 @@ Use the `fluent-db-updater` skill:
 - `new_vocabulary[]` — words the learner chose to save
 - `focus_next_session[]`
 
-Save to `/results/fluent-reading-session-{NNN}.md` — include the full text + Q&A for later analysis.
+Save to `$FLUENT_DATA_DIR/results/fluent-reading-session-{NNN}.md` — include the full text + Q&A for later analysis.
 
 ## Examples
 

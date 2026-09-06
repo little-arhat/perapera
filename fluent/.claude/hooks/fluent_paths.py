@@ -12,8 +12,8 @@ Plugin-root resolution precedence:
   2. $CLAUDE_PROJECT_DIR if set
   3. parent of this file's .claude/ dir (dev-run fallback)
 
-Pure resolvers (data_dir / plugin_root / backups_dir) do not create directories.
-Call ensure_data_dir() before writing.
+Pure resolvers (data_dir / plugin_root / backups_dir / results_dir) do not create
+directories. Call the matching ensure_*() before writing.
 """
 from __future__ import annotations
 
@@ -90,3 +90,21 @@ def ensure_backups_dir() -> Path:
     b = backups_dir()
     b.mkdir(parents=True, exist_ok=True)
     return b
+
+
+@lru_cache(maxsize=1)
+def results_dir() -> Path:
+    """Resolve the session-transcript directory (pure -- does not create it).
+
+    Nested inside data_dir for the same reason backups are: a transcript is
+    learner state, and must follow the learner rather than the checkout. Written
+    into the project directory it would put a learner's words inside a git repo,
+    and collide as soon as one machine holds more than one profile."""
+    return data_dir() / "results"
+
+
+def ensure_results_dir() -> Path:
+    """Resolve the results directory and create it if missing. Call before writing."""
+    r = results_dir()
+    r.mkdir(parents=True, exist_ok=True)
+    return r

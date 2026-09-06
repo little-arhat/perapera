@@ -94,5 +94,5 @@ Quick pattern:
 
 Structured, consistent feedback:
 1. Lets the learner scan for what to fix at a glance.
-2. Makes session files parseable so `PRACTICE.md` analysis + `/results` mining work.
+2. Makes session files parseable so `PRACTICE.md` analysis + `$FLUENT_DATA_DIR/results` mining work.
 3. Populates `mistakes-db.json` categories cleanly — which feeds spaced repetition, which drives the whole system.

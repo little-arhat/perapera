@@ -8,10 +8,12 @@ session report, and asserts schema invariants on the output files.
 Usage:
     python3 tests/test_update_db.py
 """
+import importlib
 import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -507,3 +509,42 @@ class UpdateDbSmokeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ResultsDirTests(unittest.TestCase):
+    """Session transcripts are learner state and belong beside the databases.
+
+    Five skills wrote them into the project directory, which puts a learner's
+    words inside a git checkout and collides the moment there is more than one
+    profile.
+    """
+
+    def setUp(self):
+        self.base = Path(tempfile.mkdtemp(prefix="fluent-results-")).resolve()
+        sys.path.insert(0, str(REPO_ROOT / ".claude" / "hooks"))
+
+    def tearDown(self):
+        shutil.rmtree(self.base, ignore_errors=True)
+
+    def _resolve(self, data_dir: Path, resolver: str):
+        """Reload fluent_paths under a given FLUENT_DATA_DIR and call one resolver.
+
+        Every resolver is @lru_cache'd and reads the environment when first
+        called, so the reload and the call both have to happen inside the patch.
+        """
+        import fluent_paths
+        with mock.patch.dict(os.environ, {"FLUENT_DATA_DIR": str(data_dir)}):
+            importlib.reload(fluent_paths)
+            return getattr(fluent_paths, resolver)()
+
+    def test_results_dir_is_nested_in_data_dir(self):
+        # Compare against the resolved path: data_dir() calls .resolve(), and on
+        # macOS /tmp is a symlink to /private/tmp, so comparing to the literal
+        # string fails for a reason that has nothing to do with the feature.
+        self.assertEqual(self._resolve(self.base, "results_dir"),
+                         self.base / "results")
+
+    def test_ensure_results_dir_creates_it(self):
+        created = self._resolve(self.base / "missing", "ensure_results_dir")
+        self.assertTrue(created.is_dir())
+        self.assertEqual(created.name, "results")

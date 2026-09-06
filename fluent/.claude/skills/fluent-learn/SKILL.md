@@ -147,7 +147,7 @@ Then use the `fluent-db-updater` skill:
 - `errors[]`, `new_vocabulary[]`, `review_results[]`
 - `breakthroughs[]`, `focus_next_session[]`, `session_notes`
 
-Save exchange to `/results/fluent-learn-session-{NNN}.md`.
+Save exchange to `$FLUENT_DATA_DIR/results/fluent-learn-session-{NNN}.md`.
 
 ## Examples
 
