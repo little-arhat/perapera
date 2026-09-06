@@ -9,11 +9,13 @@ Usage:
     python3 tests/test_update_db.py
 """
 import json
+import os
 import shutil
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = REPO_ROOT / ".claude" / "hooks" / "update-db.py"
@@ -152,13 +154,38 @@ class UpdateDbSmokeTest(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def _run(self, payload: dict):
+        # The data directory is stated, not inherited. `update-db.py` resolves
+        # $FLUENT_DATA_DIR ahead of the working directory, and a subprocess with
+        # no `env=` takes the developer's environment with it -- so relying on
+        # `cwd` alone pointed the whole suite at whatever real profile happened
+        # to be named there. It wrote sixteen fixture sessions into a learner's
+        # databases before this line existed.
+        env = dict(os.environ)
+        env["FLUENT_DATA_DIR"] = str(self.tmp / "data")
         proc = subprocess.run(
             ["python3", str(SCRIPT)],
             input=json.dumps(payload).encode(),
             cwd=str(self.tmp),
+            env=env,
             capture_output=True,
         )
         return proc
+
+    def test_an_inherited_data_dir_cannot_redirect_the_suite(self):
+        """A stray $FLUENT_DATA_DIR must not aim the tests at real data.
+
+        This is the regression guard for the accident above: the failure is
+        silent, destructive, and looks exactly like a passing test run.
+        """
+        decoy = self.tmp / "decoy"
+        decoy.mkdir()
+        with mock.patch.dict(os.environ, {"FLUENT_DATA_DIR": str(decoy)}):
+            proc = self._run(SESSION_PAYLOAD)
+        self.assertEqual(proc.returncode, 0,
+                         msg=f"stdout={proc.stdout!r} stderr={proc.stderr!r}")
+        self.assertEqual(sorted(decoy.iterdir()), [],
+                         "the suite wrote outside its own fixture directory")
+        self.assertTrue((self.tmp / "data" / "session-log.json").exists())
 
     def test_happy_path(self):
         proc = self._run(SESSION_PAYLOAD)
