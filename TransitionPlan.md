@@ -7,7 +7,7 @@
 
 **Goal:** Turn this repository into `perapera` — one repo holding all of our code, with the
 Swift app at the root and our fluent at `fluent/` — move all learner state out of the repo
-into `~/Library/Application Support/Fluent` under named profiles, make the app installable
+into `~/.local/share/perapera` under named profiles, make the app installable
 with a bundled fluent snapshot, and give `claude -p` an explicit, fluent-sourced teaching
 context. No progress, no lesson archive and no git history is lost.
 
@@ -21,9 +21,9 @@ improvements arrive by `git merge upstream/main` and our divergence is one
 Four concepts currently braided into one setting (`pluginRoot`) are pulled apart: **fluent
 root** (scripts + methodology — `<repo>/fluent` in development, a bundled snapshot when
 installed), **profile directory** (all mutable learner state), **app resources** (prompts
-and schemas, from `Bundle.module`), and **credentials** (Application Support, mode 0600).
+and schemas, from `Bundle.module`), and **credentials** (`credentials.env`, mode 0600).
 Learner state moves from `~/.claude/fluent-data` to
-`~/Library/Application Support/Fluent/profiles/<id>/`, copied and byte-verified before the
+`~/.local/share/perapera/profiles/<id>/`, copied and byte-verified before the
 old location is retired.
 
 **Tech Stack:** Swift 6 / SwiftUI / SPM (macOS 14+), Python 3 stdlib-only (fluent's hooks),
@@ -68,7 +68,7 @@ seven points in the transition request, restated in [Requirements](#requirements
 | R3 | A `CLAUDE.md` specific to the app | 2 |
 | R4 | `claude -p` gets the right fluent coordinates, and fluent's teaching instructions actually reach the model | 1, 4 |
 | R5 | The app is installable, with a fluent snapshot bundled | 6 |
-| R6 | State (databases, images, dictionaries, spending, results) lives in `~/Library/Application Support`, not the repo | 3 |
+| R6 | State (databases, images, dictionaries, spending, results) lives in `~/.local/share/perapera`, not the repo | 3 |
 | R7 | Create and switch learner profiles | 3, 5 |
 | R8 | Keep the Japanese focus | (constraint) |
 
@@ -172,10 +172,10 @@ leaving the directory would be a second documented answer to "where do transcrip
 `git diff upstream/main -- fluent/` shows our divergence; `git merge upstream/main` brings
 their work in. That is the whole upstream story — no submodule, no vendored second copy.
 
-### Learner state (`~/Library/Application Support/Fluent`)
+### Learner state (`~/.local/share/perapera`)
 
 ```
-~/Library/Application Support/Fluent/
+~/.local/share/perapera/
 ├── credentials.env                     mode 0600 — OPENROUTER_FLUENT=…
 ├── migration.log                       what was moved, when, and from where
 └── profiles/
@@ -280,6 +280,31 @@ because "which profile is open on this Mac" is a per-machine preference, not lea
 handful of profiles this is microseconds, and it removes a whole class of "the index says
 something the directory doesn't" bugs.
 
+### D5a — State lives in an XDG data directory, not Application Support
+
+`${XDG_DATA_HOME:-~/.local/share}/perapera/`, honouring the variable when it is set.
+
+A macOS GUI app would normally use `~/Library/Application Support`. This one should not,
+for one measured reason: the directory is co-owned by a shell. Python hooks, five Fluent
+skills, `$FLUENT_DATA_DIR` in two settings files, and every verification command in this
+plan all touch it, and `Application Support` contains a space. Every one of them has to
+quote it correctly, and the first draft of this plan's own migration check did not --
+`find "$P" -type f | xargs shasum` word-split and would have reported data loss on a
+byte-perfect copy.
+
+The macOS location gives nothing back in exchange. Time Machine and Migration Assistant
+take the whole home directory, dotfiles included, so there is no backup or migration
+advantage. Discoverability in Finder is the only real loss.
+
+`~/.perapera` would fix the space too, but it is a name invented for this project and
+`$HOME` already holds 101 dotdirs on this machine. XDG is an actual convention, respects
+an override, and `~/.local/share` is already in use here by nvim, uv, dune and others.
+
+**Tradeoff:** strict XDG would put `credentials.env` under `$XDG_CONFIG_HOME/perapera/`,
+since a secret is configuration rather than data. One root is kept anyway. Splitting a
+small app across two directories makes "where is my stuff" a two-part answer and buys
+nothing operationally.
+
 ### D6 — Migration copies, verifies, then retires
 
 `~/.claude/fluent-data` is **copied** into `profiles/<slug>/`, every file's SHA-256 is
@@ -304,13 +329,13 @@ works.
 **Verified 2026-09-02** (read-only probes, no data moved):
 
 - `FLUENT_DATA_DIR="/tmp/space probe/data" python3 .claude/hooks/read-db.py` and
-  `session-start.py` both work — the space in `Application Support` is not a problem for
-  fluent, which never shells out and receives the path through `argv`/`os.environ`.
+  `session-start.py` both work. Fluent never shells out and receives the path through
+  `argv`/`os.environ`, so even a path with a space in it is fine on its side. D5a rejects
+  such a path anyway, because the shell commands *around* fluent are where it breaks.
 - A project `.claude/settings.json` `"env"` block **is** exported into hook and command
   environments: a `printenv FLUENT_DATA_DIR` SessionStart hook in a scratch directory read
-  back `/Users/r/Library/Application Support/Fluent/profiles/roma-japanese`, space intact.
-  This is the mechanism Task 3.5 relies on.
-- `precompact-backup.sh` quotes `"$DATA_DIR"` throughout, so it survives the space too.
+  the value back exactly as written. This is the mechanism Task 3.5 relies on.
+- `precompact-backup.sh` quotes `"$DATA_DIR"` throughout.
 
 The app sets both coordinates explicitly on every subprocess; the developer machine sets
 `FLUENT_DATA_DIR` in `.claude/settings.local.json` (untracked after Task 2.3, so an
@@ -359,15 +384,15 @@ can be edited without a rebuild. An installed app has no repo. New precedence:
 unless the env var is set. Explicit beats a path that silently resolves differently on two
 machines.
 
-### D9 — Credentials move to Application Support, not Keychain
+### D9 — Credentials sit beside the state, not in the Keychain
 
-`Secrets` reads `$OPENROUTER_FLUENT`, then `<AppSupport>/Fluent/credentials.env` (0600).
+`Secrets` reads `$OPENROUTER_FLUENT`, then `~/.local/share/perapera/credentials.env` (0600).
 
-**Tradeoff:** the Keychain is the better macOS answer — encrypted at rest, ACL'd per app.
-It is also a larger change (Security framework, a first-run authorisation prompt, an
-export path for `imgbench` which reads the same key from a file). A 0600 file in
-Application Support is the same protection the repo `.env` had, at a path that survives
-installation. Keychain is recorded as future work, not smuggled in here.
+**Tradeoff:** the Keychain is the better macOS answer, encrypted at rest and scoped to the
+app. It is also a larger change: the Security framework, a first-run authorisation prompt,
+and an export path for `tools/imgbench`, which reads the same key from a file and would
+otherwise be cut off. A 0600 file gives the same protection the repo `.env` had, at a path
+that survives installation. Keychain is recorded as FL-29, not smuggled in here.
 
 ### D10 — The bundled fluent snapshot is produced by `git archive`
 
@@ -612,7 +637,7 @@ One `.gitignore` at the root covers both halves. Replace the fluent-relative rul
 (`/data/*.json`, `/results/*.md` and their negations) with:
 
 ```
-# Fluent's own data directory. Real learner state lives in Application Support;
+# Fluent's own data directory. Real learner state lives under XDG_DATA_HOME;
 # anything appearing here is a stray from a CLI run.
 /fluent/data/*.json
 /fluent/data/*.json.backup-*
@@ -1250,7 +1275,7 @@ git commit -m "feat(core): profile slugs and the migration decision, as values"
 - Create: `Sources/FluentApp/Locations.swift`
 
 **Interfaces:**
-- Produces: `Locations.appSupport: URL`, `Locations.profilesRoot: URL`,
+- Produces: `Locations.stateRoot: URL`, `Locations.profilesRoot: URL`,
   `Locations.credentialsFile: URL`, `Locations.migrationLog: URL`,
   `Locations.legacyDataDirectory: URL`, `Locations.kitRoot() -> URL?`,
   `Locations.toolSearchPaths: [String]`.
@@ -1267,18 +1292,30 @@ import Foundation
 /// no repo, and a learner may have more than one profile, so each concept gets its
 /// own resolver and its own override.
 enum Locations {
-    /// `~/Library/Application Support/Fluent`. Everything mutable lives under here.
-    static var appSupport: URL {
-        let base = FileManager.default.urls(
-            for: .applicationSupportDirectory, in: .userDomainMask
-        ).first ?? FileManager.default.homeDirectoryForCurrentUser
-            .appending(path: "Library/Application Support")
-        return base.appending(path: "Fluent")
+    /// `$XDG_DATA_HOME/perapera`, defaulting to `~/.local/share/perapera`.
+    /// Everything mutable lives under here.
+    ///
+    /// Not `~/.local/share/perapera`, despite this being a macOS app: the
+    /// same directory is read by Python hooks and five Fluent skills driven from
+    /// a shell, and that path contains a space. Every command touching it has to
+    /// quote it, and one that did not already reported data loss on a good copy.
+    /// The macOS location buys nothing back -- Time Machine and Migration
+    /// Assistant take the whole home directory, dotfiles included.
+    static var stateRoot: URL {
+        let env = ProcessInfo.processInfo.environment
+        let dataHome: URL
+        if let xdg = env["XDG_DATA_HOME"], !xdg.isEmpty {
+            dataHome = URL(fileURLWithPath: (xdg as NSString).expandingTildeInPath)
+        } else {
+            dataHome = FileManager.default.homeDirectoryForCurrentUser
+                .appending(path: ".local/share")
+        }
+        return dataHome.appending(path: "perapera")
     }
 
-    static var profilesRoot: URL { appSupport.appending(path: "profiles") }
-    static var credentialsFile: URL { appSupport.appending(path: "credentials.env") }
-    static var migrationLog: URL { appSupport.appending(path: "migration.log") }
+    static var profilesRoot: URL { stateRoot.appending(path: "profiles") }
+    static var credentialsFile: URL { stateRoot.appending(path: "credentials.env") }
+    static var migrationLog: URL { stateRoot.appending(path: "migration.log") }
 
     /// Where learner state lived before 2026-09. Read once, by the migrator.
     static var legacyDataDirectory: URL {
@@ -1419,7 +1456,7 @@ final class ProfileStore {
     }
 
     /// Which profile is open on this Mac. A per-machine preference, not learner
-    /// state, so it lives in UserDefaults rather than in Application Support.
+    /// state, so it lives in UserDefaults rather than beside the profiles.
     var activeID: String? {
         get { UserDefaults.standard.string(forKey: defaultsKey) }
         set { UserDefaults.standard.set(newValue, forKey: defaultsKey) }
@@ -1701,7 +1738,7 @@ Update the two `ResourceLoader(pluginRoot:)` call sites to `ResourceLoader()`.
 enum Secrets {
     static let openRouterKey = "OPENROUTER_FLUENT"
 
-    /// Environment first, then a 0600 file in Application Support. The repo `.env`
+    /// Environment first, then a 0600 file beside the profiles. The repo `.env`
     /// is gone: an installed app has no repo, and a key that only works from a
     /// checkout is a key that stops working when the app is installed.
     static func openRouter() -> String {
@@ -1725,7 +1762,7 @@ enum Secrets {
     /// Writes the key, owner-readable only.
     static func setOpenRouter(_ value: String) throws {
         let fm = FileManager.default
-        try fm.createDirectory(at: Locations.appSupport, withIntermediateDirectories: true)
+        try fm.createDirectory(at: Locations.stateRoot, withIntermediateDirectories: true)
         try "\(openRouterKey)=\(value)\n".write(
             to: Locations.credentialsFile, atomically: true, encoding: .utf8)
         try fm.setAttributes([.posixPermissions: 0o600],
@@ -1966,7 +2003,7 @@ tar -xzf "$FB/fluent-data.tgz" -C /tmp/mig/home/.claude
 find /tmp/mig/home/.claude/fluent-data -type f | wc -l
 ```
 
-Then run the app with `HOME=/tmp/mig/home` so both `Locations.appSupport` and
+Then run the app with `HOME=/tmp/mig/home` so both `Locations.stateRoot` and
 `legacyDataDirectory` land inside the rehearsal tree:
 
 `UserDefaults` goes through `cfprefsd`, which resolves the *real* user home regardless of
@@ -1992,7 +2029,7 @@ Expected: `profiles/roma-japanese/` holds the databases, and
 # Belt and braces: if CFFIXED_USER_HOME was missed, this clears the stray key.
 defaults read dev.fluent.app activeProfileID 2>/dev/null \
   && defaults delete dev.fluent.app activeProfileID
-cd "/tmp/mig/home/Library/Application Support/Fluent/profiles/roma-japanese"
+cd "/tmp/mig/home/.local/share/perapera/profiles/roma-japanese"
 find . -type f -print0 | sort -z | xargs -0 shasum -a 256 | awk '{print $1}' | sort > /tmp/new.txt
 cd /tmp/mig/home/.claude/fluent-data.migrated-*/
 find . -type f ! -name README.txt -print0 | sort -z | xargs -0 shasum -a 256 | awk '{print $1}' | sort > /tmp/old.txt
@@ -2017,8 +2054,8 @@ make run
 
 ```bash
 export FB="$(cat "$HOME/fluent-transition-backup/LATEST")"
-export P="$HOME/Library/Application Support/Fluent/profiles/roma-japanese"
-# -print0/-0: $P contains a space ("Application Support"), and a plain
+export P="$HOME/.local/share/perapera/profiles/roma-japanese"
+# -print0/-0: $P contains a space ("the XDG data directory"), and a plain
 # `find | xargs` word-splits on it, silently producing an empty digest list and
 # a diff that fails for the wrong reason.
 find "$P" -type f -print0 | sort -z | xargs -0 shasum -a 256 \
@@ -2046,7 +2083,7 @@ Expected: `MIGRATION VERIFIED` and `DATABASES IDENTICAL`.
 
 ```bash
 git add -A
-git commit -m "feat(app): move learner state to Application Support, verified
+git commit -m "feat(app): move learner state to the XDG data directory, verified
 
 Copies ~/.claude/fluent-data into a named profile, compares every file's
 SHA-256, and only then renames the old directory so nothing can quietly
@@ -2058,15 +2095,15 @@ keep writing to it."
 - [ ] **Step 1: Update the untracked local settings**
 
 Set `FLUENT_DATA_DIR` in `.claude/settings.local.json` to
-`/Users/r/Library/Application Support/Fluent/profiles/roma-japanese`.
+`/Users/r/Library/the XDG data directory/Fluent/profiles/roma-japanese`.
 
 - [ ] **Step 2: Move the OpenRouter key out of the repo**
 
 ```bash
-mkdir -p "$HOME/Library/Application Support/Fluent"
-cp .env "$HOME/Library/Application Support/Fluent/credentials.env"
-chmod 600 "$HOME/Library/Application Support/Fluent/credentials.env"
-grep -c OPENROUTER_FLUENT "$HOME/Library/Application Support/Fluent/credentials.env"
+mkdir -p "$HOME/.local/share/perapera"
+cp .env "$HOME/Library/the XDG data directory/Fluent/credentials.env"
+chmod 600 "$HOME/Library/the XDG data directory/Fluent/credentials.env"
+grep -c OPENROUTER_FLUENT "$HOME/Library/the XDG data directory/Fluent/credentials.env"
 ```
 
 Leave `.env` in place for `tools/imgbench`, which reads it independently — and write down
@@ -2074,7 +2111,7 @@ which is which, because there are now two live copies of one secret:
 
 | Copy | Read by | Authority |
 |---|---|---|
-| `~/Library/Application Support/Fluent/credentials.env` | the app (`Secrets`) | **yes** — this is the one the app uses |
+| `~/.local/share/perapera/credentials.env` | the app (`Secrets`) | **yes** — this is the one the app uses |
 | `<repo>/.env` | `tools/imgbench` only | a convenience copy for the benchmark |
 
 Rotating the key means editing **both**. Add that sentence to `.env.example` in Task 7.1,
@@ -2431,7 +2468,7 @@ Generate one small lesson. Then check what it cost and that it is well formed:
 ```bash
 python3 - <<'PY'
 import json, os, glob
-p = os.path.expanduser("~/Library/Application Support/Fluent/profiles/roma-japanese")
+p = os.path.expanduser("~/.local/share/perapera/profiles/roma-japanese")
 newest = max(glob.glob(p + "/lessons/lesson-*.json"), key=os.path.getmtime)
 d = json.load(open(newest))
 print("title:", d["lesson"]["title"])
@@ -2652,10 +2689,10 @@ make run
 Create `Test Learner / Spanish`. Then:
 
 ```bash
-ls "$HOME/Library/Application Support/Fluent/profiles/"
+ls "$HOME/Library/the XDG data directory/Fluent/profiles/"
 python3 - <<'PY'
 import json, os
-p = os.path.expanduser("~/Library/Application Support/Fluent/profiles/test-learner-spanish")
+p = os.path.expanduser("~/.local/share/perapera/profiles/test-learner-spanish")
 d = json.load(open(p + "/learner-profile.json"))
 print(d["learner"]["name"], d["learner"]["target_language"],
       d["learner"]["current_level"], "->", d["learner"]["target_level"])
@@ -2683,7 +2720,7 @@ is the bug this step exists to catch.**
 - [ ] **Step 7: Remove the test profile and commit**
 
 ```bash
-rm -rf "$HOME/Library/Application Support/Fluent/profiles/test-learner-spanish"
+rm -rf "$HOME/Library/the XDG data directory/Fluent/profiles/test-learner-spanish"
 git add -A
 git commit -m "feat(app): create and switch learner profiles"
 ```
@@ -2844,14 +2881,14 @@ with `git archive`, so the installed app needs no checkout at all.
 databases through the same script, and nothing serialises them; overlapping writes lose one
 session's scheduling.
 
-`~/Library/Application Support/Fluent/profiles/<profile>/` — databases, lesson archive,
+`~/.local/share/perapera/profiles/<profile>/` — databases, lesson archive,
 pictures, saved words, spending and backups. Nothing learner-specific is stored in this
 repository. Data from before 2026-09 is migrated automatically from
 `~/.claude/fluent-data` on first launch, with the old copy renamed rather than removed.
 ```
 
 - [ ] **Step 2: `.env.example`** — it now documents `tools/imgbench` only; add a line saying
-  the app reads its key from `~/Library/Application Support/Fluent/credentials.env` or the
+  the app reads its key from `~/.local/share/perapera/credentials.env` or the
   Settings screen, and that rotating the key means editing both copies.
 
 - [ ] **Step 2b: Bump the app version**
@@ -2943,7 +2980,7 @@ Expected: our fluent-side changes, and nothing from the app — the separation h
 
 ```bash
 export FB="$(cat "$HOME/fluent-transition-backup/LATEST")"
-export P="$HOME/Library/Application Support/Fluent/profiles/roma-japanese"
+export P="$HOME/.local/share/perapera/profiles/roma-japanese"
 FLUENT_DATA_DIR="$P" python3 fluent/.claude/hooks/read-db.py > /tmp/final.json
 python3 - <<'PY'
 import json, os
@@ -3015,7 +3052,7 @@ Each phase is reversible from `$FB` alone. Work from newest to oldest.
 **Undo the state migration (Phase 3)**
 
 ```bash
-rm -rf "$HOME/Library/Application Support/Fluent"
+rm -rf "$HOME/.local/share/perapera"
 mv "$HOME"/.claude/fluent-data.migrated-* "$HOME/.claude/fluent-data"
 rm -f "$HOME/.claude/fluent-data/README.txt"   # written by Migrator.retire
 find "$HOME/.claude/fluent-data" -type f -print0 | sort -z | xargs -0 shasum -a 256 \
@@ -3074,7 +3111,7 @@ None of these block a start; each changes one later task.
 3. **Retiring `~/.claude/fluent-data`.** The plan renames it after a verified copy (D6). If
    it should be left in place instead, drop `Migrator.retire` — and accept that the CLI and
    the app can then diverge silently.
-4. **Application Support directory name.** `Fluent` (human-navigable) rather than
+4. **the XDG data directory directory name.** `Fluent` (human-navigable) rather than
    `dev.fluent.app` (bundle-identifier convention). Easy to change now, awkward later.
 5. **What the teacher's brief contains.** `Resources/teacher-context.json` currently names
    `docs/METHODOLOGY.md` for generation and adds the feedback template for grading. It
@@ -3118,7 +3155,7 @@ would each have stopped execution:
 | 1 | `git submodule add` with a local path dies on `fatal: transport 'file' not allowed` (git ≥ 2.38, CVE-2022-39253) | Moot: the design moved to one repository plus an `upstream` remote, so no submodule is ever added (D2) |
 | 2 | `ProfileSlug.make`'s fallback used `String.hashValue`, which Swift seeds per process — a learner named `ローマ` would get a new directory every launch and orphan their history each time | SHA-256 prefix, with a test asserting the literal value across three separate runs (Task 3.1) |
 | 3 | `git rm -r tests` leaves an untracked `__pycache__`, so `git mv app/Tests Tests` means "move *into* `tests/`" and lands the Swift suite at `Tests/Tests/` — exit 0, no warning | `rm -rf tests` plus an explicit `test ! -e tests` gate (Tasks 2.1, 2.3) |
-| 4 | The migration's primary verification `find "$P" … \| xargs shasum` word-splits on the space in *Application Support*, producing an empty digest list and a failure that looks like data loss | `-print0 \| sort -z \| xargs -0` (Task 3.4) |
+| 4 | The migration's primary verification `find "$P" … \| xargs shasum` word-splits on the space in *the XDG data directory*, producing an empty digest list and a failure that looks like data loss | `-print0 \| sort -z \| xargs -0` (Task 3.4) |
 
 The rest were of a kind: enumerations taken from memory rather than from `rg`. The
 "three call sites" for `dataDirectory` were six; `lessonStore` is non-optional and cannot
@@ -3175,9 +3212,9 @@ They used to be one setting called `pluginRoot`. They are not one thing.
 | Concept | Resolved by | Where |
 |---|---|---|
 | Fluent root | `Locations.kitRoot()` | `$FLUENT_KIT_ROOT`, else `Fluent.app/Contents/Resources/fluent` |
-| Profile directory | `ProfileStore.active()` | `~/Library/Application Support/Fluent/profiles/<id>/` |
+| Profile directory | `ProfileStore.active()` | `~/.local/share/perapera/profiles/<id>/` |
 | App resources | `ResourceLoader` | `$FLUENT_APP_RESOURCES`, else `Bundle.module` |
-| Credentials | `Secrets` | `$OPENROUTER_FLUENT`, else `~/Library/Application Support/Fluent/credentials.env` |
+| Credentials | `Secrets` | `$OPENROUTER_FLUENT`, else `~/.local/share/perapera/credentials.env` |
 
 `Locations.kitRoot()` returns nil under `swift run` — there is no bundle to look in — so
 for development export `FLUENT_KIT_ROOT=$PWD/fluent`, or work through `make run`, which
