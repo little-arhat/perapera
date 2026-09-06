@@ -1,0 +1,96 @@
+{
+  "": {
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/primary.swiftdeps"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Attempt.swift": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Attempt.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Attempt.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Attempt~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Attempt.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Attempt.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Furigana.swift": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Furigana.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Furigana.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Furigana~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Furigana.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Furigana.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Grader.swift": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Grader.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Grader.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Grader~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Grader.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Grader.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/ImageLibrary.swift": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/ImageLibrary.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/ImageLibrary.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/ImageLibrary~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/ImageLibrary.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/ImageLibrary.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/KanaInput.swift": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/KanaInput.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/KanaInput.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/KanaInput~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/KanaInput.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/KanaInput.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Lesson.swift": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Lesson.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Lesson.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Lesson~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Lesson.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/Lesson.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/LessonPlan.swift": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/LessonPlan.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/LessonPlan.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/LessonPlan~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/LessonPlan.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/LessonPlan.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/PictureRequest.swift": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/PictureRequest.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/PictureRequest.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/PictureRequest~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/PictureRequest.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/PictureRequest.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SavedItem.swift": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SavedItem.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SavedItem.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SavedItem~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SavedItem.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SavedItem.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SessionReport.swift": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SessionReport.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SessionReport.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SessionReport~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SessionReport.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SessionReport.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SpendLog.swift": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SpendLog.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SpendLog.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SpendLog~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SpendLog.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/SpendLog.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/TopicProgress.swift": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/TopicProgress.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/TopicProgress.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/TopicProgress~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/TopicProgress.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/TopicProgress.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/WordDrill.swift": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/WordDrill.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/WordDrill.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/WordDrill~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/WordDrill.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/WordDrill.dia"
+  }
+}

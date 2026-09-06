@@ -1,0 +1,241 @@
+{
+  "": {
+    "dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentApp.d",
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentApp.o",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/primary.swiftdeps"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/AppModel.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AppModel.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AppModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AppModel.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AppModel.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/ClaudeClient.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ClaudeClient.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ClaudeClient~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ClaudeClient.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ClaudeClient.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/FluentApp.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentApp.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentApp.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentApp.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/FluentStore.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentStore.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentStore.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentStore.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/GenerationDefect.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/GenerationDefect.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/GenerationDefect~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/GenerationDefect.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/GenerationDefect.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/ImagePipeline.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagePipeline.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagePipeline~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagePipeline.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagePipeline.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/LessonService.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonService.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonService~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonService.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonService.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/LessonStore.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonStore.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonStore.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonStore.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Paths.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Paths.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Paths~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Paths.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Paths.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Secrets.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Secrets.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Secrets~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Secrets.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Secrets.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Speech.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Speech.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Speech~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Speech.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Speech.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/StringExtras.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/StringExtras.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/StringExtras~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/StringExtras.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/StringExtras.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Subprocess.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Subprocess.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Subprocess~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Subprocess.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Subprocess.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/TextScale.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TextScale.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TextScale~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TextScale.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TextScale.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Theme.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Theme.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Theme~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Theme.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Theme.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ArchiveView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ArchiveView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ArchiveView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ArchiveView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ArchiveView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/AudioPromptView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AudioPromptView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AudioPromptView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AudioPromptView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AudioPromptView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/CollapsibleSection.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/CollapsibleSection.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/CollapsibleSection~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/CollapsibleSection.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/CollapsibleSection.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/DebriefView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DebriefView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DebriefView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DebriefView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DebriefView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/DrillView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DrillView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DrillView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DrillView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DrillView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ExerciseInputView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ExerciseInputView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ExerciseInputView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ExerciseInputView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ExerciseInputView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/HomeView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/HomeView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/HomeView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/HomeView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/HomeView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ImagesView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagesView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagesView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagesView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagesView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/KanaTextField.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/KanaTextField.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/KanaTextField~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/KanaTextField.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/KanaTextField.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/LabelSheet.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LabelSheet.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LabelSheet~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LabelSheet.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LabelSheet.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/LessonPlayerView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonPlayerView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonPlayerView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonPlayerView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonPlayerView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ListsView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ListsView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ListsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ListsView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ListsView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/MakePictureSheet.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/MakePictureSheet.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/MakePictureSheet~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/MakePictureSheet.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/MakePictureSheet.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RecognitionView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RecognitionView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RecognitionView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RecognitionView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RecognitionView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RootView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RootView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RootView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RootView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RootView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RubyText.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyText.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyText~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyText.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyText.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RubyTextView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyTextView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyTextView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyTextView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyTextView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SaveItemButton.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SaveItemButton.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SaveItemButton~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SaveItemButton.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SaveItemButton.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SetInputView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SetInputView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SetInputView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SetInputView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SetInputView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SpendFooter.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SpendFooter.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SpendFooter~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SpendFooter.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SpendFooter.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/TopicsView.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TopicsView.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TopicsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TopicsView.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TopicsView.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/WordActions.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WordActions.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WordActions~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WordActions.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WordActions.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/WorkingOverlay.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WorkingOverlay.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WorkingOverlay~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WorkingOverlay.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WorkingOverlay.dia"
+  },
+  "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DerivedSources/resource_bundle_accessor.swift": {
+    "object": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/resource_bundle_accessor.swift.o",
+    "swiftmodule": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/resource_bundle_accessor~partial.swiftmodule",
+    "swift-dependencies": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/resource_bundle_accessor.swiftdeps",
+    "diagnostics": "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/resource_bundle_accessor.dia"
+  }
+}

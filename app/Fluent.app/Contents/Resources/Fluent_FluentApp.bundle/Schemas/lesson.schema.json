@@ -1,0 +1,251 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "focus",
+    "estimatedMinutes",
+    "exercises"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Short human title, e.g. 'Counters at the ticket window'."
+    },
+    "focus": {
+      "type": "string",
+      "description": "What this lesson drills, in one phrase."
+    },
+    "estimatedMinutes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 90
+    },
+    "preamble": {
+      "type": "string",
+      "description": "Optional short teaching note shown before the first exercise. Markdown. Omit for pure review lessons."
+    },
+    "exercises": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "skill",
+          "prompt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique within the lesson, e.g. 'ex-01'."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "multipleChoice",
+              "cloze",
+              "reorder",
+              "matching",
+              "digitEntry",
+              "flashcard",
+              "translation",
+              "freeResponse",
+              "set",
+              "recognition"
+            ],
+            "description": "The first seven grade locally and work offline. 'translation' and 'freeResponse' need the teacher. Use 'set' for a numbered drill: several short items under one instruction, the way a textbook groups practice. Use 'recognition' to make the learner read Japanese off a photograph of the real world — a shop sign, a handwritten menu, a station board."
+          },
+          "skill": {
+            "type": "string",
+            "enum": [
+              "vocabulary",
+              "grammar",
+              "reading",
+              "writing",
+              "listening",
+              "speaking"
+            ],
+            "description": "Maps to Fluent's skill_scores keys."
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The question. May carry furigana in the inline form 漢字[かんじ] -- the app hides readings by default and reveals them on request."
+          },
+          "instruction": {
+            "type": "string",
+            "description": "REQUIRED in practice: say exactly what the learner should type, e.g. 'Type only the particle.' or 'Write the whole sentence.' Without it a fill-in-the-blank is ambiguous -- the learner cannot tell whether you want the fragment or the full sentence. May carry furigana as 漢字[かんじ]."
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "multipleChoice only. 3-4 entries.",
+            "minItems": 2
+          },
+          "correctIndex": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "multipleChoice only. Index into options."
+          },
+          "acceptedAnswers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "cloze and digitEntry. Every spelling that counts as correct; the grader normalizes whitespace and full/half-width forms before comparing. Write these WITHOUT furigana -- they are compared against what the learner types. For 'recognition' these are the readings of the text in the image, in kana — that is what the learner types.",
+            "minItems": 1
+          },
+          "tokens": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "reorder only. Presented shuffled by the app -- supply them in a natural, NOT already-correct order.",
+            "minItems": 2
+          },
+          "correctOrder": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "reorder only. Indices into tokens, giving the correct sequence."
+          },
+          "pairs": {
+            "type": "array",
+            "description": "matching only. Every pair must carry real text on both sides -- do not pad the list with blank entries to reach a count.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "left",
+                "right"
+              ],
+              "properties": {
+                "left": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "right": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "minItems": 2
+          },
+          "front": {
+            "type": "string",
+            "description": "flashcard only. May carry furigana as 漢字[かんじ].",
+            "minLength": 1
+          },
+          "back": {
+            "type": "string",
+            "description": "flashcard only. May carry furigana as 漢字[かんじ].",
+            "minLength": 1
+          },
+          "referenceAnswer": {
+            "type": "string",
+            "description": "translation and freeResponse. A model answer the teacher grades against; never shown before the learner submits. May carry furigana as 漢字[かんじ].",
+            "minLength": 1
+          },
+          "explanation": {
+            "type": "string",
+            "description": "Why the answer is what it is. Shown after answering. Explain the rule, not just the fact. May carry furigana as 漢字[かんじ]."
+          },
+          "audioText": {
+            "type": "string",
+            "description": "Text to speak for listening exercises. Target language only."
+          },
+          "reviewItemIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "IDs of spaced-repetition items this exercise tests. Drives review_results[] on submit. Empty for brand-new material."
+          },
+          "passage": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Reading-comprehension text this exercise asks about. Several consecutive exercises may share the SAME passage verbatim to ask several questions about one text -- repeat it identically and the app shows it once. May carry furigana in the same 漢字[かんじ] form."
+          },
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 12,
+            "description": "'set' only. Several short items practising ONE point, answered together on one screen and graded item by item. This is the shape of a textbook drill: 'Fill the gaps' followed by a-h. Prefer it over eight separate exercises whenever the items share an instruction -- repetition on one point is what builds automaticity.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "prompt",
+                "acceptedAnswers"
+              ],
+              "properties": {
+                "prompt": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "One item. Mark the gap with ＿＿. May carry furigana as 漢字[かんじ]."
+                },
+                "acceptedAnswers": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": "Every spelling that counts. No furigana."
+                },
+                "hint": {
+                  "type": "string",
+                  "description": "Optional cue shown beside the gap, like the infinitive in '___ (ir)'. Use for the dictionary form of a verb, a counter, or an English gloss."
+                },
+                "explanation": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "image": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scene",
+              "targets"
+            ],
+            "description": "'recognition' only. Describes a photograph the app will generate and then verify by reading it back. Each image costs real money, so use these sparingly and make each one carry its weight.",
+            "properties": {
+              "scene": {
+                "type": "string",
+                "minLength": 20,
+                "description": "The photograph, described for an image model: what object, what material, what lighting, what angle. Favour the surfaces that are genuinely hard to read — brush on a noren, marker on a wooden menu board, weathered enamel, a shop window poster in display katakana. Do NOT name real companies or brands."
+              },
+              "targets": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 4,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "The exact text that must appear in the image, without furigana. Checked against a read-back of the finished picture; an image that does not contain all of these is discarded and regenerated. Keep to a few short strings — long text is where image models start inventing characters."
+              },
+              "question": {
+                "type": "string",
+                "description": "What to ask about the picture, e.g. 'What does the noren say?'"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

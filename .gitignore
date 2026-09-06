@@ -1,10 +1,8 @@
-# Personal learning data - DO NOT commit
-/data/*.json
-/data/*.json.backup-*
-/results/*.md
-# Except the README files which explain the structure
-!/data/README.md
-!/results/README.md
+# Fluent's own data directory. Real learner state lives in Application Support;
+# anything appearing here is a stray from a CLI run.
+/fluent/data/*.json
+/fluent/data/*.json.backup-*
+!/fluent/data/README.md
 
 # Personal writing/practice files
 myfile.txt
@@ -13,8 +11,7 @@ myfile.txt
 .backups/
 
 # Keep directory structure but ignore contents
-!/data/.gitkeep
-!/results/.gitkeep
+!/fluent/data/.gitkeep
 
 # System files
 .DS_Store
@@ -42,10 +39,14 @@ temp/
 
 
 # Swift app build artifacts
-/app/.build/
-/app/Fluent.app/
-/app/*.xcodeproj/
+/.build/
+/Fluent.app/
+/*.xcodeproj/
 .swiftpm/
+
+# Machine-specific Claude Code settings (hold an absolute FLUENT_DATA_DIR)
+/.claude/settings.local.json
+/fluent/.claude/settings.local.json
 
 # Throwaway exploration scripts
 _probes/

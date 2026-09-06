@@ -1,0 +1,2032 @@
+{
+  "builtTestProducts" : [
+    {
+      "binaryPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.xctest/Contents/MacOS/FluentPackageTests",
+      "packagePath" : "/Users/r/prj/p/lang/fluent/app",
+      "productName" : "FluentPackageTests"
+    }
+  ],
+  "copyCommands" : {
+    "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Fluent_FluentApp.bundle/Prompts" : {
+      "inputs" : [
+        {
+          "kind" : "directory",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Resources/Prompts"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "directory",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Fluent_FluentApp.bundle/Prompts"
+        }
+      ]
+    },
+    "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Fluent_FluentApp.bundle/Schemas" : {
+      "inputs" : [
+        {
+          "kind" : "directory",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Resources/Schemas"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "directory",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Fluent_FluentApp.bundle/Schemas"
+        }
+      ]
+    },
+    "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Fluent_FluentCoreTests.bundle/Fixtures" : {
+      "inputs" : [
+        {
+          "kind" : "directory",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/Fixtures"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "directory",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Fluent_FluentCoreTests.bundle/Fixtures"
+        }
+      ]
+    }
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.FluentApp-arm64-apple-macosx-release.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/sources",
+      "importPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/AppModel.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/ClaudeClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/FluentApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/FluentStore.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/GenerationDefect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/ImagePipeline.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/LessonService.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/LessonStore.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Paths.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Secrets.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Speech.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/StringExtras.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Subprocess.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/TextScale.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Theme.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ArchiveView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/AudioPromptView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/CollapsibleSection.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/DebriefView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/DrillView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ExerciseInputView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/HomeView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ImagesView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/KanaTextField.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/LabelSheet.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/LessonPlayerView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ListsView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/MakePictureSheet.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RecognitionView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RootView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RubyText.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RubyTextView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SaveItemButton.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SetInputView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SpendFooter.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/TopicsView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/WordActions.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/WorkingOverlay.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DerivedSources/resource_bundle_accessor.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<FluentApp-arm64-apple-macosx-release.module-resources>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules/FluentCore.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/sources"
+        }
+      ],
+      "isLibrary" : false,
+      "moduleName" : "FluentApp",
+      "moduleOutputPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules/FluentApp.swiftmodule",
+      "objects" : [
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AppModel.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ClaudeClient.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentApp.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentStore.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/GenerationDefect.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagePipeline.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonService.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonStore.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Paths.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Secrets.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Speech.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/StringExtras.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Subprocess.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TextScale.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Theme.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ArchiveView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AudioPromptView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/CollapsibleSection.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DebriefView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DrillView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ExerciseInputView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/HomeView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagesView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/KanaTextField.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LabelSheet.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonPlayerView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ListsView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/MakePictureSheet.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RecognitionView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RootView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyText.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyTextView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SaveItemButton.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SetInputView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SpendFooter.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TopicsView.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WordActions.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WorkingOverlay.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/resource_bundle_accessor.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-whole-module-optimization",
+        "-num-threads",
+        "8",
+        "-serialize-diagnostics",
+        "-O",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+        "-module-cache-path",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/ModuleCache",
+        "-parseable-output",
+        "-Xfrontend",
+        "-entry-point-function-name",
+        "-Xfrontend",
+        "FluentApp_main",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "app"
+      ],
+      "outputFileMapPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AppModel.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ClaudeClient.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/GenerationDefect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagePipeline.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonService.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Paths.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Secrets.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Speech.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/StringExtras.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Subprocess.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TextScale.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Theme.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ArchiveView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AudioPromptView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/CollapsibleSection.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DebriefView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DrillView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ExerciseInputView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/HomeView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagesView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/KanaTextField.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LabelSheet.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonPlayerView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ListsView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/MakePictureSheet.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RecognitionView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RootView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyText.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyTextView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SaveItemButton.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SetInputView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SpendFooter.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TopicsView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WordActions.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WorkingOverlay.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/resource_bundle_accessor.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules/FluentApp.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/AppModel.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/ClaudeClient.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/FluentApp.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/FluentStore.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/GenerationDefect.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/ImagePipeline.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/LessonService.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/LessonStore.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Paths.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Secrets.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Speech.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/StringExtras.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Subprocess.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/TextScale.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Theme.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ArchiveView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/AudioPromptView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/CollapsibleSection.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/DebriefView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/DrillView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ExerciseInputView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/HomeView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ImagesView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/KanaTextField.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/LabelSheet.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/LessonPlayerView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ListsView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/MakePictureSheet.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RecognitionView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RootView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RubyText.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RubyTextView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SaveItemButton.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SetInputView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SpendFooter.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/TopicsView.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/WordActions.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/WorkingOverlay.swift",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DerivedSources/resource_bundle_accessor.swift"
+      ],
+      "tempsPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build",
+      "wholeModuleOptimization" : true
+    },
+    "C.FluentCore-arm64-apple-macosx-release.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/sources",
+      "importPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Attempt.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Furigana.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Grader.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/ImageLibrary.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/KanaInput.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Lesson.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/LessonPlan.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/PictureRequest.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SavedItem.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SessionReport.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SpendLog.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/TopicProgress.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/WordDrill.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "FluentCore",
+      "moduleOutputPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules/FluentCore.swiftmodule",
+      "objects" : [
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Attempt.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Furigana.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Grader.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/ImageLibrary.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/KanaInput.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Lesson.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/LessonPlan.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/PictureRequest.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/SavedItem.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/SessionReport.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/SpendLog.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/TopicProgress.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/WordDrill.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-whole-module-optimization",
+        "-num-threads",
+        "8",
+        "-serialize-diagnostics",
+        "-O",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/include/FluentCore-Swift.h",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "app"
+      ],
+      "outputFileMapPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Attempt.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Furigana.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Grader.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/ImageLibrary.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/KanaInput.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Lesson.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/LessonPlan.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/PictureRequest.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/SavedItem.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/SessionReport.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/SpendLog.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/TopicProgress.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/WordDrill.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules/FluentCore.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Attempt.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Furigana.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Grader.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/ImageLibrary.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/KanaInput.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Lesson.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/LessonPlan.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/PictureRequest.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SavedItem.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SessionReport.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SpendLog.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/TopicProgress.swift",
+        "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/WordDrill.swift"
+      ],
+      "tempsPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build",
+      "wholeModuleOptimization" : true
+    },
+    "C.FluentCoreTests-arm64-apple-macosx-release.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/sources",
+      "importPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/DecodeFixtureTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/FuriganaTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/GraderTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/KanaInputTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/LessonRecordTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/PictureRequestTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/SessionReportTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/SetFixtureTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/TopicProgressTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/ValidationTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/WordDrillTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/DerivedSources/resource_bundle_accessor.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<FluentCoreTests-arm64-apple-macosx-release.module-resources>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules/FluentCore.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "FluentCoreTests",
+      "moduleOutputPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules/FluentCoreTests.swiftmodule",
+      "objects" : [
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/DecodeFixtureTests.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/FuriganaTests.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/GraderTests.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/KanaInputTests.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/LessonRecordTests.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/PictureRequestTests.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/SessionReportTests.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/SetFixtureTests.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/TopicProgressTests.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/ValidationTests.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/WordDrillTests.swift.o",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/resource_bundle_accessor.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-whole-module-optimization",
+        "-num-threads",
+        "8",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/index/store",
+        "-O",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+        "-module-cache-path",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "app"
+      ],
+      "outputFileMapPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/DecodeFixtureTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/FuriganaTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/GraderTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/KanaInputTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/LessonRecordTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/PictureRequestTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/SessionReportTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/SetFixtureTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/TopicProgressTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/ValidationTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/WordDrillTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/resource_bundle_accessor.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules/FluentCoreTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/DecodeFixtureTests.swift",
+        "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/FuriganaTests.swift",
+        "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/GraderTests.swift",
+        "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/KanaInputTests.swift",
+        "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/LessonRecordTests.swift",
+        "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/PictureRequestTests.swift",
+        "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/SessionReportTests.swift",
+        "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/SetFixtureTests.swift",
+        "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/TopicProgressTests.swift",
+        "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/ValidationTests.swift",
+        "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/WordDrillTests.swift",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/DerivedSources/resource_bundle_accessor.swift"
+      ],
+      "tempsPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build",
+      "wholeModuleOptimization" : true
+    },
+    "C.FluentPackageTests-arm64-apple-macosx-release.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.build/sources",
+      "importPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.derived/runner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules/FluentCoreTests.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "FluentPackageTests",
+      "moduleOutputPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules/FluentPackageTests.swiftmodule",
+      "objects" : [
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.build/runner.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-whole-module-optimization",
+        "-num-threads",
+        "8",
+        "-serialize-diagnostics",
+        "-O",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.build/include/FluentPackageTests-Swift.h",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "app"
+      ],
+      "outputFileMapPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules/FluentPackageTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.derived/runner.swift"
+      ],
+      "tempsPath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.build",
+      "wholeModuleOptimization" : true
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "FluentApp" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "FluentApp",
+      "-package-name",
+      "app",
+      "-c",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/AppModel.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/ClaudeClient.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/FluentApp.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/FluentStore.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/GenerationDefect.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/ImagePipeline.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/LessonService.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/LessonStore.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Paths.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Secrets.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Speech.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/StringExtras.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Subprocess.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/TextScale.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Theme.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ArchiveView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/AudioPromptView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/CollapsibleSection.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/DebriefView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/DrillView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ExerciseInputView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/HomeView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ImagesView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/KanaTextField.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/LabelSheet.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/LessonPlayerView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ListsView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/MakePictureSheet.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RecognitionView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RootView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RubyText.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RubyTextView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SaveItemButton.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SetInputView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SpendFooter.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/TopicsView.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/WordActions.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/WorkingOverlay.swift",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DerivedSources/resource_bundle_accessor.swift",
+      "-I",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-whole-module-optimization",
+      "-num-threads",
+      "8",
+      "-serialize-diagnostics",
+      "-O",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+      "-module-cache-path",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/ModuleCache",
+      "-parseable-output",
+      "-Xfrontend",
+      "-entry-point-function-name",
+      "-Xfrontend",
+      "FluentApp_main",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "app",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "FluentCore" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "FluentCore",
+      "-package-name",
+      "app",
+      "-c",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Attempt.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Furigana.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Grader.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/ImageLibrary.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/KanaInput.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Lesson.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/LessonPlan.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/PictureRequest.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SavedItem.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SessionReport.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SpendLog.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/TopicProgress.swift",
+      "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/WordDrill.swift",
+      "-I",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-whole-module-optimization",
+      "-num-threads",
+      "8",
+      "-serialize-diagnostics",
+      "-O",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/include/FluentCore-Swift.h",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "app",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "FluentCoreTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "FluentCoreTests",
+      "-package-name",
+      "app",
+      "-c",
+      "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/DecodeFixtureTests.swift",
+      "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/FuriganaTests.swift",
+      "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/GraderTests.swift",
+      "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/KanaInputTests.swift",
+      "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/LessonRecordTests.swift",
+      "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/PictureRequestTests.swift",
+      "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/SessionReportTests.swift",
+      "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/SetFixtureTests.swift",
+      "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/TopicProgressTests.swift",
+      "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/ValidationTests.swift",
+      "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/WordDrillTests.swift",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/DerivedSources/resource_bundle_accessor.swift",
+      "-I",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-whole-module-optimization",
+      "-num-threads",
+      "8",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/index/store",
+      "-O",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+      "-module-cache-path",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "app",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "FluentPackageTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "FluentPackageTests",
+      "-package-name",
+      "app",
+      "-c",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.derived/runner.swift",
+      "-I",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-whole-module-optimization",
+      "-num-threads",
+      "8",
+      "-serialize-diagnostics",
+      "-O",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.build/include/FluentPackageTests-Swift.h",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "app",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "FluentApp" : [
+      "FluentCore"
+    ],
+    "FluentCore" : [
+
+    ],
+    "FluentCoreTests" : [
+      "FluentCore"
+    ],
+    "FluentPackageTests" : [
+      "FluentCoreTests",
+      "FluentCore"
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+    "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.derived/runner.swift" : {
+      "inputs" : [
+
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.derived/runner.swift"
+        }
+      ]
+    }
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/AppModel.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/ClaudeClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/FluentApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/FluentStore.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/GenerationDefect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/ImagePipeline.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/LessonService.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/LessonStore.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Paths.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Secrets.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Speech.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/StringExtras.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Subprocess.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/TextScale.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Theme.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ArchiveView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/AudioPromptView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/CollapsibleSection.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/DebriefView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/DrillView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ExerciseInputView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/HomeView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ImagesView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/KanaTextField.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/LabelSheet.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/LessonPlayerView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/ListsView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/MakePictureSheet.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RecognitionView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RootView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RubyText.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/RubyTextView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SaveItemButton.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SetInputView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/SpendFooter.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/TopicsView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/WordActions.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentApp/Views/WorkingOverlay.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DerivedSources/resource_bundle_accessor.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/sources"
+    },
+    "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AppModel.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ArchiveView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/AudioPromptView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ClaudeClient.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/CollapsibleSection.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DebriefView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/DrillView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ExerciseInputView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/FluentStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/GenerationDefect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/HomeView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagePipeline.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ImagesView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/KanaTextField.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LabelSheet.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonPlayerView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonService.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/LessonStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/ListsView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/MakePictureSheet.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Paths.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RecognitionView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RootView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyText.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/RubyTextView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SaveItemButton.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Secrets.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SetInputView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Speech.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/SpendFooter.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/StringExtras.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Subprocess.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TextScale.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/Theme.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/TopicsView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WordActions.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/WorkingOverlay.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.build/resource_bundle_accessor.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Attempt.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Furigana.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Grader.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/ImageLibrary.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/KanaInput.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Lesson.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/LessonPlan.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/PictureRequest.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/SavedItem.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/SessionReport.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/SpendLog.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/TopicProgress.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/WordDrill.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentApp.product/Objects.LinkFileList"
+    },
+    "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Attempt.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Furigana.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Grader.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/ImageLibrary.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/KanaInput.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/Lesson.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/LessonPlan.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/PictureRequest.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SavedItem.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SessionReport.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/SpendLog.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/TopicProgress.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Sources/FluentCore/WordDrill.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/sources"
+    },
+    "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/DecodeFixtureTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/FuriganaTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/GraderTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/KanaInputTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/LessonRecordTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/PictureRequestTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/SessionReportTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/SetFixtureTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/TopicProgressTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/ValidationTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/Tests/FluentCoreTests/WordDrillTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/DerivedSources/resource_bundle_accessor.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/sources"
+    },
+    "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.derived/runner.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.build/sources"
+    },
+    "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Attempt.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Furigana.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Grader.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/ImageLibrary.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/KanaInput.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/Lesson.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/LessonPlan.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/PictureRequest.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/SavedItem.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/SessionReport.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/SpendLog.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/TopicProgress.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCore.build/WordDrill.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/DecodeFixtureTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/FuriganaTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/GraderTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/KanaInputTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/LessonRecordTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/PictureRequestTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/SessionReportTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/SetFixtureTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/TopicProgressTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/ValidationTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/WordDrillTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentCoreTests.build/resource_bundle_accessor.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.build/runner.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/FluentPackageTests.product/Objects.LinkFileList"
+    },
+    "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

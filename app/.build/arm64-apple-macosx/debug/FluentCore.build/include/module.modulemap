@@ -1,0 +1,3 @@
+module FluentCore {
+    header "/Users/r/prj/p/lang/fluent/app/.build/arm64-apple-macosx/debug/FluentCore.build/include/FluentCore-Swift.h"
+}
