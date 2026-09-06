@@ -1,0 +1,17 @@
+{
+  "description": "Perapera - app development settings",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "description": "Show the active learner profile's stats",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/fluent/.claude/hooks/session-start.py\" 2>/dev/null || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
