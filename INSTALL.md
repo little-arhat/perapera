@@ -31,7 +31,12 @@ work.
 
 ## Create a learner profile
 
-The app reads a profile; it does not yet create one. Run Fluent's onboarding in a terminal:
+The app creates one on first launch, or from the profile menu at the top of the sidebar. It
+asks for name, languages, levels, goal and daily minutes, and seeds the six databases
+through Fluent's own `new_profile.py`.
+
+If you are unsure of your level, run Fluent's onboarding in a terminal instead. It adds a
+five-question placement assessment and a study plan, and writes the same profile:
 
 ```bash
 cd fluent
@@ -39,22 +44,19 @@ claude
 > /fluent-setup
 ```
 
-It asks eleven questions (name, target and native language, CEFR level now and wanted,
-timeline, daily minutes, goal, learning style), runs a five-question placement assessment
-if you are unsure of your level, computes a study plan, and writes the six databases. Say
-Japanese unless you intend to do without kana input, furigana and the Japanese voice.
+Say Japanese unless you intend to do without kana input, furigana and the Japanese voice.
 
-Creating profiles from inside the app is planned; see [TransitionPlan.md](TransitionPlan.md).
+A profile is one learner and one target language. Learning two languages means two
+profiles, switched from the sidebar.
 
 ## Where your data lives
 
-Today: `~/.claude/fluent-data/` — six JSON databases, the lesson archive, generated
-pictures, saved words, spending, and dated backups. Nothing learner-specific is stored in
-the checkout.
+`${XDG_DATA_HOME:-~/.local/share}/perapera/profiles/<profile>/` — six JSON databases, the
+lesson archive, generated pictures, saved words, spending, session transcripts and dated
+backups. Nothing learner-specific is stored in the checkout.
 
-That location is Fluent's plugin-install default and predates this app. It is moving to
-`${XDG_DATA_HOME:-~/.local/share}/perapera/profiles/<profile>/`, one directory per learner
-and target language.
+Data from before 2026-09 is migrated automatically from `~/.claude/fluent-data` on first
+launch. The old directory is renamed, not deleted.
 
 Two reasons for XDG over `~/Library/Application Support`. The data is co-owned by a shell:
 Python hooks, five Fluent skills, and `$FLUENT_DATA_DIR` in two settings files all touch
@@ -75,33 +77,35 @@ only its own copy, so both files need the value:
 ```json
 {
   "env": {
-    "FLUENT_DATA_DIR": "/Users/you/.claude/fluent-data",
+    "FLUENT_DATA_DIR": "/Users/you/.local/share/perapera/profiles/you-japanese",
     "FLUENT_KIT_ROOT": "/Users/you/prj/perapera/fluent"
   }
 }
 ```
 
-Both are gitignored. If `$FLUENT_DATA_DIR` is unset, Fluent creates an empty database set
-at `~/.claude/fluent-data` rather than failing, which is how you end up with two divergent
+Both are gitignored. Settings (⌘,) has a **Copy FLUENT_DATA_DIR setting** button that emits
+the exact line for the active profile.
+
+If `$FLUENT_DATA_DIR` is unset, Fluent creates an empty database set at
+`~/.claude/fluent-data` rather than failing, which is how you end up with two divergent
 copies of your progress.
 
 ## OpenRouter key
 
-Only needed for generated photographs. Put it in a gitignored `.env` at the repo root:
+Only needed for generated photographs. The app reads `$OPENROUTER_FLUENT`, then
+`<state root>/credentials.env`, which it creates at mode 0600.
 
-```
-OPENROUTER_FLUENT=sk-or-...
-```
-
-The name is Fluent-specific so revoking it cannot break other projects. `tools/imgbench`
-reads the same variable. Without a key, photograph exercises are dropped from a lesson
-rather than shown blank.
+`tools/imgbench` reads the same variable from a gitignored `.env` at the repo root, so
+there are two copies and rotating the key means editing both. The name is Fluent-specific
+so revoking it cannot break other projects. Without a key, photograph exercises are dropped
+from a lesson rather than shown blank.
 
 ## Settings
 
-Open with ⌘,. The `claude` binary is located on `PATH` at first launch, including
-`~/.brew/bin`, `/opt/homebrew/bin`, `/usr/local/bin` and `~/.local/bin`, since a GUI app
-inherits a minimal `PATH`. Repo path, `claude` path and model are editable there.
+Open with ⌘,. It shows where Fluent and the active profile resolved to, and the `claude`
+path and model are editable. The `claude` binary is located on `PATH` at first launch,
+including `~/.brew/bin`, `/opt/homebrew/bin`, `/usr/local/bin` and `~/.local/bin`, since a
+GUI app inherits a minimal `PATH`.
 
 Opus generates and grades by default. Generation is the high-volume call, so moving it to
 Sonnet is the main cost lever. Every call carries a `--max-budget-usd` ceiling, so a

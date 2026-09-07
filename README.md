@@ -58,9 +58,9 @@ for the other's half.
 | `Sources/FluentApp/` | The shell: views, plus the effectful edges `ClaudeClient`, `FluentStore` and `ImagePipeline`. |
 | `Sources/FluentApp/Resources/Prompts/` | Prompt text. Content, not code. |
 | `Sources/FluentApp/Resources/Schemas/` | The JSON contracts passed to `claude --json-schema`. |
-| `Tests/FluentCoreTests/` | Grading rules and the `update-db.py` wire format. 127 tests, no network. |
+| `Tests/` | Grading rules, the `update-db.py` wire format, profile slugs, the migration. 149 tests, no network. |
 | `tools/imgbench/` | Image-model benchmark. Its own `uv` project, 28 tests. |
-| `fluent/` | Fluent: skills, hooks, six databases, methodology, 22 Python tests. |
+| `fluent/` | Fluent: skills, hooks, six databases, methodology, 29 Python tests. |
 
 `Exercise` decodes flat JSON into a Swift sum type. The schema is flat because models
 generate flat objects far more reliably than discriminated unions. The boundary
@@ -114,6 +114,8 @@ results land in Fluent's six databases. Japanese TTS, kana input with the IME by
 Core Text furigana, generated photographs with the writing verified before you see it,
 word drills, a picture library, saved words and per-call spending are all live.
 
-Outstanding work is tracked in `TODO.md`. The next structural change moves learner state
-out of `~/.claude/fluent-data` into an XDG data directory with named profiles; see
+Learner state lives under `$XDG_DATA_HOME` in named profiles, and `make install` produces a
+bundle that carries its own snapshot of Fluent, so the installed app needs no checkout.
+
+Outstanding work is tracked in `TODO.md`; the reshape that got here is recorded in
 [TransitionPlan.md](TransitionPlan.md).

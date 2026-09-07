@@ -92,6 +92,16 @@ Every lesson is one JSON file that accretes answers and then feedback, never ove
 the archive shows what actually happened. Filter by grade, rename a lesson, annotate it, or
 delete it with its images. The files are readable without the app and outlive it.
 
+## Profiles
+
+A profile is one learner and one target language, with its own schedule, archive,
+vocabulary and spending. Switch from the menu at the top of the sidebar; **New profile…**
+creates one. Switching swaps everything together, so nothing from the previous learner
+stays on screen.
+
+There is no delete. Removing a profile removes a whole history, so **Reveal in Finder**
+puts that decision where you can reconsider it.
+
 ## Terminal sessions
 
 Fluent's skills still work, and do things the app does not:
