@@ -99,7 +99,7 @@ which `/fluent-setup` stamps at profile creation, so a streak could never start.
 `last_session_date` and a backfill. That fix belongs upstream and has not been sent yet.
 
 ```bash
-git diff upstream/main -- fluent/     # what we changed
+tools/upstream-diff.sh                # what we changed
 git merge upstream/main               # take their improvements
 ```
 

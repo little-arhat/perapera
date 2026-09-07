@@ -36,9 +36,15 @@ and [USAGE.md](USAGE.md).
 ## Working with upstream
 
 ```bash
-git diff upstream/main -- fluent/     # what we changed
+tools/upstream-diff.sh                # what we changed
+tools/upstream-diff.sh -p             # the full patch
 git merge upstream/main               # take their improvements
 ```
+
+`git diff upstream/main -- fluent/` does **not** answer the first question: upstream keeps
+these files at the repository root, so all 53 read as newly added. The helper names both
+path sets and lets rename detection pair them. Merging works as normal — git detects the
+move and applies upstream's edits to `fluent/`.
 
 Keep `fluent/` mergeable. No macOS paths, no Japanese specifics, no app knowledge under
 that directory; anything app-shaped belongs above it.
