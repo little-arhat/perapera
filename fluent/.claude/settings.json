@@ -43,7 +43,7 @@
           {
             "type": "command",
             "description": "Safety backup before conversation compaction",
-            "command": "mkdir -p \"$CLAUDE_PROJECT_DIR\"/.backups/precompact && cp -r \"$CLAUDE_PROJECT_DIR\"/data/*.json \"$CLAUDE_PROJECT_DIR\"/.backups/precompact/ 2>/dev/null && echo '[Fluent] 🔒 Pre-compact backup saved'",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/precompact-backup.sh\"",
             "timeout": 10
           }
         ]
