@@ -10,6 +10,8 @@ struct RootView: View {
 
         NavigationSplitView {
             List(selection: sectionBinding) {
+                ProfileSwitcher()
+                    .padding(.bottom, 4)
                 ForEach(AppModel.Section.allCases) { section in
                     Label(section.rawValue, systemImage: section.icon)
                         .tag(section)
@@ -41,6 +43,18 @@ struct RootView: View {
         } message: {
             Text(model.error ?? "")
         }
+        // Shown once, after the one-shot move out of ~/.claude/fluent-data.
+        // An alert rather than the working overlay: that overlay is cleared only
+        // by the generation and grading paths, so a launch-time message there
+        // would pin a spinner on screen for the rest of the session.
+        .alert("Your learning data moved",
+               isPresented: Binding(
+                   get: { model.migrationNotice != nil },
+                   set: { if !$0 { model.migrationNotice = nil } })) {
+            Button("OK") { model.migrationNotice = nil }
+        } message: {
+            Text(model.migrationNotice ?? "")
+        }
     }
 
     /// Selecting a row navigates; the reverse mapping keeps the highlight
@@ -53,6 +67,15 @@ struct RootView: View {
 
     @ViewBuilder
     private var content: some View {
+        if model.activeProfile == nil {
+            WelcomeView()
+        } else {
+            screenContent
+        }
+    }
+
+    @ViewBuilder
+    private var screenContent: some View {
         switch model.screen {
         case .home:
             HomeView()
