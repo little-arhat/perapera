@@ -42,6 +42,8 @@ struct LessonService {
     let store: FluentStore
     let lessons: LessonStore
     let resources: ResourceLoader
+    /// Where the teacher's brief is read from.
+    let fluentRoot: URL
     /// Nil when no OpenRouter key is configured, in which case recognition
     /// exercises are dropped rather than shipped without their picture.
     var images: ImagePipeline?
@@ -62,7 +64,10 @@ struct LessonService {
         let schema = try resources.text("Schemas/lesson.schema.json")
 
         let generated = try await claude.request(
-            GeneratedLesson.self, prompt: prompt, schema: schema, progress: progress,
+            GeneratedLesson.self, prompt: prompt,
+            systemPrompt: try TeacherContext.systemPrompt(
+                fluentRoot: fluentRoot, call: .generation),
+            schema: schema, progress: progress,
             onSpend: { cost, model in onSpend?("Lesson", cost, model) })
 
         let lesson = Lesson(
@@ -312,11 +317,6 @@ struct LessonService {
         onSpend: (@Sendable (String, Double, String) -> Void)? = nil
     ) async throws -> LessonRecord {
         let snapshot = try await store.load()
-        // Only built when grading is actually needed.
-        let prompt = record.feedback == nil
-            ? try buildGradingPrompt(record: record, snapshot: snapshot) : ""
-        let schema = record.feedback == nil
-            ? try resources.text("Schemas/feedback.schema.json") : ""
 
         var updated = record
         let feedback: Feedback
@@ -326,8 +326,17 @@ struct LessonService {
             // return a different one, which is worse than useless.
             feedback = existing
         } else {
+            // Built here, not above: `submit` is called again after a crash
+            // between grading and the write, and that path makes no model call.
+            // Assembling the brief outside this branch would turn a missing
+            // Fluent document into a failure on a path that needs neither.
             feedback = try await claude.request(
-                Feedback.self, prompt: prompt, schema: schema, progress: progress,
+                Feedback.self,
+                prompt: try buildGradingPrompt(record: record, snapshot: snapshot),
+                systemPrompt: try TeacherContext.systemPrompt(
+                    fluentRoot: fluentRoot, call: .grading),
+                schema: try resources.text("Schemas/feedback.schema.json"),
+                progress: progress,
                 onSpend: { cost, model in onSpend?("Grading", cost, model) })
             // Persist before writing to Fluent: grading is the expensive half,
             // and a crash between the two must not throw it away.

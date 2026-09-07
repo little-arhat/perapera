@@ -20,6 +20,7 @@ let package = Package(
                 // editable without a rebuild-shaped mental model.
                 .copy("Resources/Prompts"),
                 .copy("Resources/Schemas"),
+                .copy("Resources/teacher-context.json"),
             ]
         ),
 

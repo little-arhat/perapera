@@ -84,6 +84,16 @@ def select_difficulty(mastery_level, recent_accuracy):
 3. True/False questions
 4. Summarization
 
+**Listening:** (a prompt the learner hears rather than reads)
+1. Transcribe what was said
+2. Answer a comprehension question about it
+3. Pick the phrase that was spoken, from options that differ in one sound
+4. Numbers, prices and times, which are the ones with real-world cost
+
+Listening carries the most transfer to actually using the language and is the
+easiest skill to skip, because every other exercise type works on the page. A
+lesson that never asks the learner to hear anything is not a balanced lesson.
+
 ## Error severity
 
 When showing corrections, indicate severity:

@@ -50,19 +50,20 @@ final class ClaudeClient {
     func request<T: Decodable>(
         _ type: T.Type,
         prompt: String,
+        systemPrompt: String,
         schema: String,
         progress: (@Sendable (Progress) -> Void)? = nil,
         onSpend: (@Sendable (Double, String) -> Void)? = nil
     ) async throws -> T {
         do {
-            return try await attempt(type, prompt: prompt, schema: schema,
-                                     progress: progress, onSpend: onSpend)
+            return try await attempt(type, prompt: prompt, systemPrompt: systemPrompt,
+                                     schema: schema, progress: progress, onSpend: onSpend)
         } catch Failure.malformedJSON {
             progress?(Progress(phase: .retrying, text: "", thinkingTokens: 0))
             // A retry is charged too, so its cost is reported separately rather
             // than replacing the first attempt's.
-            return try await attempt(type, prompt: prompt, schema: schema,
-                                     progress: progress, onSpend: onSpend)
+            return try await attempt(type, prompt: prompt, systemPrompt: systemPrompt,
+                                     schema: schema, progress: progress, onSpend: onSpend)
         }
     }
 
@@ -95,6 +96,7 @@ final class ClaudeClient {
     private func attempt<T: Decodable>(
         _ type: T.Type,
         prompt: String,
+        systemPrompt: String,
         schema: String,
         progress: (@Sendable (Progress) -> Void)?,
         onSpend: (@Sendable (Double, String) -> Void)? = nil
@@ -105,16 +107,24 @@ final class ClaudeClient {
             [
                 "-p", prompt,
                 "--model", config.model,
+                // Nothing ambient: no CLAUDE.md discovery, no project settings,
+                // no hooks, no skills. Everything the teacher knows arrives in
+                // --system-prompt, on purpose. Measured 2026-09-02: without this
+                // the call silently loaded the machine's global CLAUDE.md into
+                // every lesson, and never Fluent's methodology at all.
+                "--safe-mode",
+                "--system-prompt", systemPrompt,
                 // Streamed so the wait can be shown rather than spun through.
                 "--output-format", "stream-json",
                 "--verbose",
                 "--include-partial-messages",
                 "--json-schema", schema,
                 "--max-budget-usd", String(config.maxBudgetUSD),
-                // No tools: this call is a pure transformation, and a teacher
-                // that could edit files would defeat the point of the app owning
-                // its own writes.
-                "--allowedTools", "",
+                // `--tools ""` removes the tools. The old `--allowedTools ""`
+                // only emptied the permission allowlist and left them defined.
+                // This call is a pure transformation, and a teacher that could
+                // edit files would defeat the app owning its own writes.
+                "--tools", "",
             ],
             currentDirectory: config.workingDirectory,
             onLine: { line in collector.consume(line) }

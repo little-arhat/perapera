@@ -276,6 +276,7 @@ final class AppModel {
             store: store,
             lessons: lessonStore,
             resources: ResourceLoader(),
+            fluentRoot: fluentRoot,
             images: openRouterKey.isEmpty
                 ? nil
                 : ImagePipeline(config: .init(apiKey: openRouterKey))
