@@ -24,6 +24,11 @@ let package = Package(
         ),
 
         .testTarget(
+            name: "FluentAppTests",
+            dependencies: ["FluentApp", "FluentCore"]
+        ),
+
+        .testTarget(
             name: "FluentCoreTests",
             dependencies: ["FluentCore"],
             resources: [.copy("Fixtures")]
