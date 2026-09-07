@@ -135,18 +135,40 @@ struct SettingsView: View {
 
         Form {
             Section("Fluent") {
-                LabeledContent("Repo") {
-                    HStack {
-                        Text(model.pluginRoot.path)
-                            .font(.caption.monospaced())
-                            .lineLimit(1).truncationMode(.head)
-                        Button("Choose…") { chooseRepo() }
-                    }
-                }
-                LabeledContent("Data") {
-                    Text(model.dataDirectory.path)
+                LabeledContent("Fluent") {
+                    Text(model.fluentRoot?.path ?? "not found")
                         .font(.caption.monospaced())
                         .lineLimit(1).truncationMode(.head)
+                }
+                LabeledContent("Profile") {
+                    HStack {
+                        Text(model.dataDirectory?.path ?? "no profile yet")
+                            .font(.caption.monospaced())
+                            .lineLimit(1).truncationMode(.head)
+                        if let directory = model.dataDirectory {
+                            Button("Copy") {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(directory.path, forType: .string)
+                            }
+                            Button("Reveal") {
+                                NSWorkspace.shared.activateFileViewerSelecting([directory])
+                            }
+                        }
+                    }
+                }
+                // What to paste into .claude/settings.local.json so a terminal
+                // tutor session reads the same databases the app does. Without
+                // it Fluent silently creates an empty set at its own default.
+                if let directory = model.dataDirectory {
+                    LabeledContent("Terminal") {
+                        Button("Copy FLUENT_DATA_DIR setting") {
+                            let json = """
+                                "env": { "FLUENT_DATA_DIR": "\(directory.path)" }
+                                """
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(json, forType: .string)
+                        }
+                    }
                 }
             }
 
@@ -216,15 +238,4 @@ struct SettingsView: View {
         .onChange(of: model.model) { model.rebuildServices() }
     }
 
-    private func chooseRepo() {
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.allowsMultipleSelection = false
-        if panel.runModal() == .OK, let url = panel.url {
-            model.pluginRoot = url
-            model.rebuildServices()
-            Task { await model.refresh() }
-        }
-    }
 }

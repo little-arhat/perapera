@@ -10,11 +10,12 @@ import FluentCore
 @MainActor
 final class FluentStore {
     struct Config {
-        var pluginRoot: URL
+        var fluentRoot: URL
+        var dataDirectory: URL
         var python: String = "/usr/bin/python3"
 
-        var readScript: URL { pluginRoot.appending(path: ".claude/hooks/read-db.py") }
-        var updateScript: URL { pluginRoot.appending(path: ".claude/hooks/update-db.py") }
+        var readScript: URL { fluentRoot.appending(path: ".claude/hooks/read-db.py") }
+        var updateScript: URL { fluentRoot.appending(path: ".claude/hooks/update-db.py") }
     }
 
     private let config: Config
@@ -149,12 +150,14 @@ final class FluentStore {
         return result.stdout
     }
 
-    /// `CLAUDE_PLUGIN_ROOT` is how the hooks find the repo; `FLUENT_DATA_DIR`
-    /// stays unset so `fluent_paths` applies its normal precedence and the app
-    /// reads exactly the databases the CLI does.
+    /// Both coordinates are stated. Leaving `FLUENT_DATA_DIR` unset would let the
+    /// scripts apply their own precedence and fall back to `~/.claude/fluent-data`,
+    /// which once there is more than one profile is not "the same databases the
+    /// CLI uses" but "some other learner's".
     private func environmentForScripts() -> [String: String] {
         var env = ProcessInfo.processInfo.environment
-        env["CLAUDE_PLUGIN_ROOT"] = config.pluginRoot.path
+        env["CLAUDE_PLUGIN_ROOT"] = config.fluentRoot.path
+        env["FLUENT_DATA_DIR"] = config.dataDirectory.path
         return env
     }
 }

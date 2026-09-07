@@ -58,7 +58,7 @@ struct ImagesView: View {
             .disabled(!model.canGenerateImages || model.isMakingPicture)
             .help(model.canGenerateImages
                   ? "Generate a picture of a word you are learning — about $0.07."
-                  : "Needs OPENROUTER_FLUENT in .env")
+                  : "Needs an OpenRouter key in Settings")
         }
         .padding(20)
     }

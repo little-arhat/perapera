@@ -2,23 +2,30 @@ import Foundation
 import FluentCore
 
 /// Loads the prompt and schema files that ship with the app.
+///
+/// The bundle is the source. The old repo-first lookup pointed at
+/// `app/Sources/FluentApp/Resources/`, a path that stopped existing when the app
+/// moved to the repository root, so it had already silently become
+/// bundle-only. An explicit override restores editing a prompt without a rebuild.
 struct ResourceLoader {
-    let pluginRoot: URL
+    /// Set `FLUENT_APP_RESOURCES` to `Sources/FluentApp/Resources` in a checkout.
+    var override: URL? = ProcessInfo.processInfo.environment["FLUENT_APP_RESOURCES"]
+        .flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0) }
 
-    /// Prefers the files in the repo when they are there, so editing a prompt
-    /// takes effect without rebuilding; falls back to the copies inside the app
-    /// bundle for an installed build.
     func text(_ relativePath: String) throws -> String {
-        let repoCopy = pluginRoot.appending(path: "app/Sources/FluentApp/Resources/\(relativePath)")
-        if let text = try? String(contentsOf: repoCopy, encoding: .utf8) {
+        if let override,
+           let text = try? String(contentsOf: override.appending(path: relativePath),
+                                  encoding: .utf8) {
             return text
         }
         let name = (relativePath as NSString).lastPathComponent
-        let subdirectory = (relativePath as NSString).deletingLastPathComponent
+        let directory = (relativePath as NSString).deletingLastPathComponent
+        // nil, not "": a resource at the bundle root has no subdirectory, and an
+        // empty string is not the same thing.
         guard let url = Bundle.module.url(
             forResource: (name as NSString).deletingPathExtension,
             withExtension: (name as NSString).pathExtension,
-            subdirectory: subdirectory)
+            subdirectory: directory.isEmpty ? nil : directory)
         else {
             throw CocoaError(.fileNoSuchFile)
         }

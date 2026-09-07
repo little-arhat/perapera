@@ -39,7 +39,7 @@ struct ImagePipeline {
         var errorDescription: String? {
             switch self {
             case .missingKey:
-                "No OpenRouter key. Add OPENROUTER_FLUENT to .env in the Fluent repo."
+                "No OpenRouter key. Add one in Settings."
             case let .generationFailed(detail):
                 "Couldn't generate the image: \(detail)"
             case let .unreadable(targets, saw):

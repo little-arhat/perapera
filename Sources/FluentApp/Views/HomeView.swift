@@ -276,7 +276,7 @@ private extension HomeView {
             Text("These files couldn't be read")
                 .font(.headline)
                 .foregroundStyle(palette.emphasizedText)
-            Text("They're in \(model.dataDirectory.appending(path: "lessons").path). "
+            Text("They're in \(model.dataDirectory?.appending(path: "lessons").path ?? "—"). "
                  + "Usually this means a file was edited by hand or written by an "
                  + "older version. Nothing else is affected.")
                 .font(.callout)
@@ -292,7 +292,7 @@ private extension HomeView {
                     NSWorkspace.shared.selectFile(
                         nil,
                         inFileViewerRootedAtPath:
-                            model.dataDirectory.appending(path: "lessons").path)
+                            model.dataDirectory?.appending(path: "lessons").path ?? "—")
                 }
                 Spacer()
                 Button("Delete them", role: .destructive) {

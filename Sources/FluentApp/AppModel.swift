@@ -65,9 +65,6 @@ final class AppModel {
 
     // Settings, persisted in UserDefaults -- per-machine preferences, not
     // learning state. Learning state belongs to Fluent's databases.
-    var pluginRoot: URL {
-        didSet { UserDefaults.standard.set(pluginRoot.path, forKey: "pluginRoot") }
-    }
     var claudePath: String {
         didSet { UserDefaults.standard.set(claudePath, forKey: "claudePath") }
     }
@@ -172,16 +169,25 @@ final class AppModel {
         }
     }
 
-    private(set) var lessonStore: LessonStore
+    /// Nil until a profile is open. A fresh install has no profile, which is a
+    /// real state rather than a programmer error, so it has to be representable.
+    private(set) var lessonStore: LessonStore?
     private var lessons: LessonService?
+
+    let profiles = ProfileStore()
+    private(set) var activeProfile: ProfileStore.Profile?
+    let fluentRoot: URL? = Locations.fluentRoot()
+
+    /// Shown once after the one-shot move out of `~/.claude/fluent-data`.
+    /// Deliberately not `statusMessage`: that drives the working overlay, which
+    /// only the generation and grading paths clear, so a launch-time message
+    /// there would pin a spinner on screen for the rest of the session.
+    var migrationNotice: String?
 
     init() {
         let defaults = UserDefaults.standard
-        let root = defaults.string(forKey: "pluginRoot").map(URL.init(fileURLWithPath:))
-            ?? Paths.defaultPluginRoot()
-        self.pluginRoot = root
         self.claudePath = defaults.string(forKey: "claudePath")
-            ?? Subprocess.which("claude", extraPaths: Paths.toolSearchPaths)
+            ?? Subprocess.which("claude", extraPaths: Locations.toolSearchPaths)
             ?? ""
         self.model = defaults.string(forKey: "model") ?? "opus"
         self.showFurigana = defaults.bool(forKey: "showFurigana")
@@ -192,11 +198,9 @@ final class AppModel {
         let storedRate = defaults.double(forKey: "speechRate")
         self.speechRate = storedRate > 0 ? storedRate : Double(Speech.Rate.slow)
         self.voiceIdentifier = defaults.string(forKey: "voiceIdentifier") ?? ""
-        self.lessonStore = LessonStore(
-            dataDirectory: Paths.dataDirectory(pluginRoot: root))
     }
 
-    var dataDirectory: URL { Paths.dataDirectory(pluginRoot: pluginRoot) }
+    var dataDirectory: URL? { activeProfile?.directory }
 
     /// What the title bar says. Follows the screen, so the window's entry in
     /// Mission Control and the Window menu identifies itself.
@@ -248,33 +252,88 @@ final class AppModel {
     /// whenever a setting changes, so a corrected path takes effect without a
     /// restart.
     func rebuildServices() {
-        lessonStore = LessonStore(dataDirectory: dataDirectory)
+        guard let directory = dataDirectory else {
+            lessonStore = nil
+            lessons = nil
+            store = nil
+            return
+        }
+        let lessonStore = LessonStore(dataDirectory: directory)
+        self.lessonStore = lessonStore
+        guard let fluentRoot else {
+            lessons = nil
+            store = nil
+            return
+        }
+        let store = FluentStore(config: .init(fluentRoot: fluentRoot,
+                                              dataDirectory: directory))
+        self.store = store
         lessons = LessonService(
             claude: ClaudeClient(config: .init(
                 executable: claudePath,
                 model: model,
-                workingDirectory: pluginRoot)),
-            store: FluentStore(config: .init(pluginRoot: pluginRoot)),
+                workingDirectory: directory)),
+            store: store,
             lessons: lessonStore,
-            resources: ResourceLoader(pluginRoot: pluginRoot),
+            resources: ResourceLoader(),
             images: openRouterKey.isEmpty
                 ? nil
                 : ImagePipeline(config: .init(apiKey: openRouterKey))
         )
     }
 
+    /// One store, shared with `LessonService`. `refresh()` used to build a second
+    /// one of its own, which meant two answers to "where are the databases".
+    private var store: FluentStore?
+
     /// Empty when no key is configured, which disables photo exercises rather
     /// than failing a lesson halfway through generating one.
-    var openRouterKey: String { Secrets.openRouter(repoRoot: pluginRoot) }
+    var openRouterKey: String { Secrets.openRouter() }
 
     var canGenerateImages: Bool { !openRouterKey.isEmpty }
 
     func start() async {
+        // Off the main actor: this hashes every file of the profile, which is a
+        // visible hang once there are a few hundred lesson images.
+        let migrator = Migrator(legacy: Locations.legacyDataDirectory,
+                                profilesRoot: Locations.profilesRoot,
+                                logFile: Locations.migrationLog)
+        do {
+            let outcome = try await Task.detached { try migrator.run() }.value
+            if case let .migrated(_, destination, retired) = outcome {
+                profiles.activate(destination.lastPathComponent)
+                migrationNotice = "Moved your learning data to \(destination.path). "
+                    + "The old copy is at \(retired.path)."
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
+        activeProfile = profiles.active
+        rebuildServices()
+        await refresh()
+    }
+
+    /// Switching is a change of subject, not a reload. Everything derived from the
+    /// previous learner has to go first, or their name sits in the title bar and a
+    /// half-open lesson id resolves to a lesson that is not there.
+    func switchProfile(to id: String) async {
+        profiles.activate(id)
+        activeProfile = profiles.active
+        snapshot = nil
+        records = []
+        savedItems = SavedItems()
+        pictures = []
+        spending = SpendLog()
+        unreadableLessons = []
+        error = nil
+        screen = .home
+        returnTo = nil
         rebuildServices()
         await refresh()
     }
 
     func refresh() async {
+        guard let lessonStore else { return }
         savedItems = (try? lessonStore.loadSavedItems()) ?? SavedItems()
         pictures = (try? lessonStore.loadPictures()) ?? []
         spending = (try? lessonStore.loadSpending()) ?? SpendLog()
@@ -285,8 +344,9 @@ final class AppModel {
         } catch {
             self.error = "Couldn't read the lesson archive: \(error.localizedDescription)"
         }
+        guard let store else { return }
         do {
-            snapshot = try await FluentStore(config: .init(pluginRoot: pluginRoot)).load()
+            snapshot = try await store.load()
         } catch {
             self.error = "Couldn't read Fluent's databases: \(error.localizedDescription)"
         }
@@ -321,7 +381,7 @@ final class AppModel {
             record.note = note.trimmingCharacters(in: .whitespacesAndNewlines)
                 .nilWhenEmpty
             if record.name != nil || record.note != nil {
-                try? lessonStore.save(record)
+                try? lessonStore?.save(record)
             }
             records.insert(record, at: 0)
             screen = .lesson(id: record.id)
@@ -352,6 +412,7 @@ final class AppModel {
     }
 
     private func persistSavedItems() {
+        guard let lessonStore else { return }
         do { try lessonStore.saveSavedItems(savedItems) }
         catch { self.error = "Couldn't save your list: \(error.localizedDescription)" }
     }
@@ -439,8 +500,9 @@ final class AppModel {
     /// The scene is composed locally from a surface template, so this costs one
     /// image call and nothing for a model to write the description.
     func makePicture(_ request: PictureRequest) async {
+        guard let lessonStore else { return }
         guard canGenerateImages else {
-            error = "No OpenRouter key. Add OPENROUTER_FLUENT to .env in the Fluent repo."
+            error = "No OpenRouter key. Add one in Settings."
             return
         }
         isMakingPicture = true
@@ -484,13 +546,14 @@ final class AppModel {
     }
 
     func imageURL(lessonId: String, fileName: String) -> URL? {
+        guard let lessonStore else { return nil }
         let url = lessonStore.imageURL(lessonId: lessonId, fileName: fileName)
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
     }
 
     /// Where a recognition exercise's picture lives on disk.
     func imageURL(for record: LessonRecord, exercise: Exercise) -> URL? {
-        guard let fileName = record.images[exercise.id] else { return nil }
+        guard let lessonStore, let fileName = record.images[exercise.id] else { return nil }
         return lessonStore.imageURL(lessonId: record.id, fileName: fileName)
     }
 
@@ -526,7 +589,7 @@ final class AppModel {
     func noteSpend(_ purpose: String, _ cost: Double, _ model: String) {
         guard cost > 0 else { return }
         spending.record(Spend(purpose: purpose, model: model, costUSD: cost))
-        try? lessonStore.saveSpending(spending)
+        try? lessonStore?.saveSpending(spending)
     }
 
     nonisolated private func spendSink() -> @Sendable (String, Double, String) -> Void {
@@ -540,6 +603,7 @@ final class AppModel {
     }
 
     func update(_ record: LessonRecord) {
+        guard let lessonStore else { return }
         if let index = records.firstIndex(where: { $0.id == record.id }) {
             records[index] = record
         }
@@ -575,6 +639,7 @@ final class AppModel {
     /// Removes files the archive could not parse. Explicit and learner-driven:
     /// the app never quietly deletes something it failed to understand.
     func deleteUnreadableLessons() {
+        guard let dataDirectory else { return }
         let directory = dataDirectory.appending(path: "lessons")
         for name in unreadableLessons {
             try? FileManager.default.removeItem(at: directory.appending(path: name))
@@ -583,6 +648,7 @@ final class AppModel {
     }
 
     func delete(id: String) {
+        guard let lessonStore else { return }
         do {
             try lessonStore.delete(id: id)
             records.removeAll { $0.id == id }
