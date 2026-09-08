@@ -81,7 +81,7 @@ struct RootView: View {
             HomeView()
         case let .lesson(id):
             if let record = model.record(id: id) {
-                LessonPlayerView(record: record)
+                LessonPlayerView(id: record.id)
             } else {
                 missing
             }

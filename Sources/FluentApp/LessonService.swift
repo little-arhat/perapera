@@ -80,14 +80,21 @@ struct LessonService {
             spec: spec,
             generatedAt: Date()
         )
-        // Reject here, where a retry is free, rather than showing an
-        // unanswerable exercise. The archive decoder stays lenient by design.
+        // A defective exercise is dropped, not the whole lesson. Every defect
+        // names the exercise at fault, so one unanswerable question used to cost
+        // a full regeneration -- the same trade the image path already makes,
+        // where losing an exercise is the cheapest of the available outcomes.
+        //
+        // Defects with no exercise to blame, or that would leave nothing to
+        // practise, still fail: a lesson of one question is not the sitting the
+        // learner asked for.
         let defects = lesson.validate()
-        guard defects.isEmpty else {
+        let broken = Set(defects.compactMap(\.exerciseID))
+        let survivors = lesson.exercises.filter { !broken.contains($0.id) }
+        guard broken.count == defects.count, survivors.count >= 2 else {
             throw GenerationDefect(defects: defects)
         }
-
-        var record = LessonRecord(lesson: lesson)
+        var record = LessonRecord(lesson: lesson).droppingExercises(Array(broken))
         try lessons.save(record)
         record = try await buildImages(for: record, progress: progress, onSpend: onSpend)
         try lessons.save(record)

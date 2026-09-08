@@ -552,6 +552,20 @@ extension Lesson {
                 "listening exercise '\(id)' prints what is spoken, so there is nothing to listen for"
             }
         }
+
+        /// Which exercise is at fault, when one is.
+        ///
+        /// A defective exercise is a local problem: the other seven in the lesson
+        /// are fine, and throwing the whole generation away costs a full
+        /// regeneration to fix one bad question.
+        public var exerciseID: String? {
+            switch self {
+            case .noExercises: nil
+            case let .blankPadding(id, _): id
+            case let .tooFewOptions(id), let .silentListening(id), let .leakedAnswer(id),
+                 let .missingInstruction(id), let .transcriptInPrompt(id): id
+            }
+        }
     }
 
     /// Checks a generated lesson. Empty means usable.

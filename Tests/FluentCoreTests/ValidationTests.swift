@@ -323,3 +323,19 @@ private func recognition(_ extra: [String: Any] = [:]) -> [String: Any] {
     #expect(abs(log.today - 0.07) < 0.0001)
     #expect(abs(log.total - 5.07) < 0.0001)
 }
+
+// A defective exercise is a local problem. Throwing the whole generation away
+// costs a full regeneration to fix one bad question, and the learner waits
+// another minute for a lesson they already paid for.
+
+@Test func everyDefectNamesTheExerciseAtFault() {
+    #expect(Lesson.Defect.tooFewOptions(exerciseID: "e1").exerciseID == "e1")
+    #expect(Lesson.Defect.silentListening(exerciseID: "e2").exerciseID == "e2")
+    #expect(Lesson.Defect.leakedAnswer(exerciseID: "e3").exerciseID == "e3")
+    #expect(Lesson.Defect.missingInstruction(exerciseID: "e4").exerciseID == "e4")
+    #expect(Lesson.Defect.transcriptInPrompt(exerciseID: "e5").exerciseID == "e5")
+    #expect(Lesson.Defect.blankPadding(exerciseID: "e6", field: "pairs").exerciseID == "e6")
+    // The only defect with nobody to blame, and so the only one that must still
+    // fail the whole lesson.
+    #expect(Lesson.Defect.noExercises.exerciseID == nil)
+}

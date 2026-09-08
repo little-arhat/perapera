@@ -603,6 +603,18 @@ final class AppModel {
         records.first { $0.id == id }
     }
 
+    /// Applies one change to one lesson and persists it.
+    ///
+    /// The only way a lesson changes. `LessonPlayerView` used to hold its own
+    /// `@State` copy and push whole records back, which is two copies of one
+    /// identity: whichever wrote last won, and answers leaked between exercises
+    /// when the copies drifted.
+    func mutate(id: String, _ change: (inout LessonRecord) -> Void) {
+        guard var record = record(id: id) else { return }
+        change(&record)
+        update(record)
+    }
+
     func update(_ record: LessonRecord) {
         guard let lessonStore else { return }
         if let index = records.firstIndex(where: { $0.id == record.id }) {

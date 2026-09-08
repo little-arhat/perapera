@@ -1,13 +1,34 @@
 import SwiftUI
 import FluentCore
 
+/// Resolves the lesson by identity and hands its current value down.
+///
+/// The record is a `let` in the player below, re-supplied on every render, not
+/// `@State`. The player used to keep its own copy and push whole records back to
+/// `AppModel`, which is two copies of one identity: whichever wrote last won,
+/// and answers leaked between exercises when they drifted.
 struct LessonPlayerView: View {
+    let id: String
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        if let record = model.record(id: id) {
+            LessonPlayer(record: record)
+        } else {
+            ContentUnavailableView("That lesson isn't here any more",
+                                   systemImage: "questionmark.folder")
+        }
+    }
+}
+
+private struct LessonPlayer: View {
     @Environment(AppModel.self) private var model
     @Environment(Speech.self) private var speech
     @Environment(\.palette) private var palette
     @Environment(\.textScale) private var scale
 
-    @State private var record: LessonRecord
+    let record: LessonRecord
+
     @State private var index = 0
     @State private var draft = ExerciseDraft()
     /// Set once the learner commits an answer, which is what reveals the verdict.
@@ -15,10 +36,7 @@ struct LessonPlayerView: View {
     /// When the learner was last doing something, for active-time accounting.
     @State private var lastInteraction = Date()
 
-    init(record: LessonRecord) {
-        _record = State(initialValue: record)
-    }
-
+    private var id: String { record.id }
     private var exercise: Exercise { record.lesson.exercises[index] }
     private var isLast: Bool { index == record.lesson.exercises.count - 1 }
 
@@ -221,38 +239,48 @@ struct LessonPlayerView: View {
 
     private func startIfNeeded() {
         lastInteraction = Date()
-        if record.startedAt == nil {
-            record.startedAt = Date()
-            record.state = .inProgress
-            model.update(record)
+        model.mutate(id: id) { record in
+            if record.startedAt == nil {
+                record.startedAt = Date()
+                record.state = .inProgress
+            }
         }
         // Resume where the learner left off.
-        if let next = record.lesson.exercises.firstIndex(where: { record.answers[$0.id] == nil }) {
+        if let next = record.lesson.exercises
+            .firstIndex(where: { record.answers[$0.id] == nil }) {
             index = next
         }
         restoreDraft()
     }
 
     private func commit(_ answer: Answer) {
-        record.recordActivity(since: lastInteraction)
+        let exercise = self.exercise
+        let elapsedSince = lastInteraction
         lastInteraction = Date()
-        record.answers[exercise.id] = answer
-        if let verdict = Grader.grade(exercise, answer) {
-            record.verdicts[exercise.id] = verdict
+        model.mutate(id: id) { record in
+            record.recordActivity(since: elapsedSince)
+            record.answers[exercise.id] = answer
+            if let verdict = Grader.grade(exercise, answer) {
+                record.verdicts[exercise.id] = verdict
+            }
         }
-        model.update(record)
         revealed = true
     }
 
     private func advance() {
         speech.stop()
-        record.recordActivity(since: lastInteraction)
+        let elapsedSince = lastInteraction
         lastInteraction = Date()
-        if isLast {
-            record.finishedAt = Date()
-            record.state = .completed
-            model.update(record)
-            model.screen = .debrief(id: record.id)
+        let finishing = isLast
+        model.mutate(id: id) { record in
+            record.recordActivity(since: elapsedSince)
+            if finishing {
+                record.finishedAt = Date()
+                record.state = .completed
+            }
+        }
+        if finishing {
+            model.screen = .debrief(id: id)
         } else {
             index += 1
             restoreDraft()
@@ -267,6 +295,7 @@ struct LessonPlayerView: View {
     /// screen. Marking work incorrect that the learner got right is the most
     /// damaging thing this app can do, so the two are set together.
     private func restoreDraft() {
+        guard record.lesson.exercises.indices.contains(index) else { return }
         draft = ExerciseDraft(answer: record.answers[exercise.id], for: exercise)
         revealed = record.answers[exercise.id] != nil
     }
