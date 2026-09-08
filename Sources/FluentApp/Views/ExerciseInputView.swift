@@ -10,6 +10,8 @@ struct ExerciseInputView: View {
 
     @Environment(\.palette) private var palette
     @Environment(AppModel.self) private var model
+    /// Which prompt is waiting for an answer, in a matching exercise.
+    @State private var pendingLeft: Int?
 
     private var kanaLanguage: Bool {
         model.snapshot?.databases.learner_profile.learner
@@ -149,29 +151,98 @@ struct ExerciseInputView: View {
         return Array(0..<count).shuffled(using: &generator)
     }
 
+    /// Tap a prompt, then tap its answer.
+    ///
+    /// This was a `Picker` per row, and a `Picker` cannot host ruby, so every
+    /// answer in the menu had its readings stripped — the one exercise type
+    /// where the learner is reading answers rather than writing them, and the
+    /// readings were the part that got dropped. Chips are ordinary views, so
+    /// both sides render like the rest of the lesson.
     private func matching(_ pairs: [Exercise.Pair]) -> some View {
-        // A Picker row cannot host ruby, so strip the annotation rather than
-        // show 漢字[かんじ] in a menu.
-        let rights = pairs.map { Furigana.stripped($0.right) }
-        return VStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             ForEach(pairs.indices, id: \.self) { i in
-                HStack {
+                let assigned = matchIndex(i, count: pairs.count)
+                HStack(spacing: 10) {
                     RubyText(annotated: pairs[i].left,
                              showFurigana: model.showFurigana, size: 18)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Picker("", selection: binding(for: i, count: pairs.count)) {
-                        Text("—").tag(-1)
-                        ForEach(rights.indices, id: \.self) { j in
-                            Text(rights[j]).tag(j)
+                    if assigned >= 0, pairs.indices.contains(assigned) {
+                        RubyText(annotated: pairs[assigned].right,
+                                 showFurigana: model.showFurigana, size: 16,
+                                 hugsContent: true)
+                        Button {
+                            binding(for: i, count: pairs.count).wrappedValue = -1
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(palette.secondaryText)
                         }
+                        .buttonStyle(.plain)
+                        .help("Unmatch")
+                    } else {
+                        Text(pendingLeft == i ? "now pick its answer" : "tap to match")
+                            .font(.caption)
+                            .foregroundStyle(palette.secondaryText)
                     }
-                    .labelsHidden()
-                    .frame(width: 160)
                 }
                 .padding(10)
-                .background(palette.surface, in: .rect(cornerRadius: 8))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    pendingLeft == i ? palette.accent.opacity(0.15) : palette.surface,
+                    in: .rect(cornerRadius: 8))
+                .contentShape(.rect)
+                .onTapGesture { pendingLeft = pendingLeft == i ? nil : i }
+            }
+
+            Text("Answers")
+                .font(.caption)
+                .foregroundStyle(palette.secondaryText)
+                .padding(.top, 4)
+
+            // A plain wrapping row of chips. Used answers stay visible but dimmed,
+            // so the learner can see what is left without the list reordering
+            // under them.
+            FlowRow(spacing: 8) {
+                ForEach(pairs.indices, id: \.self) { j in
+                    let used = isUsed(j, count: pairs.count)
+                    Button {
+                        guard let left = pendingLeft else { return }
+                        assign(right: j, to: left, count: pairs.count)
+                        pendingLeft = nil
+                    } label: {
+                        RubyText(annotated: pairs[j].right,
+                                 showFurigana: model.showFurigana, size: 16,
+                                 hugsContent: true)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(palette.surface, in: .rect(cornerRadius: 8))
+                            .opacity(used ? 0.35 : 1)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(used || pendingLeft == nil)
+                    .help(pendingLeft == nil ? "Pick a prompt first" : "Match this answer")
+                }
             }
         }
+    }
+
+    private func matchIndex(_ index: Int, count: Int) -> Int {
+        draft.matches.count == count ? draft.matches[index] : -1
+    }
+
+    private func isUsed(_ right: Int, count: Int) -> Bool {
+        draft.matches.count == count && draft.matches.contains(right)
+    }
+
+    /// One answer belongs to one prompt, so assigning it takes it back from
+    /// wherever it was.
+    private func assign(right: Int, to left: Int, count: Int) {
+        if draft.matches.count != count {
+            draft.matches = Array(repeating: -1, count: count)
+        }
+        for (index, value) in draft.matches.enumerated() where value == right {
+            draft.matches[index] = -1
+        }
+        draft.matches[left] = right
     }
 
     private func binding(for index: Int, count: Int) -> Binding<Int> {
