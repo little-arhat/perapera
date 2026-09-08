@@ -355,18 +355,56 @@ final class AppModel {
 
     // MARK: - Intents
 
+    /// Makes `count` lessons in one go.
+    ///
+    /// Stocking up before a flight is the whole point of the offline path, and
+    /// until now it had to be done one lesson at a time. Each lesson is
+    /// generated in turn rather than in parallel: they are written to the same
+    /// archive, and each one is told what the previous ones covered so the batch
+    /// does not come back as four variations of the same ticket window.
+    ///
+    /// A failure part-way keeps what was already made. Four lessons minus one is
+    /// a worse afternoon than four; nothing at all is a worse one still.
     func generate(
         mode: LessonSpec.Mode, size: LessonSpec.Size,
         depth: LessonSpec.Depth = .standard, focus: String,
-        name: String = "", note: String = "", photoExercises: Int = 0
+        name: String = "", note: String = "", photoExercises: Int = 0,
+        count: Int = 1
     ) async {
-        guard let lessons else { return }
+        guard count > 0 else { return }
+        for step in 1...count {
+            let made = await generateOne(
+                mode: mode, size: size, depth: depth, focus: focus,
+                name: name, note: note, photoExercises: photoExercises,
+                step: step, of: count)
+            guard made else { break }
+        }
+        if count > 1 {
+            statusMessage = nil
+            // Staying on Practice: a batch is stock for later, not something to
+            // start now, and being dropped into lesson one of four is not what
+            // was asked for.
+            screen = .home
+        }
+    }
+
+    /// Returns whether the lesson was made, so a batch stops at the first failure
+    /// rather than reporting the same error four times.
+    @discardableResult
+    private func generateOne(
+        mode: LessonSpec.Mode, size: LessonSpec.Size,
+        depth: LessonSpec.Depth, focus: String,
+        name: String, note: String, photoExercises: Int,
+        step: Int, of total: Int
+    ) async -> Bool {
+        guard let lessons else { return false }
         guard !claudePath.isEmpty else {
             error = "Set the path to `claude` in Settings first."
-            return
+            return false
         }
         isGenerating = true
-        beginProgress("Building a \(size.rawValue) \(mode.rawValue)…")
+        let counted = total > 1 ? " (\(step) of \(total))" : ""
+        beginProgress("Building a \(size.rawValue) \(mode.rawValue)\(counted)…")
         defer { isGenerating = false; endProgress() }
 
         do {
@@ -385,9 +423,11 @@ final class AppModel {
                 try? lessonStore?.save(record)
             }
             records.insert(record, at: 0)
-            screen = .lesson(id: record.id)
+            if total == 1 { screen = .lesson(id: record.id) }
+            return true
         } catch {
             self.error = error.localizedDescription
+            return false
         }
     }
 

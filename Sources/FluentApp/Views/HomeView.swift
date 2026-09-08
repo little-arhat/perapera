@@ -10,6 +10,8 @@ struct HomeView: View {
     @State private var depth: LessonSpec.Depth = .standard
     @State private var photos = 0
     @State private var focus = ""
+    /// How many lessons to make in one go.
+    @State private var batch = 1
     @State private var name = ""
     @State private var note = ""
     @State private var showUnreadable = false
@@ -181,6 +183,19 @@ struct HomeView: View {
                     .textFieldStyle(.roundedBorder)
             }
 
+            // Stocking up: several lessons made now, done offline later. The
+            // count sits with the buttons because it multiplies what they cost.
+            HStack(spacing: 10) {
+                Stepper("Make: \(batch)", value: $batch, in: 1...6)
+                    .fixedSize()
+                    .help("Generate several lessons in one go, to do offline later.")
+                if batch > 1 {
+                    Text("\(batch) lessons, generated one after another")
+                        .font(.caption2)
+                        .foregroundStyle(palette.secondaryText)
+                }
+            }
+
             HStack(spacing: 12) {
                 Button {
                     Task { await generate(.lesson) }
@@ -219,7 +234,7 @@ struct HomeView: View {
     private func generate(_ mode: LessonSpec.Mode) async {
         await model.generate(mode: mode, size: size, depth: depth,
                              focus: focus, name: name, note: note,
-                             photoExercises: photos)
+                             photoExercises: photos, count: batch)
         name = ""
         note = ""
     }
