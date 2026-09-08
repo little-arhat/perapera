@@ -39,7 +39,30 @@ public enum JapaneseReadings {
     }
 
     /// Every token that contains a kanji, with its kana reading.
+    ///
+    /// Boundaries come from `JapaneseText`, so a compound gets one reading:
+    /// 新幹線[しんかんせん] rather than 新[しん]幹線[かんせん].
+    ///
+    /// The transcription is taken from a single pass over the whole text and
+    /// then concatenated within each merged span. Transcribing a span on its own
+    /// loses the context the tokenizer reads it in, and 枚 out of context comes
+    /// back as ばい where 2枚 gives まい.
     public static func readings(in text: String) -> [(Range<String.Index>, String?)] {
+        let latin = transcriptions(in: text)
+        return JapaneseText.tokens(in: text)
+            .filter { containsKanji($0.text) }
+            .map { token in
+                let pieces = latin
+                    .filter { token.range.lowerBound <= $0.0.lowerBound
+                              && $0.0.upperBound <= token.range.upperBound }
+                    .map(\.1)
+                    .joined()
+                return (token.range, pieces.isEmpty ? nil : hiragana(fromLatin: pieces))
+            }
+    }
+
+    /// Latin transcription of every token, in one pass over the whole string.
+    static func transcriptions(in text: String) -> [(Range<String.Index>, String)] {
         guard !text.isEmpty else { return [] }
         let cf = text as CFString
         let full = CFRangeMake(0, CFStringGetLength(cf))
@@ -49,20 +72,17 @@ public enum JapaneseReadings {
             Locale(identifier: "ja") as CFLocale)
         else { return [] }
 
-        var found: [(Range<String.Index>, String?)] = []
+        var out: [(Range<String.Index>, String)] = []
         while CFStringTokenizerAdvanceToNextToken(tokenizer) != [] {
             let cfRange = CFStringTokenizerGetCurrentTokenRange(tokenizer)
             guard let range = Range(NSRange(location: cfRange.location,
-                                            length: cfRange.length), in: text)
+                                            length: cfRange.length), in: text),
+                  let piece = CFStringTokenizerCopyCurrentTokenAttribute(
+                    tokenizer, kCFStringTokenizerAttributeLatinTranscription) as? String
             else { continue }
-            let token = String(text[range])
-            guard containsKanji(token) else { continue }
-
-            let latin = CFStringTokenizerCopyCurrentTokenAttribute(
-                tokenizer, kCFStringTokenizerAttributeLatinTranscription) as? String
-            found.append((range, latin.flatMap(hiragana(fromLatin:))))
+            out.append((range, piece))
         }
-        return found
+        return out
     }
 
     /// True if the string holds a CJK ideograph, which is what needs a reading.

@@ -29,6 +29,8 @@ struct RubyTextView: NSViewRepresentable {
     let rubyColor: NSColor
     let selectable: Bool
     let highlightWords: Bool
+    /// Non-nil tints particles this colour.
+    var particleColor: NSColor?
     /// Width to lay out into. SwiftUI measures after layout, so the view needs
     /// telling rather than asking.
     let availableWidth: CGFloat
@@ -99,6 +101,7 @@ final class RubyCanvas: NSView {
         var rubyColor: NSColor
         var selectable: Bool
         var highlightWords: Bool
+        var particleColor: NSColor?
         /// Parse the source as Markdown before applying ruby.
         ///
         /// Explanatory prose — a lesson preamble, a feedback comment — carries
@@ -214,8 +217,24 @@ final class RubyCanvas: NSView {
             }
             result.append(NSAttributedString(string: segment.base, attributes: attributes))
         }
+        tintParticles(in: result)
         attributed = result
         frame_ = nil
+    }
+
+    /// Colours the particles, once the text is otherwise built.
+    ///
+    /// Applied last, over whatever the base colour is, so it survives both the
+    /// plain and the Markdown path without either needing to know about it. The
+    /// attributed string's characters are the plain text at this point — ruby is
+    /// an attribute, not content — so token offsets line up directly.
+    private func tintParticles(in result: NSMutableAttributedString) {
+        guard let color = model.particleColor else { return }
+        let text = result.string
+        for token in JapaneseText.tokens(in: text) where token.role == .particle {
+            let range = NSRange(token.range, in: text)
+            result.addAttribute(.foregroundColor, value: color, range: range)
+        }
     }
 
     /// Markdown first, then ruby.
@@ -444,24 +463,23 @@ final class RubyCanvas: NSView {
         return nil
     }
 
-    /// The word containing an index, using the system's Japanese segmenter.
+    /// The word containing an index.
     ///
-    /// `NLTokenizer` handles Japanese, which has no spaces — 切符を2枚ください
-    /// segments to 切符 | を | 2 | 枚 | ください. It is imperfect on compounds
-    /// (新幹線 comes back as 新 + 幹線) but far better than splitting on script
-    /// changes, and it makes particles individually hoverable, which is exactly
-    /// what a learner wants to isolate.
+    /// `JapaneseText` handles the segmentation, including rejoining compounds
+    /// `NLTokenizer` splits — 新幹線 came back as 新 + 幹線, so hovering it
+    /// highlighted half a word and offered to save a word that does not exist.
     private func wordRange(containing index: Int) -> Range<Int>? {
-        guard !plainText.isEmpty else { return nil }
-        let tokenizer = NLTokenizer(unit: .word)
-        tokenizer.string = plainText
-        guard let position = utf16Index(index) else { return nil }
-        let tokenRange = tokenizer.tokenRange(at: position)
-        guard !tokenRange.isEmpty else { return nil }
+        guard !plainText.isEmpty,
+              let token = JapaneseText.token(at: index, in: plainText)
+        else { return nil }
         let lower = plainText.utf16.distance(
-            from: plainText.utf16.startIndex, to: tokenRange.lowerBound.samePosition(in: plainText.utf16) ?? plainText.utf16.startIndex)
+            from: plainText.utf16.startIndex,
+            to: token.range.lowerBound.samePosition(in: plainText.utf16)
+                ?? plainText.utf16.startIndex)
         let upper = plainText.utf16.distance(
-            from: plainText.utf16.startIndex, to: tokenRange.upperBound.samePosition(in: plainText.utf16) ?? plainText.utf16.startIndex)
+            from: plainText.utf16.startIndex,
+            to: token.range.upperBound.samePosition(in: plainText.utf16)
+                ?? plainText.utf16.startIndex)
         return lower..<upper
     }
 

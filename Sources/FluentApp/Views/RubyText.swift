@@ -39,6 +39,7 @@ struct RubyText: View {
                 rubyColor: NSColor(palette.secondaryText),
                 selectable: scale.selectable,
                 highlightWords: model.highlightWords,
+                particleColor: model.tintParticles ? NSColor(palette.particle) : nil,
                 availableWidth: 0,
                 // Only offered when word highlighting is on: without it there
                 // is no indication a word is a target, and a click that opens a
@@ -94,6 +95,7 @@ struct MarkdownRubyText: View {
             rubyColor: NSColor(palette.secondaryText),
             selectable: scale.selectable,
             highlightWords: model.highlightWords,
+            particleColor: model.tintParticles ? NSColor(palette.particle) : nil,
             availableWidth: 0,
             isMarkdown: true
         )

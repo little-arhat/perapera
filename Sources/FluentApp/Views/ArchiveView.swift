@@ -172,6 +172,19 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Reading") {
+                Toggle("Highlight the word under the pointer", isOn: $model.highlightWords)
+                    .help("Japanese has no spaces, so seeing where a word ends is a "
+                          + "reading aid rather than a convenience. Click copies it.")
+                Toggle("Colour particles", isOn: $model.tintParticles)
+                    .help("は, を, に, で and the rest in a separate colour. They are "
+                          + "short and unstressed and carry the whole grammatical "
+                          + "structure, which is where sentences get lost.")
+                Toggle("Show readings by default", isOn: $model.showFurigana)
+                    .help("Off by default: a learner who always sees the reading "
+                          + "never learns to read the kanji. ⌘F toggles per screen.")
+            }
+
             Section("Speech") {
                 Picker("Voice", selection: $model.voiceIdentifier) {
                     Text("Best installed").tag("")

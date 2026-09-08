@@ -47,6 +47,10 @@ struct Palette {
     var warning: Color  { Solarized.yellow }
     var critical: Color { Solarized.orange }
     var review: Color   { Solarized.violet }
+    /// Particles: the words that mark what everything else is doing. Cyan is
+    /// used for nothing else in running text, so the grammar reads at a glance
+    /// without competing with correct/wrong.
+    var particle: Color { Solarized.cyan }
     var newItem: Color  { Solarized.cyan }
 
     /// Severity colors, matching the 🔴/🟡/🟢 vocabulary the tutor already uses
