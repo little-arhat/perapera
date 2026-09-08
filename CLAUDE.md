@@ -32,6 +32,10 @@ and [USAGE.md](USAGE.md).
 - **Grading splits by what each side can know.** The app supplies what it measures; the
   teacher supplies judgement. Neither is asked for the other's half.
 - **Target language is Japanese.** Kana input, furigana, ruby and voice selection assume it.
+- **One writer at a time, enforced.** The app and a terminal tutor session write the
+  same six databases through `update-db.py`, which takes an exclusive advisory lock
+  (`fluent/.claude/hooks/fluent_lock.py`) across the whole read-modify-write;
+  `read-db.py` takes a shared one. Any new writer goes through the same module.
 
 ## Working with upstream
 

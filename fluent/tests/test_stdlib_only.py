@@ -21,7 +21,14 @@ RUNTIME_DIRS = [REPO / ".claude" / "hooks"]
 
 # Modules the runtime code may import: the standard library, plus its own
 # siblings.
-LOCAL_MODULES = {"fluent_paths"}
+# A sibling .py in the same directory is local, not a dependency. Naming them
+# one at a time meant the next helper failed this test for existing rather than
+# for being third-party.
+LOCAL_MODULES = {
+    path.stem
+    for directory in RUNTIME_DIRS
+    for path in directory.glob("*.py")
+}
 
 
 def imported_roots(path: pathlib.Path) -> set[str]:

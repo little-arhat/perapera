@@ -128,6 +128,6 @@ claude
 > /fluent-setup       # create or update a profile
 ```
 
-Use one surface at a time. The app and a tutor session write the same six databases through
-the same script, and nothing serialises them, so overlapping writes lose a session's
-scheduling.
+The app and a tutor session write the same six databases through the same script, and it
+takes a lock, so the second waits rather than quietly overwriting the first. If something
+has held it for twenty seconds you are told which process, rather than left waiting.

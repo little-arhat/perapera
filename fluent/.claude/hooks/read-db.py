@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fluent_lock import database_lock  # noqa: E402
 from fluent_paths import data_dir, force_utf8_io  # noqa: E402
 
 force_utf8_io()
@@ -53,13 +54,31 @@ def main():
     databases = {}
     missing = []
 
-    for key, path in FILES.items():
-        data = load_json(path)
-        if data is None:
-            missing.append(str(path))
-            databases[key] = {}
-        else:
-            databases[key] = data
+    # A shared lock for the duration of the read. Each file is written
+    # atomically, but the six are written in sequence, so a read landing in the
+    # middle of an update sees a session logged that the progress totals do not
+    # know about yet. A reader never blocks another reader.
+    try:
+        with database_lock(DATA_DIR, exclusive=False, timeout=10):
+            for key, path in FILES.items():
+                data = load_json(path)
+                if data is None:
+                    missing.append(str(path))
+                    databases[key] = {}
+                else:
+                    databases[key] = data
+    except TimeoutError:
+        # Reading is worth doing even if a writer is wedged; the caller gets the
+        # databases as they stand rather than nothing at all.
+        print("[Fluent] a writer has held the lock for 10s; reading anyway",
+              file=sys.stderr)
+        for key, path in FILES.items():
+            data = load_json(path)
+            if data is None:
+                missing.append(str(path))
+                databases[key] = {}
+            else:
+                databases[key] = data
 
     now = datetime.now()
     today = now.strftime("%Y-%m-%d")

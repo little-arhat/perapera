@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fluent_lock import database_lock  # noqa: E402
 from fluent_paths import ensure_backups_dir, ensure_data_dir, force_utf8_io  # noqa: E402
 
 force_utf8_io()
@@ -572,9 +573,20 @@ def main():
         "log": DATA_DIR / "session-log.json",
     }
 
+    # Held across the read and the write. Reading outside it would let another
+    # writer land in between, and this update would then be computed from a
+    # state that no longer exists.
+    try:
+        lock = database_lock(DATA_DIR)
+        lock.__enter__()
+    except TimeoutError as e:
+        print(f"[Fluent] {e}", file=sys.stderr)
+        sys.exit(2)
+
     try:
         originals = {k: load_json(p) for k, p in files.items()}
     except Exception as e:
+        lock.__exit__(None, None, None)
         print(f"[Fluent] Error loading databases: {e}", file=sys.stderr)
         sys.exit(2)
 
@@ -603,8 +615,11 @@ def main():
         for k, p in files.items():
             save_json(p, data[k])
     except Exception as e:
+        lock.__exit__(None, None, None)
         print(f"[Fluent] Error saving databases: {e}", file=sys.stderr)
         sys.exit(2)
+
+    lock.__exit__(None, None, None)
 
     # Summary
     stats = data["progress"]["overall_stats"]
