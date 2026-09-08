@@ -18,6 +18,7 @@ final class AppModel {
         case debrief(id: String)
         case lists
         case images
+        case scratch
     }
 
     /// Top-level areas, as the sidebar lists them.
@@ -29,6 +30,7 @@ final class AppModel {
         case practice = "Practice"
         case images = "Pictures"
         case dictionary = "Saved"
+        case scratch = "Scratch"
         case archive = "Archive"
 
         public var id: String { rawValue }
@@ -38,6 +40,7 @@ final class AppModel {
             case .practice: "graduationcap"
             case .images: "photo.on.rectangle.angled"
             case .dictionary: "star"
+            case .scratch: "text.book.closed"
             case .archive: "tray.full"
             }
         }
@@ -47,6 +50,7 @@ final class AppModel {
             case .practice: .home
             case .images: .images
             case .dictionary: .lists
+            case .scratch: .scratch
             case .archive: .archive
             }
         }
@@ -59,6 +63,7 @@ final class AppModel {
         case .home, .lesson, .debrief: .practice
         case .images: .images
         case .lists: .dictionary
+        case .scratch: .scratch
         case .archive: .archive
         }
     }
@@ -79,6 +84,8 @@ final class AppModel {
     }
 
     var savedItems = SavedItems()
+    /// Whatever the learner pasted into the scratch pad, kept with the profile.
+    var scratchText = "" 
     var pictures: [StandalonePicture] = []
     /// What the app has spent on the learner's behalf.
     var spending = SpendLog()
@@ -219,6 +226,8 @@ final class AppModel {
             return "Saved items"
         case .images:
             return "Pictures"
+        case .scratch:
+            return "Scratch pad"
         }
     }
 
@@ -323,6 +332,7 @@ final class AppModel {
         snapshot = nil
         records = []
         savedItems = SavedItems()
+        scratchText = ""
         pictures = []
         spending = SpendLog()
         unreadableLessons = []
@@ -336,6 +346,7 @@ final class AppModel {
     func refresh() async {
         guard let lessonStore else { return }
         savedItems = (try? lessonStore.loadSavedItems()) ?? SavedItems()
+        scratchText = lessonStore.loadScratch()
         pictures = (try? lessonStore.loadPictures()) ?? []
         spending = (try? lessonStore.loadSpending()) ?? SpendLog()
         do {
@@ -445,6 +456,13 @@ final class AppModel {
             savedItems.record(id: id, wasCorrect: wasCorrect)
         }
         persistSavedItems()
+    }
+
+    /// Written on leaving the scratch pad rather than on every keystroke: this
+    /// is a text file, and a learner pasting a page should not cause a write per
+    /// character.
+    func persistScratch() {
+        try? lessonStore?.saveScratch(scratchText)
     }
 
     func unsave(id: String) {

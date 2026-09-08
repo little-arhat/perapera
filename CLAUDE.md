@@ -1,4 +1,4 @@
-# Perapera — development
+# Perapera development
 
 A SwiftUI app for learning Japanese. This repository holds all of our code: the app at the
 root, and our copy of Fluent at `fluent/`. Fluent originates in
@@ -43,7 +43,7 @@ git merge upstream/main               # take their improvements
 
 `git diff upstream/main -- fluent/` does **not** answer the first question: upstream keeps
 these files at the repository root, so all 53 read as newly added. The helper names both
-path sets and lets rename detection pair them. Merging works as normal — git detects the
+path sets and lets rename detection pair them. Merging works as normal: git detects the
 move and applies upstream's edits to `fluent/`.
 
 Keep `fluent/` mergeable. No macOS paths, no Japanese specifics, no app knowledge under
@@ -101,8 +101,8 @@ spun through, validates against a schema, and retries once on malformed output o
 
 It runs with `--safe-mode` and an assembled `--system-prompt`, so the teacher's context is
 exactly what `Resources/teacher-context.json` names and nothing else. Before that, every
-lesson silently carried whichever `CLAUDE.md` the working directory sat under — the
-machine's global one, and this file — and never Fluent's methodology, because the call has
+lesson silently carried whichever `CLAUDE.md` the working directory sat under (the
+machine's global one, and this file) and never Fluent's methodology, because the call has
 no tools to read it.
 
 The manifest deliberately excludes `fluent/CLAUDE.md` and `fluent/LEARNING_SYSTEM.md`: they

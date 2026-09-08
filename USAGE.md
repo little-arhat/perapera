@@ -92,6 +92,20 @@ Every lesson is one JSON file that accretes answers and then feedback, never ove
 the archive shows what actually happened. Filter by grade, rename a lesson, annotate it, or
 delete it with its images. The files are readable without the app and outlive it.
 
+## Your own text
+
+The **Scratch** pane takes any Japanese you paste and puts readings over the kanji.
+Click a word for its meaning, to save it, or to look it up, the same as in a lesson.
+A lesson is text the app chose; this is a menu you photographed, a line from a manga,
+a sign you could not read.
+
+Readings come from the system tokenizer, so this costs nothing and works offline. It
+occasionally splits a compound in the wrong place (新幹線 comes back as 新 + 幹線), so
+the readings are right more often than the word boundaries are. The pane says so.
+
+What you paste is kept with the profile, not with the Mac, so it follows you when you
+switch profiles.
+
 ## Profiles
 
 A profile is one learner and one target language, with its own schedule, archive,

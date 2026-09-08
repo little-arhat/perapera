@@ -169,6 +169,25 @@ final class LessonStore {
         _ = try FileManager.default.replaceItemAt(savedItemsURL, withItemAt: temp)
     }
 
+    // MARK: - Scratch pad
+    //
+    // The learner's own text, so it belongs to the profile rather than to this
+    // Mac. Plain text rather than JSON: it is prose, and a scratch pad that
+    // cannot be opened in any editor is a worse scratch pad.
+
+    private var scratchURL: URL {
+        directory.deletingLastPathComponent().appending(path: "scratch.txt")
+    }
+
+    func loadScratch() -> String {
+        (try? String(contentsOf: scratchURL, encoding: .utf8)) ?? ""
+    }
+
+    func saveScratch(_ text: String) throws {
+        try prepare()
+        try Data(text.utf8).write(to: scratchURL, options: .atomic)
+    }
+
     func delete(id: String) throws {
         deleteAssets(for: id)
         try FileManager.default.removeItem(at: url(for: id))

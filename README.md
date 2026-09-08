@@ -69,7 +69,7 @@ validates; the interior gets a real sum type with no optionals to thread through
 ## Credits
 
 This app is a front end. Everything that makes it teach anything comes from
-**[Fluent](https://github.com/m98/fluent)** by Mohammad Kermani — 396 stars, MIT licensed,
+**[Fluent](https://github.com/m98/fluent)** by Mohammad Kermani: 396 stars, MIT licensed,
 and the reason this project exists at all.
 
 Fluent supplies the parts that are hard to get right:
@@ -77,8 +77,8 @@ Fluent supplies the parts that are hard to get right:
 - the SM-2 spaced-repetition implementation, and `update-db.py`, which has stayed the
   single writer of every database through this whole project
 - the six-database schema: profile, progress, mistakes, mastery, review queue, session log
-- the teaching methodology — active recall, desirable difficulty at 60–70%, interleaving,
-  comprehensible input — and the error taxonomy the feedback is graded against
+- the teaching methodology (active recall, desirable difficulty at 60-70%, interleaving,
+  comprehensible input) and the error taxonomy the feedback is graded against
 - twelve skills, including the `/fluent-setup` interview that still creates every profile
   this app reads
 
