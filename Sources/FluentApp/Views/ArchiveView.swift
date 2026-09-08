@@ -109,6 +109,10 @@ struct ArchiveView: View {
 }
 
 struct SettingsView: View {
+    @State private var openRouterDraft = ""
+    @State private var keySaved = false
+    @State private var keyError: String?
+
     @Environment(AppModel.self) private var model
     @Environment(Speech.self) private var speech
     @Environment(\.palette) private var palette
@@ -169,6 +173,21 @@ struct SettingsView: View {
                             NSPasteboard.general.setString(json, forType: .string)
                         }
                     }
+                }
+            }
+
+            Section("OpenRouter") {
+                // Only needed for generated photographs. Stored in the Keychain,
+                // so it is encrypted at rest and scoped to this app rather than
+                // readable by anything running as the learner.
+                SecureField("API key", text: $openRouterDraft)
+                    .onSubmit { saveKey() }
+                HStack {
+                    Button("Save key") { saveKey() }
+                        .disabled(openRouterDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+                    Text(keyStatus)
+                        .font(.caption)
+                        .foregroundStyle(keySaved ? palette.correct : palette.secondaryText)
                 }
             }
 
@@ -249,6 +268,25 @@ struct SettingsView: View {
         .frame(width: 480)
         .onChange(of: model.claudePath) { model.rebuildServices() }
         .onChange(of: model.model) { model.rebuildServices() }
+    }
+
+    private var keyStatus: String {
+        if let keyError { return keyError }
+        if keySaved { return "Saved to the Keychain." }
+        return model.canGenerateImages ? "A key is stored." : "No key yet — photographs are off."
+    }
+
+    private func saveKey() {
+        do {
+            try Secrets.setOpenRouter(openRouterDraft)
+            openRouterDraft = ""
+            keyError = nil
+            keySaved = true
+            model.rebuildServices()
+        } catch {
+            keyError = error.localizedDescription
+            keySaved = false
+        }
     }
 
 }

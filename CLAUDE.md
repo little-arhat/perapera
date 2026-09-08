@@ -64,7 +64,7 @@ streak could never start. We added `last_session_date` and a backfill migration.
 | Fluent root | `Locations.fluentRoot()` | `$FLUENT_KIT_ROOT`, else `Fluent.app/Contents/Resources/fluent` |
 | Profile directory | `ProfileStore.active` | `${XDG_DATA_HOME:-~/.local/share}/perapera/profiles/<id>/` |
 | Prompts and schemas | `ResourceLoader` | `$FLUENT_APP_RESOURCES`, else `Bundle.module` |
-| OpenRouter key | `Secrets.openRouter()` | `$OPENROUTER_FLUENT`, else `<state root>/credentials.env`, mode 0600 |
+| OpenRouter key | `Secrets.openRouter()` | `$OPENROUTER_FLUENT`, else the Keychain (`dev.fluent.app`) |
 
 They used to be one setting, `pluginRoot`, which only resolved from a git checkout.
 

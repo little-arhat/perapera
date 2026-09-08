@@ -29,6 +29,7 @@ import json
 import os
 import pathlib
 import re
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -79,10 +80,10 @@ IN_USE = "google/gemini-3.1-flash-image"
 def api_key() -> str:
     """The OpenRouter key: `OPENROUTER_FLUENT`.
 
-    Looked up in the environment first, then in a `.env` file at the repo root.
-    The file is the normal case — cron and GUI contexts never source a login
-    shell, so relying on the environment alone is the difference between working
-    and a confusing auth error.
+    The environment first, then a `.env` at the repo root, then the Keychain item
+    the app writes. A file or the environment is the normal case for a tool run
+    from a shell; the Keychain is the fallback so there need not be a second copy
+    of the secret living beside the app's.
 
     `.env` is gitignored. Never print or log the value.
     """
@@ -96,11 +97,36 @@ def api_key() -> str:
             match = re.match(rf"\s*(?:export\s+)?{ENV_KEY}\s*=\s*(.+)", line)
             if match:
                 return match.group(1).strip().strip('"').strip("'")
+    key = keychain_key()
+    if key:
+        return key
     sys.exit(
         f"{ENV_KEY} is not set.\n"
-        f"Add it to {ROOT.parent.parent / '.env'} as {ENV_KEY}=sk-or-...\n"
+        f"Add it in the app's Settings, which stores it in the Keychain,\n"
+        f"or put it in {ROOT.parent.parent / '.env'} as {ENV_KEY}=sk-or-...,\n"
         "or export it in the environment."
     )
+
+
+def keychain_key() -> str | None:
+    """The key as the app stored it, read through the `security` command.
+
+    One copy of the secret. The app keeps it in the Keychain; a second file here
+    would have to be rotated in step with it, and the one that gets forgotten is
+    the one that leaks. macOS only, which is where the app runs; anywhere else
+    this returns None and the messages above apply.
+    """
+    if sys.platform != "darwin":
+        return None
+    try:
+        found = subprocess.run(
+            ["security", "find-generic-password",
+             "-s", "dev.fluent.app", "-a", ENV_KEY, "-w"],
+            capture_output=True, text=True, timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return found.stdout.strip() or None
 
 
 # ─── Network ─────────────────────────────────────────────────

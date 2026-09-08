@@ -92,13 +92,15 @@ copies of your progress.
 
 ## OpenRouter key
 
-Only needed for generated photographs. The app reads `$OPENROUTER_FLUENT`, then
-`<state root>/credentials.env`, which it creates at mode 0600.
+Only needed for generated photographs. Paste it into Settings (⌘,); the app stores it in
+the Keychain, encrypted at rest and scoped to the app. `$OPENROUTER_FLUENT` in the
+environment overrides it.
 
-`tools/imgbench` reads the same variable from a gitignored `.env` at the repo root, so
-there are two copies and rotating the key means editing both. The name is Fluent-specific
-so revoking it cannot break other projects. Without a key, photograph exercises are dropped
-from a lesson rather than shown blank.
+`tools/imgbench` reads the environment, then a gitignored `.env` at the repo root, then the
+same Keychain item through the `security` command — so there is one copy of the secret to
+rotate rather than two. The name is Fluent-specific so revoking it cannot break other
+projects. Without a key, photograph exercises are dropped from a lesson rather than shown
+blank.
 
 ## Settings
 
