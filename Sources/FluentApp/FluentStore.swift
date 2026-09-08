@@ -32,6 +32,7 @@ final class FluentStore {
     struct Snapshot: Decodable {
         struct Databases: Decodable {
             let learner_profile: Profile
+            let progress_db: ProgressDB
             let spaced_repetition: SpacedRepetition
             let mistakes_db: MistakesDB
             let mastery_db: MasteryDB
@@ -55,6 +56,37 @@ final class FluentStore {
                 let breakthroughs: [String]?
                 let notes: String?
             }
+        }
+
+        /// The record of how the learner is actually doing over time.
+        ///
+        /// Read but never written here: `update-db.py` owns every number in it.
+        struct ProgressDB: Decodable {
+            struct Overall: Decodable {
+                let total_sessions: Int?
+                let total_exercises: Int?
+                let total_correct: Int?
+                let accuracy_rate: Double?
+                let total_study_minutes: Int?
+                let average_session_duration: Int?
+            }
+
+            struct TrendPoint: Decodable {
+                let date: String
+                let accuracy: Double
+                let exercises: Int?
+            }
+
+            struct SkillProgress: Decodable {
+                let sessions: Int?
+                let accuracy: Double?
+                let last_practiced: String?
+                let exercises_completed: Int?
+            }
+
+            let overall_stats: Overall?
+            let accuracy_trend: [TrendPoint]?
+            let skill_progress: [String: SkillProgress]?
         }
 
         struct MasteryDB: Decodable {

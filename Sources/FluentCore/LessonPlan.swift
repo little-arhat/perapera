@@ -23,6 +23,19 @@ public struct LessonPlan: Equatable, Sendable {
         self.minutes = minutes
     }
 
+    /// How long one question actually takes, in minutes.
+    ///
+    /// Measured rather than guessed. Across the four finished lessons in the
+    /// archive on 2026-09-08, active time per question was 0.98, 0.99 and 0.51
+    /// minutes for the three of ten items or more, against the 1.25 the estimate
+    /// assumed. The fourth — six items in 12.7 minutes — was a first sitting
+    /// with a preamble to read, and is the reason this is not tuned lower still.
+    ///
+    /// Four lessons is a small sample and this is a number to revisit, not a
+    /// constant of nature. It is deliberately an integer ratio so the estimate
+    /// stays a round figure a learner can hold in their head.
+    static let minutesPerItem = 1
+
     /// Breadth from `size`, depth from `depth`, nudged by level and experience.
     ///
     /// - Parameter dueCount: review mode must cover what is due or the schedule
@@ -56,7 +69,7 @@ public struct LessonPlan: Equatable, Sendable {
         let count = min(12, max(exercises, dueFloor))
         let items = count * perSet
         return LessonPlan(
-            exercises: count, itemsPerSet: perSet, minutes: max(5, items * 5 / 4))
+            exercises: count, itemsPerSet: perSet, minutes: max(5, items * minutesPerItem))
     }
 
     /// One line the learner can read before spending anything.

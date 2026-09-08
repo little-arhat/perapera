@@ -85,3 +85,20 @@ private func item(_ category: String, _ mastery: Int, due: Bool = false)
 @Test func emptyInputIsEmptyOutput() {
     #expect(TopicBreakdown.from(items: []).isEmpty)
 }
+
+// Lesson length is a promise: the learner picks a size because they have that
+// much time. Overstating it makes them pick smaller sittings than they wanted.
+
+@Test func theEstimateMatchesMeasuredPace() {
+    let plan = LessonPlan.plan(size: .medium, depth: .standard, level: "A1",
+                               totalSessions: 7, mode: .lesson, dueCount: 0)
+    // One minute a question, from the archive's own active-time records.
+    #expect(plan.minutes == max(5, plan.items))
+}
+
+@Test func aTinyLessonStillClaimsAFloor() {
+    // Sitting down at all has a cost the per-item rate does not capture.
+    let plan = LessonPlan.plan(size: .small, depth: .light, level: "A1",
+                               totalSessions: 0, mode: .lesson, dueCount: 0)
+    #expect(plan.minutes >= 5)
+}

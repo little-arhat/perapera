@@ -19,6 +19,7 @@ final class AppModel {
         case lists
         case images
         case scratch
+        case progress
     }
 
     /// Top-level areas, as the sidebar lists them.
@@ -30,6 +31,7 @@ final class AppModel {
         case practice = "Practice"
         case images = "Pictures"
         case dictionary = "Saved"
+        case progress = "Progress"
         case scratch = "Scratch"
         case archive = "Archive"
 
@@ -40,6 +42,7 @@ final class AppModel {
             case .practice: "graduationcap"
             case .images: "photo.on.rectangle.angled"
             case .dictionary: "star"
+            case .progress: "chart.line.uptrend.xyaxis"
             case .scratch: "text.book.closed"
             case .archive: "tray.full"
             }
@@ -50,7 +53,9 @@ final class AppModel {
             case .practice: .home
             case .images: .images
             case .dictionary: .lists
-            case .scratch: .scratch
+            case .progress: .progress
+            case .progress: .progress
+        case .scratch: .scratch
             case .archive: .archive
             }
         }
@@ -63,6 +68,7 @@ final class AppModel {
         case .home, .lesson, .debrief: .practice
         case .images: .images
         case .lists: .dictionary
+        case .progress: .progress
         case .scratch: .scratch
         case .archive: .archive
         }
@@ -83,6 +89,8 @@ final class AppModel {
         didSet { UserDefaults.standard.set(showFurigana, forKey: "showFurigana") }
     }
 
+    /// A focus handed over from another screen, consumed by Practice.
+    var pendingFocus: String?
     var savedItems = SavedItems()
     /// Whatever the learner pasted into the scratch pad, kept with the profile.
     var scratchText = "" 
@@ -235,6 +243,8 @@ final class AppModel {
             return "Saved items"
         case .images:
             return "Pictures"
+        case .progress:
+            return "Progress"
         case .scratch:
             return "Scratch pad"
         }

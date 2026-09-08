@@ -93,6 +93,8 @@ struct RootView: View {
             ImagesView()
         case .scratch:
             ScratchPadView()
+        case .progress:
+            ProgressDashboard()
         case let .debrief(id):
             if let record = model.record(id: id) {
                 DebriefView(record: record)

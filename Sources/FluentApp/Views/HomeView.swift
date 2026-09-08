@@ -52,6 +52,8 @@ struct HomeView: View {
     }
 
     var body: some View {
+        // A topic picked on the Progress screen arrives here as the focus, so
+        // "work on this" is one click rather than retyping what you just read.
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 header
@@ -71,6 +73,12 @@ struct HomeView: View {
                 }
                 if !pending.isEmpty { pendingSection }
                 footer
+            }
+            .onAppear {
+                if let handed = model.pendingFocus {
+                    focus = handed
+                    model.pendingFocus = nil
+                }
             }
             .padding(32)
             .frame(maxWidth: scale.width(760), alignment: .leading)
