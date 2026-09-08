@@ -33,6 +33,65 @@ old location is retired.
 seven points in the transition request, restated in [Requirements](#requirements) below.
 
 ---
+## Execution record
+
+**Executed 2026-09-06 → 09-08.** Everything below is the plan as written; this section
+records what actually happened, including where reality diverged from it.
+
+### Done
+
+| Phase | Outcome |
+|---|---|
+| 0 — safety net | 63 commits bundled with all refs, 113 data files digested, restore proven |
+| 1 — reshape | App at the root, Fluent at `fluent/`, `origin` → perapera, `upstream` → m98/fluent |
+| 2 — Fluent-side | `docs/METHODOLOGY.md` split out, transcripts moved to the data directory |
+| 3 — state | Migrated to `~/.local/share/perapera/profiles/roma-japanese`, 115 files verified byte-identical |
+| 4 — teacher context | `--safe-mode` plus an assembled `--system-prompt`; `--tools ""` |
+| 5 — profiles | Switcher, welcome screen, creation through Fluent's `new_profile.py` |
+| 6 — install | `make install`; the installed app runs with the repo renamed off disk |
+
+### Where the plan was wrong
+
+The plan was reviewed twice, and the second review found 34 defects in Phases 3-7 alone.
+Four would have stopped execution: `Locations.kitRoot()` had no way to resolve before
+Phase 6, so the app would have been dead for three phases; `ProfileStore.create()` could
+never have succeeded, because the placeholder guard always fired on a third `{YYYY-MM-DD}`
+the plan's own comment miscounted; `resumeIfInterrupted()` could not recover the one crash
+window it existed for; and Task 3.5 updated one of the two `settings.local.json` files that
+matter.
+
+Two more surfaced only during execution:
+
+- **Fluent's test suite wrote its fixtures into the real learner databases.**
+  `UpdateDbSmokeTest` ran `update-db.py` with no `env=`, so it inherited
+  `$FLUENT_DATA_DIR` — which this plan had just told the executor to export. Sixteen
+  fixture sessions landed in the live profile. Restored from the Phase 0 archive, verified
+  byte-for-byte, and fixed at the root with a regression test.
+- **`verify()` reported every file as missing** on a source given as `/var/...`, because the
+  enumerator returns `/private/var/...` and the relative path was computed by string prefix
+  length. Now by URL components.
+
+### What changed from the plan
+
+- **No submodule.** Fluent is a directory in this repository and `m98/fluent` is a remote.
+  Our copy carries 244 lines of changes including the streak fix, so a submodule of pristine
+  upstream would have put a second, buggy `update-db.py` on disk. See D1 and D2.
+- **XDG rather than Application Support**, for the reasons in D5a.
+- **Profile seeding moved into Fluent** as `new_profile.py`. The templates carry example
+  sessions and 37 placeholders; transforming them is schema knowledge, and schema knowledge
+  belongs with the schema.
+- **Bundling moved from Phase 6 to Phase 3**, so the app could resolve Fluent while the rest
+  of the work happened.
+
+### Still open
+
+`TODO.md` carries FL-29 (Keychain), FL-30 (measure the brief's token cost) and FL-31
+(nothing serialises the app and the CLI against one profile). The task-level detail below is
+kept as a record of the reasoning, not as instructions: several task numbers and file lists
+refer to a shape this repository no longer has.
+
+---
+
 ## Global Constraints
 
 - **No state loss.** Every phase is preceded by a restorable backup and followed by a
@@ -3053,8 +3112,13 @@ Each phase is reversible from `$FB` alone. Work from newest to oldest.
 **Undo the state migration (Phase 3)**
 
 ```bash
+# Revert both settings.local.json files to the legacy path FIRST, or the next
+# terminal session resolves a path that no longer exists and creates an empty
+# database set there.
+RETIRED=$(ls -d "$HOME"/.claude/fluent-data.migrated-* | tail -1)   # may be several
 rm -rf "$HOME/.local/share/perapera"
-mv "$HOME"/.claude/fluent-data.migrated-* "$HOME/.claude/fluent-data"
+mv "$RETIRED" "$HOME/.claude/fluent-data"
+defaults delete dev.fluent.app activeProfileID 2>/dev/null || true
 rm -f "$HOME/.claude/fluent-data/README.txt"   # written by Migrator.retire
 find "$HOME/.claude/fluent-data" -type f -print0 | sort -z | xargs -0 shasum -a 256 \
   | diff - "$FB/fluent-data.sha256.post-2.2" && echo "RESTORED"
@@ -3077,9 +3141,11 @@ is checked out from elsewhere and nothing needs deinitialising.
 
 ```bash
 cd /Users/r/prj/p/lang/fluent
-git reset --hard <sha of the commit before Task 1.2>
-git clean -fd            # removes the now-empty fluent/ scaffolding
-git status --porcelain   # expect only the untracked files Phase 0 archived
+# The reshape is pushed, so a hard reset would need a force-push, which the
+# Global Constraints forbid. Revert instead. And never `git clean -fd` here: it
+# removes the untracked files Phase 0 archived, TODO.md among them.
+git revert --no-commit <sha of Task 1.3>..<sha of Task 1.2>
+git commit -m "revert: undo the repository reshape"
 ```
 
 **Rebuild the repository from scratch**
