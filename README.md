@@ -54,10 +54,10 @@ for the other's half.
 
 | Path | What |
 |---|---|
-| `Sources/FluentCore/` | Pure values: `Lesson`, `Exercise`, `Grader`, `SessionReport`. No SwiftUI, no subprocesses. |
-| `Sources/FluentApp/` | The shell: views, plus the effectful edges `ClaudeClient`, `FluentStore` and `ImagePipeline`. |
-| `Sources/FluentApp/Resources/Prompts/` | Prompt text. Content, not code. |
-| `Sources/FluentApp/Resources/Schemas/` | The JSON contracts passed to `claude --json-schema`. |
+| `Sources/PeraperaCore/` | Pure values: `Lesson`, `Exercise`, `Grader`, `SessionReport`. No SwiftUI, no subprocesses. |
+| `Sources/PeraperaApp/` | The shell: views, plus the effectful edges `ClaudeClient`, `FluentStore` and `ImagePipeline`. |
+| `Sources/PeraperaApp/Resources/Prompts/` | Prompt text. Content, not code. |
+| `Sources/PeraperaApp/Resources/Schemas/` | The JSON contracts passed to `claude --json-schema`. |
 | `Tests/` | Grading rules, the `update-db.py` wire format, profile slugs, the migration. 149 tests, no network. |
 | `tools/imgbench/` | Image-model benchmark. Its own `uv` project, 28 tests. |
 | `fluent/` | Fluent: skills, hooks, six databases, methodology, 29 Python tests. |

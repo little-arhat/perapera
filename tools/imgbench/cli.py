@@ -112,17 +112,20 @@ def keychain_key() -> str | None:
     """The key as the app stored it, read through the `security` command.
 
     One copy of the secret. The app keeps it in the Keychain; a second file here
-    would have to be rotated in step with it, and the one that gets forgotten is
-    the one that leaks. macOS only, which is where the app runs; anywhere else
-    this returns None and the messages above apply.
+    would have to be rotated in step, and the copy that gets forgotten is the one
+    that leaks. macOS asks for authorization the first time another process reads
+    the item and remembers the answer, so this is silent from then on.
+
+    macOS only, which is where the app runs. A short timeout so an unattended run
+    fails fast rather than sitting behind a dialog nobody is there to answer.
     """
     if sys.platform != "darwin":
         return None
     try:
         found = subprocess.run(
             ["security", "find-generic-password",
-             "-s", "dev.fluent.app", "-a", ENV_KEY, "-w"],
-            capture_output=True, text=True, timeout=10,
+             "-s", "dev.perapera.app", "-a", ENV_KEY, "-w"],
+            capture_output=True, text=True, timeout=3,
         )
     except (OSError, subprocess.SubprocessError):
         return None

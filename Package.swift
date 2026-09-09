@@ -2,18 +2,18 @@
 import PackageDescription
 
 let package = Package(
-    name: "Fluent",
+    name: "Perapera",
     platforms: [.macOS(.v14)],
     targets: [
         // Pure: models, grading, kana, payload building. No SwiftUI, no
         // subprocesses -- everything here is testable without a UI or a network.
-        .target(name: "FluentCore"),
+        .target(name: "PeraperaCore"),
 
         // The app shell: SwiftUI views plus the two effectful edges
         // (ClaudeClient, FluentStore) that talk to `claude` and `update-db.py`.
         .executableTarget(
-            name: "FluentApp",
-            dependencies: ["FluentCore"],
+            name: "PeraperaApp",
+            dependencies: ["PeraperaCore"],
             resources: [
                 // Prompts and schemas are plain files on purpose: the wording of
                 // a prompt is content, not code, and should be diffable and
@@ -25,13 +25,13 @@ let package = Package(
         ),
 
         .testTarget(
-            name: "FluentAppTests",
-            dependencies: ["FluentApp", "FluentCore"]
+            name: "PeraperaAppTests",
+            dependencies: ["PeraperaApp", "PeraperaCore"]
         ),
 
         .testTarget(
-            name: "FluentCoreTests",
-            dependencies: ["FluentCore"],
+            name: "PeraperaCoreTests",
+            dependencies: ["PeraperaCore"],
             resources: [.copy("Fixtures")]
         ),
     ]

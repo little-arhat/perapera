@@ -1,11 +1,11 @@
-# Fluent macOS app.
+# Perapera — the macOS app.
 #
 # SPM builds the binary; this assembles the .app around it. There is no
 # .xcodeproj on purpose -- the project is a plain Swift package, and the bundle
 # is four files of metadata rather than a reason to adopt a project format.
 
 CONFIG    ?= release
-APP       := Fluent.app
+APP       := Perapera.app
 BUILD_DIR := $(shell swift build -c $(CONFIG) --show-bin-path 2>/dev/null)
 CONTENTS  := $(APP)/Contents
 
@@ -23,7 +23,7 @@ test:
 # committed -- but keeps the icon reproducible rather than a binary nobody can edit.
 icon:
 	swift tools/make-icon.swift Resources
-	iconutil -c icns Resources/Fluent.iconset -o Resources/Fluent.icns
+	iconutil -c icns Resources/Perapera.iconset -o Resources/Perapera.icns
 
 # Assembles the bundle, then ad-hoc signs it. Signing matters even unsigned-for-
 # distribution: macOS keys a stable app identity off the signature, and without
@@ -43,11 +43,11 @@ check-kit:
 app: build check-kit
 	@rm -rf $(APP)
 	@mkdir -p $(CONTENTS)/MacOS $(CONTENTS)/Resources
-	@cp $(BUILD_DIR)/FluentApp $(CONTENTS)/MacOS/FluentApp
+	@cp $(BUILD_DIR)/PeraperaApp $(CONTENTS)/MacOS/PeraperaApp
 	@cp Resources/Info.plist $(CONTENTS)/Info.plist
-	@cp Resources/Fluent.icns $(CONTENTS)/Resources/Fluent.icns
-	@if [ -d "$(BUILD_DIR)/Fluent_FluentApp.bundle" ]; then \
-		cp -R "$(BUILD_DIR)/Fluent_FluentApp.bundle" $(CONTENTS)/Resources/; \
+	@cp Resources/Perapera.icns $(CONTENTS)/Resources/Perapera.icns
+	@if [ -d "$(BUILD_DIR)/Perapera_PeraperaApp.bundle" ]; then \
+		cp -R "$(BUILD_DIR)/Perapera_PeraperaApp.bundle" $(CONTENTS)/Resources/; \
 	fi
 	@mkdir -p $(CONTENTS)/Resources/fluent
 	@git archive HEAD:$(KIT) | tar -x -C $(CONTENTS)/Resources/fluent

@@ -1,4 +1,4 @@
-// Generates Fluent.icns from code.
+// Generates Perapera.icns from code.
 //
 // Drawn rather than hand-authored so the icon is diffable, reproducible, and
 // tweakable in one place. Run via `make icon`.
@@ -114,7 +114,7 @@ func png(_ image: NSImage, size: CGFloat) -> Data? {
     return rep.representation(using: .png, properties: [:])
 }
 
-let iconset = outputDir.appending(path: "Fluent.iconset")
+let iconset = outputDir.appending(path: "Perapera.iconset")
 try? FileManager.default.removeItem(at: iconset)
 try FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
 

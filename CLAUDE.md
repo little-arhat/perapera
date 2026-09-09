@@ -11,11 +11,11 @@ and [USAGE.md](USAGE.md).
 
 | Path | What |
 |---|---|
-| `Sources/FluentCore/` | Pure values: `Lesson`, `Exercise`, `Grader`, `SessionReport`, `LessonPlan`. No SwiftUI, no subprocesses, no filesystem. |
-| `Sources/FluentApp/` | The shell: SwiftUI views plus the effectful edges `ClaudeClient`, `FluentStore`, `LessonStore` and `ImagePipeline`. |
-| `Sources/FluentApp/Resources/Prompts/` | Prompt text. Content, not code. |
-| `Sources/FluentApp/Resources/Schemas/` | The JSON contracts passed to `claude --json-schema`. |
-| `Tests/FluentCoreTests/` | Grading rules, decode fixtures, the `update-db.py` wire format, profile slugs, the teacher's brief. |
+| `Sources/PeraperaCore/` | Pure values: `Lesson`, `Exercise`, `Grader`, `SessionReport`, `LessonPlan`. No SwiftUI, no subprocesses, no filesystem. |
+| `Sources/PeraperaApp/` | The shell: SwiftUI views plus the effectful edges `ClaudeClient`, `FluentStore`, `LessonStore` and `ImagePipeline`. |
+| `Sources/PeraperaApp/Resources/Prompts/` | Prompt text. Content, not code. |
+| `Sources/PeraperaApp/Resources/Schemas/` | The JSON contracts passed to `claude --json-schema`. |
+| `Tests/PeraperaCoreTests/` | Grading rules, decode fixtures, the `update-db.py` wire format, profile slugs, the teacher's brief. |
 | `Tests/FluentAppTests/` | The migration and the teacher-context assembly. |
 | `tools/imgbench/` | Image-model benchmark. Its own `uv` project, 28 tests. |
 | `fluent/` | Fluent: skills, hooks, six databases, methodology, 22 Python tests. |
@@ -61,7 +61,7 @@ streak could never start. We added `last_session_date` and a backfill migration.
 
 | Concept | Resolved by | Where |
 |---|---|---|
-| Fluent root | `Locations.fluentRoot()` | `$FLUENT_KIT_ROOT`, else `Fluent.app/Contents/Resources/fluent` |
+| Fluent root | `Locations.fluentRoot()` | `$FLUENT_KIT_ROOT`, else `Perapera.app/Contents/Resources/fluent` |
 | Profile directory | `ProfileStore.active` | `${XDG_DATA_HOME:-~/.local/share}/perapera/profiles/<id>/` |
 | Prompts and schemas | `ResourceLoader` | `$FLUENT_APP_RESOURCES`, else `Bundle.module` |
 | OpenRouter key | `Secrets.openRouter()` | `$OPENROUTER_FLUENT`, else the Keychain (`dev.fluent.app`) |

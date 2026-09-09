@@ -97,9 +97,9 @@ the Keychain, encrypted at rest and scoped to the app. `$OPENROUTER_FLUENT` in t
 environment overrides it.
 
 `tools/imgbench` reads the environment, then a gitignored `.env` at the repo root, then the
-same Keychain item through the `security` command — so there is one copy of the secret to
-rotate rather than two. The name is Fluent-specific so revoking it cannot break other
-projects. Without a key, photograph exercises are dropped from a lesson rather than shown
+same Keychain item through the `security` command, so there is one copy of the secret to
+rotate rather than two. macOS asks for authorization the first time and remembers the
+answer. Without a key, photograph exercises are dropped from a lesson rather than shown
 blank.
 
 ## Settings
