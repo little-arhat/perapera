@@ -16,7 +16,7 @@ and [USAGE.md](USAGE.md).
 | `Sources/PeraperaApp/Resources/Prompts/` | Prompt text. Content, not code. |
 | `Sources/PeraperaApp/Resources/Schemas/` | The JSON contracts passed to `claude --json-schema`. |
 | `Tests/PeraperaCoreTests/` | Grading rules, decode fixtures, the `update-db.py` wire format, profile slugs, the teacher's brief. |
-| `Tests/FluentAppTests/` | The migration and the teacher-context assembly. |
+| `Tests/PeraperaAppTests/` | The migration and the teacher-context assembly. |
 | `tools/imgbench/` | Image-model benchmark. Its own `uv` project, 28 tests. |
 | `fluent/` | Fluent: skills, hooks, six databases, methodology, 22 Python tests. |
 

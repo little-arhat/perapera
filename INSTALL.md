@@ -14,7 +14,7 @@
 
 ```bash
 git clone git@github.com:little-arhat/perapera.git && cd perapera
-make app     # build, assemble Fluent.app, ad-hoc sign
+make app     # build, assemble Perapera.app, ad-hoc sign
 make run     # and launch it
 swift test   # 127 tests, no network
 ```
