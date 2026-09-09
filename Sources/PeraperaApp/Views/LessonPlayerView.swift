@@ -133,7 +133,11 @@ private struct LessonPlayer: View {
                 }
                 SaveItemButton(exercise: exercise)
             }
+            // Prose is inset within the card rather than the card being
+             // narrowed: a paragraph wants 65-75 characters, the controls above
+             // it want the width they have.
             RubyText(annotated: exercise.prompt, showFurigana: model.showFurigana)
+                .frame(maxWidth: scale.prose(720), alignment: .leading)
                 .foregroundStyle(palette.emphasizedText)
             if let instruction = exercise.instruction {
                 Text(instruction)
@@ -155,7 +159,7 @@ private struct LessonPlayer: View {
         ScrollView {
             RubyText(annotated: passage, showFurigana: model.showFurigana, size: 19)
                 .foregroundStyle(palette.bodyText)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: scale.prose(720), alignment: .leading)
                 .padding(18)
         }
         .frame(maxHeight: 260)

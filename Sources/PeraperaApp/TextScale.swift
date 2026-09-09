@@ -35,6 +35,19 @@ struct TextScale {
     func width(_ base: CGFloat) -> CGFloat {
         base * min(2.2, max(1.25, 1.5 + (factor - 1) * 0.7))
     }
+
+    /// Reading measure for running prose.
+    ///
+    /// The page is not one column. Cards, controls and tables want the full
+    /// width — that is what stopped a measure-optimal layout from leaving half a
+    /// large display empty — but a paragraph read left to right does not, and at
+    /// the card width it runs to about 89 latin characters against a textbook
+    /// 65-75.
+    ///
+    /// So prose is inset within the card rather than the card being narrowed:
+    /// 0.78 of the measure, which lands in the seventies at the default size and
+    /// keeps tracking the text as it grows.
+    func prose(_ base: CGFloat) -> CGFloat { width(base) * 0.78 }
 }
 
 private struct TextScaleKey: EnvironmentKey {

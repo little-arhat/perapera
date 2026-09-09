@@ -56,6 +56,9 @@ private func briefless() throws -> ResourceLoader {
         .appending(path: "perapera-bench/\(Int(Date().timeIntervalSince1970))")
     try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
 
+    // PERAPERA_BENCH_ONLY names one config, so a run that died part-way can be
+    // finished without paying for the ones that already succeeded.
+    let only = ProcessInfo.processInfo.environment["PERAPERA_BENCH_ONLY"]
     let configs = [
         Config(name: "opus-brief", model: "opus", withBrief: true),
         Config(name: "sonnet-brief", model: "sonnet", withBrief: true),
@@ -63,7 +66,7 @@ private func briefless() throws -> ResourceLoader {
     ]
 
     var summary = ["config,cost_usd,exercises,requested,defects,skills,seconds"]
-    for config in configs {
+    for config in configs where only == nil || only == config.name {
         let scratch = out.appending(path: config.name)
         try FileManager.default.copyItem(at: active.directory, to: scratch)
 

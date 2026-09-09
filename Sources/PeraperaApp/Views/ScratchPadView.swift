@@ -84,7 +84,7 @@ struct ScratchPadView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 RubyText(annotated: annotated, showFurigana: model.showFurigana)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: scale.prose(720), alignment: .leading)
 
                 // The tokenizer splits some compounds it should not -- 新幹線
                 // comes back as 新 + 幹線 -- so the readings are right more often
