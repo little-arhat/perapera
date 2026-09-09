@@ -533,6 +533,7 @@ extension Lesson {
         case leakedAnswer(exerciseID: String)
         case missingInstruction(exerciseID: String)
         case transcriptInPrompt(exerciseID: String)
+        case homophoneAccepted(exerciseID: String, wrong: String, right: String)
 
         public var description: String {
             switch self {
@@ -550,6 +551,10 @@ extension Lesson {
                 "exercise '\(id)' asks for a gap to be filled without saying what to type"
             case let .transcriptInPrompt(id):
                 "listening exercise '\(id)' prints what is spoken, so there is nothing to listen for"
+            case let .homophoneAccepted(id, wrong, right):
+                "exercise '\(id)' accepts '\(wrong)' as well as '\(right)'; they sound the "
+                    + "same but only one is the particle, so accepting both teaches the "
+                    + "mistake it should be catching"
             }
         }
 
@@ -564,9 +569,18 @@ extension Lesson {
             case let .blankPadding(id, _): id
             case let .tooFewOptions(id), let .silentListening(id), let .leakedAnswer(id),
                  let .missingInstruction(id), let .transcriptInPrompt(id): id
+            case let .homophoneAccepted(id, _, _): id
             }
         }
     }
+
+    /// The three particles whose spelling reads as a different kana.
+    ///
+    /// A closed set, because Japanese has exactly these three. Accepting both
+    /// members of a pair marks a wrong particle correct.
+    static let particleHomophones: [(String, String)] = [
+        ("を", "お"), ("は", "わ"), ("へ", "え"),
+    ]
 
     /// Checks a generated lesson. Empty means usable.
     public func validate(raw: [String: Any]? = nil) -> [Defect] {
@@ -600,6 +614,15 @@ extension Lesson {
                 if let answer = accepted.first, answer.count > 2,
                    Furigana.stripped(exercise.prompt).contains(answer) {
                     defects.append(.leakedAnswer(exerciseID: exercise.id))
+                }
+                // Japanese has exactly three particles spelled with a character
+                // that reads as another kana: を/お, は/わ, へ/え. A generator
+                // that accepts both members has accepted the mistake the
+                // exercise exists to catch, and it has happened.
+                for (particle, homophone) in Lesson.particleHomophones
+                where accepted.contains(particle) && accepted.contains(homophone) {
+                    defects.append(.homophoneAccepted(
+                        exerciseID: exercise.id, wrong: homophone, right: particle))
                 }
             case let .reorder(tokens, _):
                 if tokens.count < 2 {

@@ -339,3 +339,28 @@ private func recognition(_ extra: [String: Any] = [:]) -> [String: Any] {
     // fail the whole lesson.
     #expect(Lesson.Defect.noExercises.exerciseID == nil)
 }
+
+@Test func acceptingBothHalvesOfAParticleHomophoneIsADefect() throws {
+    // Observed in a real generation: お listed alongside を. They sound the same
+    // and only を is the object particle, so accepting both marks the exact
+    // mistake the exercise is testing for as correct.
+    let l = try lesson([base(["kind": "cloze", "instruction": "Type the particle",
+                              "acceptedAnswers": ["を", "お"]])])
+    #expect(l.validate() == [.homophoneAccepted(exerciseID: "ex-01",
+                                                wrong: "お", right: "を")])
+}
+
+@Test func aParticleAcceptedAloneIsFine() throws {
+    let l = try lesson([base(["kind": "cloze", "instruction": "Type the particle",
+                              "acceptedAnswers": ["を"]])])
+    #expect(l.validate().isEmpty)
+}
+
+@Test func theOtherTwoHomophonePairsAreCaughtToo() throws {
+    for (right, wrong) in [("は", "わ"), ("へ", "え")] {
+        let l = try lesson([base(["kind": "cloze", "instruction": "Type the particle",
+                                  "acceptedAnswers": [right, wrong]])])
+        #expect(l.validate() == [.homophoneAccepted(exerciseID: "ex-01",
+                                                    wrong: wrong, right: right)])
+    }
+}
