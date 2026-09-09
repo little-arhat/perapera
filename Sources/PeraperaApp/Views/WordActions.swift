@@ -15,6 +15,8 @@ struct WordActionsPopover: View {
     @Environment(\.palette) private var palette
     @State private var gloss = ""
     @State private var justSaved = false
+    /// A meaning found without asking anyone, or the answer to asking.
+    @State private var found: Glossary.Entry?
 
     /// Already in the dictionary? Then its meaning is known, and the useful
     /// offer is to show it rather than to save it again.
@@ -27,6 +29,7 @@ struct WordActionsPopover: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             RubyText(annotated: word, showFurigana: model.showFurigana, size: 22)
+                .onAppear { found = model.knownGloss(for: word) }
 
             if let existing, !existing.gloss.isEmpty {
                 Text(existing.gloss)
@@ -43,13 +46,40 @@ struct WordActionsPopover: View {
                 Label("Added", systemImage: "checkmark.circle.fill")
                     .font(.caption)
                     .foregroundStyle(palette.correct)
+            } else if let found {
+                Text(found.meaning)
+                    .foregroundStyle(palette.emphasizedText)
+                if let reading = found.reading, !reading.isEmpty {
+                    Text(reading)
+                        .font(.caption)
+                        .foregroundStyle(palette.secondaryText)
+                }
+                Text(found.source)
+                    .font(.caption2)
+                    .foregroundStyle(palette.secondaryText)
             } else {
-                // No local meaning, and looking one up costs a call — so this
-                // is a field rather than an automatic lookup. The learner types
-                // what they find, or saves it blank and fills it in later.
+                // Type what you know, or ask. A lookup is a few hundredths of a
+                // cent on the cheapest model and is cached for good, so the
+                // second time this word appears it is free and offline.
                 TextField("Meaning (optional)", text: $gloss)
                     .textFieldStyle(.roundedBorder)
                     .onSubmit(save)
+                Button {
+                    Task {
+                        found = await model.lookUp(word)
+                        if let found { gloss = found.meaning }
+                    }
+                } label: {
+                    if model.isLookingUp {
+                        Label("Looking up…", systemImage: "hourglass")
+                    } else {
+                        Label("Look up meaning", systemImage: "sparkle.magnifyingglass")
+                    }
+                }
+                .buttonStyle(.plain)
+                .font(.caption)
+                .foregroundStyle(palette.accent)
+                .disabled(model.isLookingUp)
             }
 
             HStack(spacing: 8) {

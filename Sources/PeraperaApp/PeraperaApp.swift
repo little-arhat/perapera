@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import PeraperaCore
 
 @main
 struct PeraperaApp: App {
@@ -12,7 +13,8 @@ struct PeraperaApp: App {
                 .environment(model)
                 .environment(speech)
                 .environment(\.textScale, model.textScale)
-                .solarized()
+                .solarized(model.appearance)
+                .preferredColorScheme(model.appearance.colorScheme)
                 .frame(minWidth: 720, minHeight: 520)
                 .frame(
                     idealWidth: AppWindow.idealSize.width,
@@ -32,7 +34,8 @@ struct PeraperaApp: App {
                 .environment(model)
                 .environment(speech)
                 .environment(\.textScale, model.textScale)
-                .solarized()
+                .solarized(model.appearance)
+                .preferredColorScheme(model.appearance.colorScheme)
         }
     }
 }

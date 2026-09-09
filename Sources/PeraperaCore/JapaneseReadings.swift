@@ -62,7 +62,7 @@ public enum JapaneseReadings {
     }
 
     /// Latin transcription of every token, in one pass over the whole string.
-    static func transcriptions(in text: String) -> [(Range<String.Index>, String)] {
+    public static func transcriptions(in text: String) -> [(Range<String.Index>, String)] {
         guard !text.isEmpty else { return [] }
         let cf = text as CFString
         let full = CFRangeMake(0, CFStringGetLength(cf))
@@ -83,6 +83,13 @@ public enum JapaneseReadings {
             out.append((range, piece))
         }
         return out
+    }
+
+    /// The kana reading of one word, or nil if it needs none.
+    public static func reading(of word: String) -> String? {
+        guard containsKanji(word) else { return nil }
+        let pieces = transcriptions(in: word).map(\.1).joined()
+        return pieces.isEmpty ? nil : hiragana(fromLatin: pieces)
     }
 
     /// True if the string holds a CJK ideograph, which is what needs a reading.

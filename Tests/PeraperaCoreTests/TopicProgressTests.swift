@@ -102,3 +102,12 @@ private func item(_ category: String, _ mastery: Int, due: Bool = false)
                                totalSessions: 0, mode: .lesson, dueCount: 0)
     #expect(plan.minutes >= 5)
 }
+
+@Test func appearanceOverridesTheSystemOnlyWhenAsked() {
+    #expect(Appearance.system.isDark(systemIsDark: true))
+    #expect(!Appearance.system.isDark(systemIsDark: false))
+    // An explicit choice ignores the system in both directions, which is the
+    // whole point: Solarized light is not "dark, lightened".
+    #expect(!Appearance.light.isDark(systemIsDark: true))
+    #expect(Appearance.dark.isDark(systemIsDark: false))
+}

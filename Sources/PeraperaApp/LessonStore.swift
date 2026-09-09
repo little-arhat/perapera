@@ -169,6 +169,29 @@ final class LessonStore {
         _ = try FileManager.default.replaceItemAt(savedItemsURL, withItemAt: temp)
     }
 
+    // MARK: - Glosses
+    //
+    // A word looked up once should not be paid for twice. Kept beside the
+    // profile rather than in the dictionary proper: a gloss is a fact about the
+    // language, not a decision to study the word.
+
+    private var glossesURL: URL {
+        directory.deletingLastPathComponent().appending(path: "glosses.json")
+    }
+
+    func loadGlosses() -> [String: Glossary.Entry] {
+        guard let data = try? Data(contentsOf: glossesURL) else { return [:] }
+        return (try? JSONDecoder().decode([String: Glossary.Entry].self, from: data)) ?? [:]
+    }
+
+    func saveGlosses(_ glosses: [String: Glossary.Entry]) throws {
+        try prepare()
+        let data = try encoder.encode(glosses)
+        let temp = glossesURL.appendingPathExtension("tmp")
+        try data.write(to: temp, options: .atomic)
+        _ = try FileManager.default.replaceItemAt(glossesURL, withItemAt: temp)
+    }
+
     // MARK: - Scratch pad
     //
     // The learner's own text, so it belongs to the profile rather than to this

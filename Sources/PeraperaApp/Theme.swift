@@ -1,4 +1,5 @@
 import SwiftUI
+import PeraperaCore
 
 /// Solarized, by Ethan Schoonover.
 ///
@@ -75,12 +76,31 @@ extension EnvironmentValues {
     }
 }
 
-/// Supplies the palette matching the system appearance.
+extension Appearance {
+    /// What to hand SwiftUI. Nil means "don't override", which is what following
+    /// the system is: the window chrome and the controls have to move with the
+    /// palette or the app is half one theme and half the other.
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
+        }
+    }
+}
+
+/// Supplies the palette, following the system unless the learner has said otherwise.
+///
+/// The appearance is a parameter rather than something read from the environment:
+/// this modifier is applied outside `.environment(model)`, and environment values
+/// flow to descendants, not to ancestors. Reading it here compiled and then
+/// crashed at launch.
 struct SolarizedTheme: ViewModifier {
+    let appearance: Appearance
     @Environment(\.colorScheme) private var scheme
 
     func body(content: Content) -> some View {
-        let palette = Palette(isDark: scheme == .dark)
+        let palette = Palette(isDark: appearance.isDark(systemIsDark: scheme == .dark))
         content
             .environment(\.palette, palette)
             .background(palette.background)
@@ -90,7 +110,9 @@ struct SolarizedTheme: ViewModifier {
 }
 
 extension View {
-    func solarized() -> some View { modifier(SolarizedTheme()) }
+    func solarized(_ appearance: Appearance = .system) -> some View {
+        modifier(SolarizedTheme(appearance: appearance))
+    }
 }
 
 extension Color {

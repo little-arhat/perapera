@@ -191,6 +191,13 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Appearance") {
+                Picker("Theme", selection: $model.appearance) {
+                    ForEach(Appearance.allCases) { Text($0.label).tag($0) }
+                }
+                .pickerStyle(.segmented)
+            }
+
             Section("Reading") {
                 Toggle("Highlight the word under the pointer", isOn: $model.highlightWords)
                     .help("Japanese has no spaces, so seeing where a word ends is a "

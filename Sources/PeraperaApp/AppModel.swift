@@ -124,6 +124,10 @@ final class AppModel {
     var tintParticles: Bool {
         didSet { UserDefaults.standard.set(tintParticles, forKey: "tintParticles") }
     }
+    /// Light, dark, or follow the system.
+    var appearance: Appearance {
+        didSet { UserDefaults.standard.set(appearance.rawValue, forKey: "appearance") }
+    }
     /// Slow-playback rate. A stored value rather than a preset because the
     /// scale is badly non-linear — 0.375 and 0.5 are indistinguishable, 0.30 is
     /// obviously slower — so the useful range is narrow and personal.
@@ -220,6 +224,8 @@ final class AppModel {
         self.textSelectable = defaults.bool(forKey: "textSelectable")
         self.highlightWords = defaults.bool(forKey: "highlightWords")
         self.tintParticles = defaults.bool(forKey: "tintParticles")
+        self.appearance = defaults.string(forKey: "appearance")
+            .flatMap(Appearance.init(rawValue:)) ?? .system
         let storedRate = defaults.double(forKey: "speechRate")
         self.speechRate = storedRate > 0 ? storedRate : Double(Speech.Rate.slow)
         self.voiceIdentifier = defaults.string(forKey: "voiceIdentifier") ?? ""
@@ -243,7 +249,7 @@ final class AppModel {
         let carried = [
             "activeProfileID", "claudePath", "model", "showFurigana",
             "textSizeFactor", "textSelectable", "highlightWords", "tintParticles",
-            "speechRate", "voiceIdentifier",
+            "speechRate", "voiceIdentifier", "appearance",
         ]
         for key in carried where defaults.object(forKey: key) == nil {
             if let value = old.object(forKey: key) {
@@ -323,6 +329,15 @@ final class AppModel {
         let store = FluentStore(config: .init(fluentRoot: fluentRoot,
                                               dataDirectory: directory))
         self.store = store
+        glossary = Glossary(
+            store: lessonStore,
+            claude: claudePath.isEmpty ? nil : ClaudeClient(config: .init(
+                executable: claudePath,
+                // A gloss is eight words; the cheapest model is the right one,
+                // and the lesson generator's choice should not drag it up.
+                model: "haiku",
+                maxBudgetUSD: 0.05,
+                workingDirectory: directory)))
         lessons = LessonService(
             claude: ClaudeClient(config: .init(
                 executable: claudePath,
@@ -341,6 +356,32 @@ final class AppModel {
     /// One store, shared with `LessonService`. `refresh()` used to build a second
     /// one of its own, which meant two answers to "where are the databases".
     private var store: FluentStore?
+    /// Word meanings, from the cheapest source that knows.
+    private var glossary: Glossary?
+    var isLookingUp = false
+
+    /// A meaning that costs nothing: the learner's dictionary, the cache, or a
+    /// system dictionary if one is enabled.
+    func knownGloss(for word: String) -> Glossary.Entry? {
+        glossary?.known(word, savedItems: savedItems)
+    }
+
+    /// Asks the model, once, and remembers the answer for good.
+    @discardableResult
+    func lookUp(_ word: String) async -> Glossary.Entry? {
+        isLookingUp = true
+        defer { isLookingUp = false }
+        guard let glossary else { return nil }
+        do {
+            let entry = try await glossary.lookUp(word, onSpend: { [weak self] cost, model in
+                Task { @MainActor in self?.noteSpend("Word lookup", cost, model) }
+            })
+            return entry
+        } catch {
+            self.error = error.localizedDescription
+            return nil
+        }
+    }
 
     /// Empty when no key is configured, which disables photo exercises rather
     /// than failing a lesson halfway through generating one.
