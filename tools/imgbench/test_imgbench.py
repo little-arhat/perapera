@@ -16,7 +16,13 @@ import unittest
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 import store
-from catalog import Observation, discount_from_endpoints, parse_models, rank
+from catalog import (
+    Observation,
+    discount_from_endpoints,
+    parse_models,
+    price_moves,
+    rank,
+)
 from fidelity import missing, normalize, score_transcription
 
 
@@ -287,3 +293,41 @@ class SuggestTests(unittest.TestCase):
             {"id": "m", "date": "2026-09-01", "measured_image": 0.0691},
         ]
         self.assertEqual(price_moves(history), [])
+
+
+class PriceWatchTests(unittest.TestCase):
+    """The free sweep (FL-2).
+
+    A benchmark costs money and tells you what the bill will be. The watch costs
+    nothing and tells you what the quote is, which is the only way to see a rise
+    before paying it.
+    """
+
+    def test_can_watch_the_quoted_column(self):
+        history = [
+            {"date": "2026-09-01", "id": "a", "quoted_image": 0.0677, "measured_image": None},
+            {"date": "2026-09-08", "id": "a", "quoted_image": 0.0900, "measured_image": None},
+        ]
+        self.assertEqual(
+            price_moves(history, field="quoted_image"),
+            [("a", 0.0677, 0.0900, "2026-09-01")],
+        )
+
+    def test_still_defaults_to_the_measured_column(self):
+        # The quote swung wildly; the bill did not. The default must not report it.
+        history = [
+            {"date": "2026-09-01", "id": "a", "quoted_image": 0.01, "measured_image": 0.0677},
+            {"date": "2026-09-08", "id": "a", "quoted_image": 0.99, "measured_image": 0.0677},
+        ]
+        self.assertEqual(price_moves(history), [])
+
+    def test_a_move_under_the_threshold_is_not_news(self):
+        history = [
+            {"date": "2026-09-01", "id": "a", "quoted_image": 0.1000, "measured_image": None},
+            {"date": "2026-09-08", "id": "a", "quoted_image": 0.1001, "measured_image": None},
+        ]
+        self.assertEqual(price_moves(history, field="quoted_image"), [])
+
+    def test_one_observation_is_not_a_move(self):
+        history = [{"date": "2026-09-01", "id": "a", "quoted_image": 0.0677}]
+        self.assertEqual(price_moves(history, field="quoted_image"), [])

@@ -8,6 +8,7 @@ uv run cli.py list          # models, catalog price, discount
 uv run cli.py run           # benchmark the shortlist (costs money)
 uv run cli.py report        # last measurements, ranked
 uv run cli.py suggest       # cheaper swaps, moves, what to measure
+uv run cli.py watch         # record today's quotes, report what moved (free)
 ```
 
 uv manages this tool only, not the rest of the repo — `uv sync --group dev`
@@ -143,3 +144,31 @@ OPENROUTER_FLUENT=sk-or-...
 
 `.env` is gitignored. The key is Fluent-specific rather than shared with other
 projects, so revoking it cannot break them. `list` and `report` need no key.
+
+## Noticing a price change before the bill
+
+`run` measures by paying for a generation, so it is the truth and it is
+occasional. `watch` reads the catalog instead: no generation, no cost, and it
+records a line only when a quote actually changes, so the log stays an event log
+rather than a diary.
+
+A quote is not a bill — the two have disagreed before — so `watch` never
+promotes a model on its own. It says what moved and what is cheaper on paper;
+`run` decides, and fidelity decides after that.
+
+To be told rather than to remember, schedule it. With launchd:
+
+```xml
+<!-- ~/Library/LaunchAgents/dev.perapera.imgbench-watch.plist -->
+<key>ProgramArguments</key>
+<array>
+  <string>/bin/sh</string>
+  <string>-lc</string>
+  <string>cd ~/prj/p/lang/fluent/tools/imgbench && uv run cli.py watch</string>
+</array>
+<key>StartCalendarInterval</key>
+<dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>9</integer></dict>
+```
+
+Weekly is enough. Image prices move in steps, not continuously, and the point is
+to hear about a step before a month of lessons has been billed at the new rate.

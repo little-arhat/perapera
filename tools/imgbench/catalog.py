@@ -229,12 +229,17 @@ def worth_measuring(
 
 
 def price_moves(
-    history: Sequence[Mapping[str, Any]], threshold: float = 0.02
+    history: Sequence[Mapping[str, Any]],
+    threshold: float = 0.02,
+    field: str = "measured_image",
 ) -> list[tuple[str, float, float, str]]:
-    """Models whose measured price moved between their last two observations.
+    """Models whose price moved between their last two observations of `field`.
 
-    Returns (id, was, now, date_of_earlier). Only measured prices, because a
-    move in a catalog figure that never matched the bill is not news.
+    Returns (id, was, now, date_of_earlier).
+
+    Defaults to the measured price, which is the one that matched a bill. Passing
+    ``quoted_image`` watches the catalog instead: cheaper by far, since it needs
+    no generation, and the only way to notice a rise *before* paying it.
     """
     by_model: dict[str, list[Mapping[str, Any]]] = {}
     for record in history:
@@ -247,8 +252,8 @@ def price_moves(
         ordered = sorted(records, key=lambda r: str(r.get("date", "")))
         if len(ordered) < 2:
             continue
-        was = ordered[-2].get("measured_image")
-        now = ordered[-1].get("measured_image")
+        was = ordered[-2].get(field)
+        now = ordered[-1].get(field)
         if not was or not now:
             continue
         if abs(now - was) / was > threshold:

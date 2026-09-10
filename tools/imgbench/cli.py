@@ -391,6 +391,82 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_watch(args: argparse.Namespace) -> int:
+    """Record what the catalog quotes today, and say what moved.
+
+    A benchmark costs $0.07 a model and tells you what the bill will be. This
+    costs nothing and tells you what the quote is, which is the only way to see
+    a rise coming rather than finding it afterwards. It is the sweep the
+    measurement pass is too expensive to be.
+
+    Written to the same log as measurements, so `list` and `suggest` keep one
+    history rather than two.
+    """
+    models = parse_models(get_json(f"{BASE}/models"))
+    if not models:
+        print("no image-capable models found")
+        return 1
+
+    if args.discounts:
+        key = api_key()
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            payloads = list(pool.map(lambda m: _endpoints_safe(m.id, key), models))
+        models = [
+            ImageModel(id=m.id, quoted_image=m.quoted_image, quoted_prompt=m.quoted_prompt,
+                       discount=discount_from_endpoints(p, m.quoted_image or m.quoted_prompt),
+                       context=m.context)
+            for m, p in zip(models, payloads, strict=True)
+        ]
+
+    path = store.history_path(ROOT)
+    before = store.read(path)
+    today = dt.date.today().isoformat()
+
+    # Only models whose quote actually changed earn a line. The log is an event
+    # log; a daily entry saying "still $0.0677" would bury the events in it.
+    latest = store.latest_by_model(before)
+    fresh = []
+    for model in models:
+        if model.quoted_image is None:
+            continue
+        known = latest.get(model.id, {}).get("quoted_image")
+        if known is not None and abs(known - model.quoted_image) < 1e-9:
+            continue
+        fresh.append({"date": today, "id": model.id, "measured_image": None,
+                      "fidelity": None, "samples": None,
+                      "discount": model.discount, "quoted_image": model.quoted_image})
+
+    if fresh:
+        store.append(path, fresh)
+
+    moves = price_moves(store.read(path), field="quoted_image")
+    if moves:
+        print("quoted price moved:")
+        for model_id, was, now, when in moves:
+            print(f"  {model_id:<40} ${was:.4f} → ${now:.4f} "
+                  f"({(now - was) / was:+.0%}) since {when}")
+    elif fresh:
+        print(f"recorded {len(fresh)} first-seen quote(s); nothing to compare yet")
+    else:
+        print("no quoted price changed")
+
+    incumbent_id = args.incumbent
+    incumbent = next((m for m in models if m.id == incumbent_id), None)
+    if incumbent and incumbent.quoted_or_none is not None:
+        cheaper = [
+            m for m in models
+            if m.quoted_or_none is not None
+            and m.quoted_or_none < incumbent.quoted_or_none
+            and m.id != incumbent.id
+        ]
+        if cheaper:
+            print(f"\ncheaper than {incumbent.id} on the catalog, unmeasured:")
+            for model in sorted(cheaper, key=lambda m: m.quoted_or_none or 0):
+                print(f"  {model.id:<40} ${model.quoted_or_none:.4f}")
+            print("  (a quote is not a bill — `run` measures, and fidelity decides)")
+    return 0
+
+
 def cmd_suggest(args: argparse.Namespace) -> int:
     """Cheaper swaps that are no less faithful, plus what is worth measuring."""
     records = store.read(store.history_path(ROOT))
@@ -516,6 +592,14 @@ def main() -> int:
 
     p_report = sub.add_parser("report", help="last measurements, ranked")
     p_report.set_defaults(func=cmd_report)
+
+    p_watch = sub.add_parser(
+        "watch", help="record today's catalog quotes and report what moved (free)")
+    p_watch.add_argument("--discounts", action="store_true",
+                         help="also fetch per-model endpoints for promotion state")
+    p_watch.add_argument("--incumbent", default="google/gemini-3.1-flash-image",
+                         help="the model in use, to compare quotes against")
+    p_watch.set_defaults(func=cmd_watch)
 
     p_suggest = sub.add_parser(
         "suggest", help="cheaper swaps that are no less faithful")
