@@ -40,7 +40,7 @@ temp/
 
 # Swift app build artifacts
 /.build/
-/Fluent.app/
+/Perapera.app/
 /*.xcodeproj/
 .swiftpm/
 
