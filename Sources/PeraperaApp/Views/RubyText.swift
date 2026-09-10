@@ -14,6 +14,15 @@ struct RubyText: View {
     /// Shrink to the content instead of filling the width offered. For inline
     /// words — reorder tokens — not for anything that wraps.
     var hugsContent: Bool = false
+    /// Force word tapping on regardless of the learner's preference.
+    ///
+    /// Nil follows the preference, which is right inside a lesson: a click that
+    /// opens a menu out of nowhere is a surprise. On a screen whose entire
+    /// purpose is looking words up, following a preference that defaults to off
+    /// means the screen does nothing.
+    var wordActions: Bool?
+
+    private var interactive: Bool { wordActions ?? model.highlightWords }
 
     @Environment(\.palette) private var palette
     @Environment(\.textScale) private var scale
@@ -24,8 +33,11 @@ struct RubyText: View {
 
     var body: some View {
         // Plain text with no readings needs none of the machinery, and a real
-        // SwiftUI Text composes better (Dynamic Type, accessibility, layout).
-        if !Furigana.hasAnnotations(annotated) {
+        // SwiftUI Text composes better (Dynamic Type, accessibility, layout) —
+        // but only when nothing is meant to be clickable. All-kana Japanese has
+        // no readings to annotate and is exactly what a beginner pastes, so
+        // taking the fast path there would make the words inert.
+        if !Furigana.hasAnnotations(annotated), !interactive {
             Text(annotated)
                 .font(.system(size: scale.size(size)))
                 .selectableIf(scale.selectable)
@@ -38,13 +50,13 @@ struct RubyText: View {
                 color: NSColor(palette.emphasizedText),
                 rubyColor: NSColor(palette.secondaryText),
                 selectable: scale.selectable,
-                highlightWords: model.highlightWords,
+                highlightWords: interactive,
                 particleColor: model.tintParticles ? NSColor(palette.particle) : nil,
                 availableWidth: 0,
                 // Only offered when word highlighting is on: without it there
                 // is no indication a word is a target, and a click that opens a
                 // menu out of nowhere is a surprise rather than a feature.
-                onWordTapped: model.highlightWords
+                onWordTapped: interactive
                     ? { word, rect in
                         tappedWord = word
                         wordRect = rect

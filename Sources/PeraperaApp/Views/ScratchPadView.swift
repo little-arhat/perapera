@@ -83,16 +83,21 @@ struct ScratchPadView: View {
     private func reading(_ annotated: String) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                RubyText(annotated: annotated, showFurigana: model.showFurigana)
+                // Word actions are forced on here rather than following the
+                // preference: looking a word up is what this screen is for, and
+                // the preference defaults to off.
+                RubyText(annotated: annotated, showFurigana: model.showFurigana,
+                         wordActions: true)
                     .frame(maxWidth: scale.prose(720), alignment: .leading)
 
                 // The tokenizer splits some compounds it should not -- 新幹線
                 // comes back as 新 + 幹線 -- so the readings are right more often
                 // than the word boundaries are. Saying so beats a learner
                 // quietly memorising a split that is not a word.
-                Text("Readings come from the system tokenizer. It occasionally splits a "
-                     + "compound in the wrong place, so treat the word boundaries as a "
-                     + "hint rather than an authority.")
+                Text("Click any word for its meaning, to save it, or to look it up. "
+                     + "Readings come from the system tokenizer, which occasionally "
+                     + "splits a compound in the wrong place, so treat the word "
+                     + "boundaries as a hint rather than an authority.")
                     .font(.caption2)
                     .foregroundStyle(palette.secondaryText)
                     .padding(.top, 6)

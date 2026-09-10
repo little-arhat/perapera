@@ -67,3 +67,26 @@ private func words(_ text: String) -> [String] {
     #expect(words("").isEmpty)
     #expect(!words("hello world").isEmpty)
 }
+
+@Test func kanaOnlyTextIsStillSegmentedIntoTappableWords() {
+    // All-kana Japanese has no readings to annotate, and is exactly what a
+    // beginner pastes into the scratch pad. If it were treated as plain text
+    // the words would be inert, which is the whole feature missing.
+    let source = "ひらがなだけのぶんです"
+    let tokens = JapaneseText.tokens(in: source)
+    #expect(tokens.count > 1, "kana text must still break into words")
+    #expect(JapaneseText.token(at: 0, in: source) != nil)
+    for token in tokens {
+        #expect(String(source[token.range]) == token.text)
+    }
+}
+
+@Test func aWordCanBeFoundAtEveryOffsetOfJapaneseText() {
+    // A click lands on a UTF-16 offset; every one inside the string has to
+    // resolve to something, or some characters are silently unclickable.
+    let source = "切符を2枚ください"
+    for offset in 0..<source.utf16.count {
+        #expect(JapaneseText.token(at: offset, in: source) != nil,
+                "offset \(offset) resolves to no word")
+    }
+}
