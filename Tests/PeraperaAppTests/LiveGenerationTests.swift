@@ -50,6 +50,11 @@ private func scratchProfile() throws -> URL {
             model: ProcessInfo.processInfo.environment["PERAPERA_LIVE_MODEL"] ?? "sonnet",
             maxBudgetUSD: 1.0,
             workingDirectory: profile)),
+        grader: ClaudeClient(config: .init(
+            executable: claude,
+            model: ProcessInfo.processInfo.environment["PERAPERA_LIVE_MODEL"] ?? "sonnet",
+            maxBudgetUSD: 1.0,
+            workingDirectory: profile)),
         store: FluentStore(config: .init(fluentRoot: fluentRoot, dataDirectory: profile)),
         lessons: LessonStore(dataDirectory: profile),
         resources: ResourceLoader(),

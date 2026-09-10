@@ -38,7 +38,10 @@ struct ResourceLoader {
 /// here, in one place, rather than being spread across views.
 @MainActor
 struct LessonService {
+    /// Writes lessons. The high-volume call.
     let claude: ClaudeClient
+    /// Reads answers. A different job, and priced separately.
+    let grader: ClaudeClient
     let store: FluentStore
     let lessons: LessonStore
     let resources: ResourceLoader
@@ -337,7 +340,7 @@ struct LessonService {
             // between grading and the write, and that path makes no model call.
             // Assembling the brief outside this branch would turn a missing
             // Fluent document into a failure on a path that needs neither.
-            feedback = try await claude.request(
+            feedback = try await grader.request(
                 Feedback.self,
                 prompt: try buildGradingPrompt(record: record, snapshot: snapshot),
                 systemPrompt: try TeacherContext.systemPrompt(

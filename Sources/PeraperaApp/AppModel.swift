@@ -79,8 +79,22 @@ final class AppModel {
     var claudePath: String {
         didSet { UserDefaults.standard.set(claudePath, forKey: "claudePath") }
     }
-    var model: String {
-        didSet { UserDefaults.standard.set(model, forKey: "model") }
+    /// Which model writes lessons.
+    ///
+    /// Generation is the high-volume call and the main cost lever. Measured
+    /// 2026-09-09 on the same request: Opus $0.32, Sonnet $0.18, both producing
+    /// five of five exercises with no validation defects and comparable lessons.
+    /// So Sonnet by default, and the saving is real rather than assumed.
+    var generationModel: String {
+        didSet { UserDefaults.standard.set(generationModel, forKey: "generationModel") }
+    }
+    /// Which model grades.
+    ///
+    /// A different job: low volume, and almost entirely judgement about a
+    /// learner's specific answer. One measured grading was $0.67, which makes it
+    /// the larger number of the two and the one to measure before moving.
+    var gradingModel: String {
+        didSet { UserDefaults.standard.set(gradingModel, forKey: "gradingModel") }
     }
 
     /// Readings hidden by default: seeing them every time means never learning
@@ -217,7 +231,10 @@ final class AppModel {
         self.claudePath = defaults.string(forKey: "claudePath")
             ?? Subprocess.which("claude", extraPaths: Locations.toolSearchPaths)
             ?? ""
-        self.model = defaults.string(forKey: "model") ?? "opus"
+        // Carried from the single `model` setting these two replaced.
+        let legacyModel = defaults.string(forKey: "model")
+        self.generationModel = defaults.string(forKey: "generationModel") ?? "sonnet"
+        self.gradingModel = defaults.string(forKey: "gradingModel") ?? legacyModel ?? "opus"
         self.showFurigana = defaults.bool(forKey: "showFurigana")
         let stored = defaults.double(forKey: "textSizeFactor")
         self.textSizeFactor = stored > 0 ? stored : 1.0
@@ -247,7 +264,8 @@ final class AppModel {
         else { return }
 
         let carried = [
-            "activeProfileID", "claudePath", "model", "showFurigana",
+            "activeProfileID", "claudePath", "model", "generationModel",
+            "gradingModel", "showFurigana",
             "textSizeFactor", "textSelectable", "highlightWords", "tintParticles",
             "speechRate", "voiceIdentifier", "appearance",
         ]
@@ -341,7 +359,11 @@ final class AppModel {
         lessons = LessonService(
             claude: ClaudeClient(config: .init(
                 executable: claudePath,
-                model: model,
+                model: generationModel,
+                workingDirectory: directory)),
+            grader: ClaudeClient(config: .init(
+                executable: claudePath,
+                model: gradingModel,
                 workingDirectory: directory)),
             store: store,
             lessons: lessonStore,

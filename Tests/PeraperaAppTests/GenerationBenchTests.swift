@@ -77,6 +77,8 @@ private func briefless() throws -> ResourceLoader {
         let service = LessonService(
             claude: ClaudeClient(config: .init(executable: claude, model: config.model,
                                                maxBudgetUSD: 2.0, workingDirectory: scratch)),
+            grader: ClaudeClient(config: .init(executable: claude, model: config.model,
+                                               maxBudgetUSD: 2.0, workingDirectory: scratch)),
             store: FluentStore(config: .init(fluentRoot: fluentRoot, dataDirectory: scratch)),
             lessons: LessonStore(dataDirectory: scratch),
             resources: config.withBrief ? ResourceLoader() : (try briefless()),

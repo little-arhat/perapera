@@ -261,12 +261,20 @@ struct SettingsView: View {
             Section("Claude") {
                 TextField("Path to `claude`", text: $model.claudePath)
                     .font(.caption.monospaced())
-                Picker("Model", selection: $model.model) {
+                Picker("Writes lessons", selection: $model.generationModel) {
                     Text("Opus").tag("opus")
                     Text("Sonnet").tag("sonnet")
                     Text("Haiku").tag("haiku")
                 }
-                Text("Opus generates and grades by default. Generation is the high-volume call, so switching it to Sonnet is the main cost lever.")
+                Picker("Grades answers", selection: $model.gradingModel) {
+                    Text("Opus").tag("opus")
+                    Text("Sonnet").tag("sonnet")
+                    Text("Haiku").tag("haiku")
+                }
+                Text("Measured on one request: Opus wrote a lesson for $0.32, Sonnet for "
+                     + "$0.18, both five of five exercises with no defects. Generation is "
+                     + "the high-volume call, so it defaults to Sonnet. Grading is a "
+                     + "judgement about your specific answer and defaults to Opus.")
                     .font(.caption)
                     .foregroundStyle(palette.secondaryText)
             }
@@ -274,7 +282,8 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 480)
         .onChange(of: model.claudePath) { model.rebuildServices() }
-        .onChange(of: model.model) { model.rebuildServices() }
+        .onChange(of: model.generationModel) { model.rebuildServices() }
+        .onChange(of: model.gradingModel) { model.rebuildServices() }
     }
 
     private var keyStatus: String {
