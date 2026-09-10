@@ -29,7 +29,6 @@ import json
 import os
 import pathlib
 import re
-import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -80,10 +79,9 @@ IN_USE = "google/gemini-3.1-flash-image"
 def api_key() -> str:
     """The OpenRouter key: `OPENROUTER_FLUENT`.
 
-    The environment first, then a `.env` at the repo root, then the Keychain item
-    the app writes. A file or the environment is the normal case for a tool run
-    from a shell; the Keychain is the fallback so there need not be a second copy
-    of the secret living beside the app's.
+    The environment first, then a `.env` at the repo root, then the file the app
+    writes beside the profiles. That last one is what keeps there being one copy
+    of the secret to rotate rather than two.
 
     `.env` is gitignored. Never print or log the value.
     """
@@ -97,42 +95,35 @@ def api_key() -> str:
             match = re.match(rf"\s*(?:export\s+)?{ENV_KEY}\s*=\s*(.+)", line)
             if match:
                 return match.group(1).strip().strip('"').strip("'")
-    key = keychain_key()
+    key = app_key_file()
     if key:
         return key
     sys.exit(
         f"{ENV_KEY} is not set.\n"
-        f"Add it in the app's Settings, which stores it in the Keychain,\n"
+        f"Add it in the app's Settings, which stores it beside your profiles,\n"
         f"or put it in {ROOT.parent.parent / '.env'} as {ENV_KEY}=sk-or-...,\n"
         "or export it in the environment."
     )
 
 
-def keychain_key() -> str | None:
-    """The key as the app stored it, read through the `security` command.
+def app_key_file() -> str | None:
+    """The key as the app stored it: a 0600 file beside the profiles.
 
-    One copy of the secret. The app keeps it in the Keychain; a second file here
-    would have to be rotated in step, and the copy that gets forgotten is the one
-    that leaks. macOS asks for authorization the first time another process reads
-    the item and remembers the answer, so this is silent from then on.
-
-    macOS only, which is where the app runs. A short timeout so an unattended run
-    fails fast rather than sitting behind a dialog nobody is there to answer.
+    One copy of the secret. The app briefly kept this in the Keychain, which is
+    the better store for an app with a stable code-signing identity -- this one
+    is ad-hoc signed, so its hash changes on every build and macOS asked for
+    authorization at every launch. The file is what it went back to.
     """
-    if sys.platform != "darwin":
+    home = os.environ.get("XDG_DATA_HOME") or os.path.join(
+        os.path.expanduser("~"), ".local", "share")
+    path = pathlib.Path(home) / "perapera" / "credentials.env"
+    if not path.exists():
         return None
-    try:
-        found = subprocess.run(
-            ["security", "find-generic-password",
-             "-s", "dev.perapera.app", "-a", ENV_KEY, "-w"],
-            capture_output=True, text=True, timeout=3,
-        )
-    except (OSError, subprocess.SubprocessError):
-        return None
-    return found.stdout.strip() or None
-
-
-# ─── Network ─────────────────────────────────────────────────
+    for line in path.read_text(encoding="utf-8").splitlines():
+        match = re.match(rf"\s*(?:export\s+)?{ENV_KEY}\s*=\s*(.+)", line)
+        if match:
+            return match.group(1).strip().strip('"').strip("'")
+    return None
 
 
 def get_json(url: str, key: str | None = None) -> dict:

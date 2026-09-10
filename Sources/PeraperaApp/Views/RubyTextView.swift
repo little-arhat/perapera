@@ -594,6 +594,7 @@ final class RubyCanvas: NSView {
 
     override func mouseDragged(with event: NSEvent) {
         guard model.selectable, let anchor else { return }
+        didDrag = true
         let point = convert(event.locationInWindow, from: nil)
         guard let index = characterIndex(at: point) else { return }
         selection = min(anchor, index)..<max(anchor, index)
@@ -601,11 +602,21 @@ final class RubyCanvas: NSView {
     }
 
     override func mouseUp(with event: NSEvent) {
-        // A completed drag copies, matching the click-to-copy gesture: the
-        // point of selecting here is almost always a dictionary lookup.
-        guard model.selectable, let selection, !selection.isEmpty else { return }
+        defer { didDrag = false }
+        guard didDrag, model.selectable, let selection, !selection.isEmpty else { return }
         copySelection()
+        // A dragged selection asks the same question a clicked word does, and
+        // more often a better one: a phrase is what you want the meaning of and
+        // what you want in your list. Only a drag -- a plain click has already
+        // been handled in mouseDown, and firing twice would reopen the popover
+        // on top of itself.
+        if let onWordTapped {
+            onWordTapped(text(in: selection), rect(for: selection))
+        }
     }
+
+    /// Whether the current gesture moved. Distinguishes a selection from a click.
+    private var didDrag = false
 
     private func copySelection() {
         guard let selection, !selection.isEmpty else { return }

@@ -92,15 +92,18 @@ copies of your progress.
 
 ## OpenRouter key
 
-Only needed for generated photographs. Paste it into Settings (⌘,); the app stores it in
-the Keychain, encrypted at rest and scoped to the app. `$OPENROUTER_FLUENT` in the
-environment overrides it.
+Only needed for generated photographs. Paste it into Settings (⌘,); the app writes it to
+`<state root>/credentials.env` at mode 0600. `$OPENROUTER_FLUENT` in the environment
+overrides it.
+
+Not the Keychain, despite that being the better store in principle. The Keychain scopes an
+item to the app that wrote it, identified by its code signature, and this app is ad-hoc
+signed: its hash changes on every build, so macOS sees a different app each launch and asks
+for authorization. Using the Keychain means getting a persistent signing identity first.
 
 `tools/imgbench` reads the environment, then a gitignored `.env` at the repo root, then the
-same Keychain item through the `security` command, so there is one copy of the secret to
-rotate rather than two. macOS asks for authorization the first time and remembers the
-answer. Without a key, photograph exercises are dropped from a lesson rather than shown
-blank.
+same file, so there is one copy of the secret to rotate rather than two. Without a key,
+photograph exercises are dropped from a lesson rather than shown blank.
 
 ## Settings
 
