@@ -80,3 +80,17 @@ private let ticket = SavedItem(
     #expect(ordered.first == .stationSign)
     #expect(ordered.last == .handwrittenNote)
 }
+
+@Test func surpriseChoosesFromEverySurface() {
+    // Every surface has to be reachable, or "surprise me" quietly means "one of
+    // the three I already read comfortably".
+    var chosen: Set<PictureRequest.Surface> = []
+    for index in PictureRequest.Surface.allCases.indices {
+        chosen.insert(PictureRequest.Surface.surprise { $0[index] })
+    }
+    #expect(chosen.count == PictureRequest.Surface.allCases.count)
+}
+
+@Test func surpriseAlwaysReturnsSomething() {
+    #expect(PictureRequest.Surface.allCases.contains(PictureRequest.Surface.surprise()))
+}

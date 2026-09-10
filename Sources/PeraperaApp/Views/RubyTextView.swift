@@ -576,6 +576,22 @@ final class RubyCanvas: NSView {
         needsDisplay = true
     }
 
+    /// Right-click offers the same actions as a left click.
+    ///
+    /// On macOS a right-click on a word is where people look for "what is this",
+    /// and it arrives as a separate event a mouseDown handler never sees. Without
+    /// this it did nothing at all.
+    override func rightMouseDown(with event: NSEvent) {
+        guard let onWordTapped else { return super.rightMouseDown(with: event) }
+        let point = convert(event.locationInWindow, from: nil)
+        guard let index = characterIndex(at: point),
+              let word = wordRange(containing: index)
+        else { return super.rightMouseDown(with: event) }
+        selection = word
+        needsDisplay = true
+        onWordTapped(text(in: word), rect(for: word))
+    }
+
     override func mouseDragged(with event: NSEvent) {
         guard model.selectable, let anchor else { return }
         let point = convert(event.locationInWindow, from: nil)

@@ -12,6 +12,16 @@ public struct PictureRequest: Equatable, Sendable {
     public enum Surface: String, CaseIterable, Sendable, Identifiable {
         case enamelPlate, noren, menuBoard, stationSign, shopWindow, handwrittenNote
 
+        /// One at random.
+        ///
+        /// Text in the wild does not announce what it is written on, and always
+        /// choosing the familiar surface trains the surface as much as the word.
+        public static func surprise(
+            using pick: ([Surface]) -> Surface = { $0.randomElement() ?? .stationSign }
+        ) -> Surface {
+            pick(allCases)
+        }
+
         public var id: String { rawValue }
 
         public var label: String {

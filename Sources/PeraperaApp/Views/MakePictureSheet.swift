@@ -17,6 +17,19 @@ struct MakePictureSheet: View {
     @State private var selectedId: String?
     @State private var custom = ""
     @State private var surface: PictureRequest.Surface = .enamelPlate
+    /// Let the app choose the surface.
+    ///
+    /// Text in the street does not announce what it is written on. Always
+    /// picking the surface yourself means always picking the one you are
+    /// comfortable reading, which trains the surface as much as the word.
+    @State private var surprise = false
+    /// Rolled once, when Make is pressed. A computed property would reroll on
+    /// every redraw and the summary would disagree with what was generated.
+    @State private var rolled: PictureRequest.Surface?
+
+    private var chosenSurface: PictureRequest.Surface {
+        surprise ? (rolled ?? .stationSign) : surface
+    }
     @AppStorage("picture.scripts") private var scriptsRaw = PictureRequest.Scripts.all.rawValue
 
     private var scripts: PictureRequest.Scripts {
@@ -34,9 +47,9 @@ struct MakePictureSheet: View {
         case .saved:
             guard let item = candidates.first(where: { $0.id == selectedId })
             else { return nil }
-            return PictureRequest.from(item, surface: surface, scripts: scripts)
+            return PictureRequest.from(item, surface: chosenSurface, scripts: scripts)
         case .custom:
-            return PictureRequest.from(text: custom, surface: surface, scripts: scripts)
+            return PictureRequest.from(text: custom, surface: chosenSurface, scripts: scripts)
         }
     }
 
@@ -79,6 +92,8 @@ struct MakePictureSheet: View {
                 Button("Cancel") { dismiss() }
                 Spacer()
                 Button("Make it") {
+                    // Roll before reading `request`, which uses the result.
+                    if surprise { rolled = PictureRequest.Surface.surprise() }
                     if let request {
                         Task { await model.makePicture(request) }
                         dismiss()
@@ -210,7 +225,15 @@ struct MakePictureSheet: View {
                 }
             }
             .labelsHidden()
-            Text(surface.summary)
+            .disabled(surprise)
+            Toggle("Surprise me", isOn: $surprise)
+                .font(.caption)
+                .help("Pick the surface at random. Text in the street does not tell you "
+                      + "what it is written on.")
+            Text(surprise
+                 ? "One of the \(PictureRequest.surfaces.count) at random, chosen when you "
+                     + "press Make."
+                 : surface.summary)
                 .font(.caption2)
                 .foregroundStyle(palette.secondaryText)
         }

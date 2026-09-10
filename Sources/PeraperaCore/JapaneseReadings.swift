@@ -27,15 +27,55 @@ public enum JapaneseReadings {
         for (range, reading) in readings(in: text) {
             result += text[cursor..<range.lowerBound]
             let token = String(text[range])
-            if let reading, reading != token {
-                result += "\(token)[\(reading)]"
-            } else {
-                result += token
-            }
+            result += annotated(token: token, reading: reading)
             cursor = range.upperBound
         }
         result += text[cursor...]
         return result
+    }
+
+    /// One token in `kanji[reading]` form, with its okurigana left outside.
+    ///
+    /// `Furigana.parse` attaches a reading to the run of kanji immediately
+    /// before it, so `目指し[めざし]` is not a reading at all -- the base ends in
+    /// kana, the parser finds no kanji run, and the brackets render as literal
+    /// text in the middle of the sentence. It has to be `目指[めざ]し`.
+    ///
+    /// The kana that a token and its reading share at each end are the same
+    /// characters, so they can be split off by comparison rather than by
+    /// morphology: 輝く/かがやく gives 輝[かがや]く, お誕生日/おたんじょうび gives
+    /// お誕生日[たんじょうび] with the お outside.
+    ///
+    /// When the two do not agree at the edges -- a sound change, or a reading
+    /// the tokenizer got wrong -- the token is returned unannotated. A missing
+    /// reading is a smaller loss than a wrong one, and far smaller than brackets
+    /// on the page.
+    static func annotated(token: String, reading: String?) -> String {
+        guard let reading, reading != token, !reading.isEmpty else { return token }
+
+        var base = Array(token)
+        var kana = Array(reading)
+        var prefix = "", suffix = ""
+
+        while let first = base.first, let readingFirst = kana.first,
+              !containsKanji(String(first)), first == readingFirst {
+            prefix.append(first)
+            base.removeFirst()
+            kana.removeFirst()
+        }
+        while let last = base.last, let readingLast = kana.last,
+              !containsKanji(String(last)), last == readingLast {
+            suffix = String(last) + suffix
+            base.removeLast()
+            kana.removeLast()
+        }
+
+        let core = String(base)
+        // The base must be a pure kanji run, or `parse` will not take it.
+        guard !core.isEmpty, !kana.isEmpty,
+              core.unicodeScalars.allSatisfy({ containsKanji(String($0)) })
+        else { return token }
+        return "\(prefix)\(core)[\(String(kana))]\(suffix)"
     }
 
     /// Every token that contains a kanji, with its kana reading.

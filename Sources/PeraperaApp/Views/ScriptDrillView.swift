@@ -21,7 +21,8 @@ struct ScriptDrillView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
             header
             if let question {
                 card(question)
@@ -34,10 +35,10 @@ struct ScriptDrillView: View {
             } else {
                 ProgressView().onAppear(perform: nextQuestion)
             }
-            Spacer()
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
         .onAppear { if question == nil { nextQuestion() } }
     }
 
@@ -101,9 +102,13 @@ struct ScriptDrillView: View {
 
             if picked != nil {
                 VStack(alignment: .leading, spacing: 8) {
+                    // fixedSize, or the explanation is squeezed to a single line
+                    // and truncated with an ellipsis -- and the explanation is the
+                    // entire lesson of a wrong answer.
                     Text(question.group.difference)
                         .font(.callout)
                         .foregroundStyle(palette.bodyText)
+                        .fixedSize(horizontal: false, vertical: true)
                     // Side by side in the same face, which is where the
                     // difference is actually visible.
                     HStack(spacing: 20) {

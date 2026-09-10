@@ -22,11 +22,22 @@ public enum ScriptDrill {
         public let characters: [String]
         /// What actually separates them, in one line.
         public let difference: String
+        /// Whether looking at the glyph can settle it.
+        ///
+        /// ー and 一 are drawn as the same horizontal stroke in most faces, and
+        /// カ and 力 differ by a hair. They are real confusions and worth
+        /// knowing about, but "which character is this?" is the wrong question
+        /// to ask about them: the answer is a coin flip, and being told you are
+        /// wrong about a stroke you read correctly teaches nothing. Context
+        /// settles those, so they are shown as a reference rather than drilled.
+        public let distinguishedByShape: Bool
 
-        public init(id: String, characters: [String], difference: String) {
+        public init(id: String, characters: [String], difference: String,
+                    distinguishedByShape: Bool = true) {
             self.id = id
             self.characters = characters
             self.difference = difference
+            self.distinguishedByShape = distinguishedByShape
         }
     }
 
@@ -51,8 +62,10 @@ public enum ScriptDrill {
                   + "sits on a base stroke."),
         Group(id: "chouon-ichi", characters: ["ー", "一"],
               difference: "ー is the long-vowel mark and belongs to katakana; 一 is the "
-                  + "kanji for one. Many faces draw them nearly identically, and vertical "
-                  + "text turns the long-vowel mark upright."),
+                  + "kanji for one. Most faces draw them as the same stroke, so only "
+                  + "context tells you which you are looking at — ー follows kana in a "
+                  + "borrowed word, 一 stands alone or in a compound.",
+              distinguishedByShape: false),
         Group(id: "ha-ho", characters: ["は", "ほ"],
               difference: "ほ has one more horizontal stroke than は."),
         Group(id: "ki-sa", characters: ["き", "さ"],
@@ -64,8 +77,10 @@ public enum ScriptDrill {
               difference: "ワ closes at the top-right, ラ has a separate stroke above, "
                   + "フ is a single stroke."),
         Group(id: "ka-chikara", characters: ["カ", "力"],
-              difference: "Katakana カ and the kanji 力 (power). Genuinely near-identical; "
-                  + "context decides, and knowing they are two characters is the lesson."),
+              difference: "Katakana カ and the kanji 力 (power). Near-identical in every "
+                  + "face; context decides. Knowing they are two different characters is "
+                  + "the whole lesson.",
+              distinguishedByShape: false),
     ]
 
     /// One question: what character is this, in this typeface?
@@ -92,13 +107,19 @@ public enum ScriptDrill {
     /// `seen` and `correct` are per character, so a learner who has シ but not ツ
     /// is asked about ツ. Ties break on least-seen, so a fresh group comes up
     /// before one already answered ten times.
+    /// The groups this drill can actually ask about.
+    public static var drillable: [Group] { groups.filter(\.distinguishedByShape) }
+
+    /// The ones a drill cannot settle, kept as a reference.
+    public static var lookalikes: [Group] { groups.filter { !$0.distinguishedByShape } }
+
     public static func next(
         seen: [String: Int], correct: [String: Int], families: [String],
         randomness: (Int) -> Int = { Int.random(in: 0..<max(1, $0)) }
     ) -> Question? {
         guard !families.isEmpty else { return nil }
 
-        let ranked = groups
+        let ranked = drillable
             .map { group -> (Group, Double, Int) in
                 let attempts = group.characters.reduce(0) { $0 + (seen[$1] ?? 0) }
                 let right = group.characters.reduce(0) { $0 + (correct[$1] ?? 0) }
