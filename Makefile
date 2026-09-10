@@ -51,7 +51,12 @@ app: build check-kit
 	fi
 	@mkdir -p $(CONTENTS)/Resources/fluent
 	@git archive HEAD:$(KIT) | tar -x -C $(CONTENTS)/Resources/fluent
-	@git rev-parse HEAD > $(CONTENTS)/Resources/bundle-version.txt
+	@# Marked dirty when the tree is: the stamp records HEAD, and building with
+	@# uncommitted changes would otherwise produce a bundle whose version names a
+	@# commit that does not contain it.
+	@printf '%s%s\n' "$$(git rev-parse HEAD)" \
+	  "$$(test -z "$$(git status --porcelain)" || echo -dirty)" \
+	  > $(CONTENTS)/Resources/bundle-version.txt
 	@codesign --force --sign - --timestamp=none $(APP) 2>/dev/null \
 		|| echo "warning: ad-hoc signing failed; the app still runs"
 	@echo "Built $(APP) from $$(cut -c1-8 $(CONTENTS)/Resources/bundle-version.txt)"
