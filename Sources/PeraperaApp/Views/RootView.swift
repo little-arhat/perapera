@@ -95,6 +95,8 @@ struct RootView: View {
             ScratchPadView()
         case .progress:
             ProgressDashboard()
+        case .script:
+            ScriptDrillView()
         case let .debrief(id):
             if let record = model.record(id: id) {
                 DebriefView(record: record)

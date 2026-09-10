@@ -92,6 +92,20 @@ Every lesson is one JSON file that accretes answers and then feedback, never ove
 the archive shows what actually happened. Filter by grade, rename a lesson, annotate it, or
 delete it with its images. The files are readable without the app and outlive it.
 
+## Reading kana you have not seen before
+
+The **Script** pane drills the pairs that actually get confused — シ/ツ, ソ/ン,
+ね/れ/わ, ぬ/め, る/ろ and eight more — each shown in one of sixteen installed
+typefaces: brush, carved stone, rounded shop-front, textbook hand, transit
+signage. A learner who reads すし instantly on screen can stall on the same word
+brushed on a noren, and only one of those is being trained by everything else in
+the app.
+
+Get one wrong and it shows you the whole group side by side in the same face,
+with the one feature that separates them stated in a line. It asks about whatever
+you are worst at, costs nothing and works offline, so it can be a daily habit
+rather than a budget decision.
+
 ## Your own text
 
 The **Scratch** pane takes any Japanese you paste and puts readings over the kanji.

@@ -169,6 +169,38 @@ final class LessonStore {
         _ = try FileManager.default.replaceItemAt(savedItemsURL, withItemAt: temp)
     }
 
+    // MARK: - Script drill
+    //
+    // Per-character counts, so the drill can ask about the one the learner keeps
+    // missing rather than the one that comes next alphabetically.
+
+    struct ScriptProgress: Codable, Equatable {
+        var seen: [String: Int] = [:]
+        var correct: [String: Int] = [:]
+
+        mutating func record(_ character: String, wasCorrect: Bool) {
+            seen[character, default: 0] += 1
+            if wasCorrect { correct[character, default: 0] += 1 }
+        }
+    }
+
+    private var scriptURL: URL {
+        directory.deletingLastPathComponent().appending(path: "script-progress.json")
+    }
+
+    func loadScriptProgress() -> ScriptProgress {
+        guard let data = try? Data(contentsOf: scriptURL) else { return ScriptProgress() }
+        return (try? JSONDecoder().decode(ScriptProgress.self, from: data)) ?? ScriptProgress()
+    }
+
+    func saveScriptProgress(_ progress: ScriptProgress) throws {
+        try prepare()
+        let data = try encoder.encode(progress)
+        let temp = scriptURL.appendingPathExtension("tmp")
+        try data.write(to: temp, options: .atomic)
+        _ = try FileManager.default.replaceItemAt(scriptURL, withItemAt: temp)
+    }
+
     // MARK: - Glosses
     //
     // A word looked up once should not be paid for twice. Kept beside the

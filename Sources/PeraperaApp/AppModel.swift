@@ -20,6 +20,7 @@ final class AppModel {
         case images
         case scratch
         case progress
+        case script
     }
 
     /// Top-level areas, as the sidebar lists them.
@@ -31,6 +32,7 @@ final class AppModel {
         case practice = "Practice"
         case images = "Pictures"
         case dictionary = "Saved"
+        case script = "Script"
         case progress = "Progress"
         case scratch = "Scratch"
         case archive = "Archive"
@@ -42,6 +44,7 @@ final class AppModel {
             case .practice: "graduationcap"
             case .images: "photo.on.rectangle.angled"
             case .dictionary: "star"
+            case .script: "character.magnify"
             case .progress: "chart.line.uptrend.xyaxis"
             case .scratch: "text.book.closed"
             case .archive: "tray.full"
@@ -53,7 +56,9 @@ final class AppModel {
             case .practice: .home
             case .images: .images
             case .dictionary: .lists
-            case .progress: .progress
+            case .script: .script
+            case .script: .script
+        case .progress: .progress
             case .progress: .progress
         case .scratch: .scratch
             case .archive: .archive
@@ -69,6 +74,7 @@ final class AppModel {
         case .images: .images
         case .lists: .dictionary
         case .progress: .progress
+        case .script: .script
         case .scratch: .scratch
         case .archive: .archive
         }
@@ -107,7 +113,9 @@ final class AppModel {
     var pendingFocus: String?
     var savedItems = SavedItems()
     /// Whatever the learner pasted into the scratch pad, kept with the profile.
-    var scratchText = "" 
+    var scratchText = ""
+    /// Per-character letterform accuracy, for the script drill.
+    var scriptProgress = LessonStore.ScriptProgress() 
     var pictures: [StandalonePicture] = []
     /// What the app has spent on the learner's behalf.
     var spending = SpendLog()
@@ -294,6 +302,8 @@ final class AppModel {
             return "Saved items"
         case .images:
             return "Pictures"
+        case .script:
+            return "Script drill"
         case .progress:
             return "Progress"
         case .scratch:
@@ -442,6 +452,7 @@ final class AppModel {
         records = []
         savedItems = SavedItems()
         scratchText = ""
+        scriptProgress = LessonStore.ScriptProgress()
         pictures = []
         spending = SpendLog()
         unreadableLessons = []
@@ -456,6 +467,7 @@ final class AppModel {
         guard let lessonStore else { return }
         savedItems = (try? lessonStore.loadSavedItems()) ?? SavedItems()
         scratchText = lessonStore.loadScratch()
+        scriptProgress = lessonStore.loadScriptProgress()
         pictures = (try? lessonStore.loadPictures()) ?? []
         spending = (try? lessonStore.loadSpending()) ?? SpendLog()
         do {
@@ -572,6 +584,13 @@ final class AppModel {
     /// character.
     func persistScratch() {
         try? lessonStore?.saveScratch(scratchText)
+    }
+
+    /// Records one letterform answer. Free and local, so it is written straight
+    /// through rather than batched.
+    func recordScript(_ character: String, wasCorrect: Bool) {
+        scriptProgress.record(character, wasCorrect: wasCorrect)
+        try? lessonStore?.saveScriptProgress(scriptProgress)
     }
 
     func unsave(id: String) {
