@@ -499,6 +499,19 @@ final class RubyCanvas: NSView {
     }
 
     /// Where a character range sits in the view, for anchoring a popover.
+    /// The word's box, in the coordinates SwiftUI anchors a popover in.
+    ///
+    /// This view is not flipped, so its own origin is bottom-left, while
+    /// SwiftUI reads an anchor rect top-left. Handing over the AppKit rect
+    /// unconverted put the anchor as far from the word as the word was from the
+    /// bottom of the view -- inside a scroll view that is usually off-screen,
+    /// and the popover simply never appeared.
+    private func anchorRect(for range: Range<Int>) -> CGRect {
+        let box = rect(for: range)
+        guard box != .zero else { return .zero }
+        return Geometry.flippingVertically(box, inHeight: bounds.height)
+    }
+
     private func rect(for range: Range<Int>) -> CGRect {
         let headroom = hasRuby ? model.fontSize * 0.6 : 0
         let offset = bounds.height - textHeight - headroom
@@ -566,7 +579,7 @@ final class RubyCanvas: NSView {
         if event.clickCount == 1, let word = wordRange(containing: index) {
             selection = word
             if let onWordTapped {
-                onWordTapped(text(in: word), rect(for: word))
+                onWordTapped(text(in: word), anchorRect(for: word))
             } else {
                 copySelection()
             }
@@ -589,7 +602,7 @@ final class RubyCanvas: NSView {
         else { return super.rightMouseDown(with: event) }
         selection = word
         needsDisplay = true
-        onWordTapped(text(in: word), rect(for: word))
+        onWordTapped(text(in: word), anchorRect(for: word))
     }
 
     override func mouseDragged(with event: NSEvent) {
@@ -611,7 +624,7 @@ final class RubyCanvas: NSView {
         // been handled in mouseDown, and firing twice would reopen the popover
         // on top of itself.
         if let onWordTapped {
-            onWordTapped(text(in: selection), rect(for: selection))
+            onWordTapped(text(in: selection), anchorRect(for: selection))
         }
     }
 
