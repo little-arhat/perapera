@@ -69,8 +69,11 @@ import Testing
 @Test func nIsAcceptedDoubledAndAsMBeforeALabial() {
     #expect(KanaRomaji.accepts("shinbun", for: "しんぶん"))
     #expect(KanaRomaji.accepts("shimbun", for: "しんぶん"))
-    #expect(KanaRomaji.accepts("onnna", for: "おんな") == false)  // not a spelling of it
     #expect(KanaRomaji.accepts("onna", for: "おんな"))
+    // onnna is what an IME takes for おんな, so it is a spelling of it.
+    #expect(KanaRomaji.accepts("onnna", for: "おんな"))
+    // m only before a labial: しんぶん is shimbun, あんない is not amnai.
+    #expect(!KanaRomaji.accepts("amnai", for: "あんない"))
 }
 
 @Test func vowelLengthIsStillADistinction() {
@@ -88,4 +91,47 @@ import Testing
 
 @Test func caseAndStraySpacingDoNotMatter() {
     #expect(KanaRomaji.accepts("  SaKuRa ", for: "さくら"))
+}
+
+// Spellings the earlier normalise-and-compare approach got wrong, kept as the
+// reason the matcher was rewritten.
+
+@Test func geminatedChiIsTchiAsWellAsCchi() {
+    // tchi is the standard Hepburn and was being rejected.
+    #expect(KanaRomaji.accepts("kotchi", for: "こっち"))
+    #expect(KanaRomaji.accepts("kocchi", for: "こっち"))
+    #expect(KanaRomaji.romaji("こっち") == "kotchi")
+}
+
+@Test func theHyphenIsALongVowel() {
+    #expect(KanaRomaji.accepts("ko-hi-", for: "コーヒー"))
+    #expect(KanaRomaji.accepts("ra-men", for: "ラーメン"))
+}
+
+@Test func mIsOnlyAcceptedBeforeALabial() {
+    #expect(KanaRomaji.accepts("shimbun", for: "しんぶん"))
+    #expect(KanaRomaji.accepts("sampo", for: "さんぽ"))
+    #expect(!KanaRomaji.accepts("amnai", for: "あんない"))
+    #expect(!KanaRomaji.accepts("hom", for: "ほん"))
+}
+
+@Test func hiraganaLongVowelsTakeEveryWrittenForm() {
+    for typed in ["toukyou", "tookyoo", "tōkyō"] {
+        #expect(KanaRomaji.accepts(typed, for: "とうきょう"), "\(typed) rejected")
+    }
+}
+
+@Test func aVowelThatIsNotLengtheningStaysItsOwnSyllable() {
+    // あう is au, not "aa". こい is koi, not "koo".
+    #expect(KanaRomaji.accepts("au", for: "あう"))
+    #expect(!KanaRomaji.accepts("aa", for: "あう"))
+    #expect(KanaRomaji.accepts("koi", for: "こい"))
+    #expect(!KanaRomaji.accepts("koo", for: "こい"))
+}
+
+@Test func wapuroSpellingsFromAnImeAreAccepted() {
+    #expect(KanaRomaji.accepts("jyugyou", for: "じゅぎょう"))
+    #expect(KanaRomaji.accepts("jugyou", for: "じゅぎょう"))
+    #expect(KanaRomaji.accepts("syashin", for: "しゃしん"))
+    #expect(KanaRomaji.accepts("cyotto", for: "ちょっと"))
 }

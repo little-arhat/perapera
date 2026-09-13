@@ -17,6 +17,7 @@ struct ReadingPracticeView: View {
 
     @State private var script: ReadingDrill.Script = .hiragana
     @State private var size: ReadingDrill.Size = .small
+    @State private var mode: ReadingDrill.Mode = .review
     @State private var queue: [ReadingDrill.Word] = []
     @State private var index = 0
     @State private var typed = ""
@@ -84,6 +85,15 @@ struct ReadingPracticeView: View {
             }
             .pickerStyle(.segmented)
 
+            Picker("Mode", selection: $mode) {
+                ForEach(ReadingDrill.Mode.allCases) { Text($0.label).tag($0) }
+            }
+            .pickerStyle(.segmented)
+
+            Text(mode.summary)
+                .font(.caption2)
+                .foregroundStyle(palette.secondaryText)
+
             Text(dueSummary)
                 .font(.caption)
                 .foregroundStyle(palette.secondaryText)
@@ -106,6 +116,10 @@ struct ReadingPracticeView: View {
     /// What the schedule has waiting, so starting is an informed choice rather
     /// than a surprise.
     private var dueSummary: String {
+        if mode == .shuffle {
+            let pool = ReadingDrill.mostFrequent(model.kanaWords, script: script)
+            return "\(pool.count) of the most frequent \(script.label.lowercased()) words."
+        }
         let today = ReadingDrill.day()
         let due = model.kanaWords.filter { word in
             guard let seen = model.readingProgress[word.text], seen.seen > 0 else { return false }
@@ -225,7 +239,7 @@ struct ReadingPracticeView: View {
 
     private func start() {
         queue = ReadingDrill.session(
-            from: model.kanaWords, script: script, size: size,
+            from: model.kanaWords, script: script, size: size, mode: mode,
             progress: model.readingProgress, today: ReadingDrill.day())
         index = 0
         right = 0

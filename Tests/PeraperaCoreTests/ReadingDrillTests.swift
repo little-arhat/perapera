@@ -105,3 +105,46 @@ private let pool = (1...200).map { word("ひ\($0)", "h", tier: $0 % 5 == 0 ? 2 :
     #expect(p.seen == 2)
     #expect(p.correct == 1)
 }
+
+// Shuffle mode: no schedule, no queue to clear, straight from the frequent words.
+
+@Test func shuffleDrawsOnlyFromTheFrequentWords() {
+    let ranked = (1...900).map {
+        ReadingDrill.Word(w: "ひ\($0)", g: "g", s: "h", t: 1, f: $0 <= 500 ? 1 : 9)
+    }
+    let session = ReadingDrill.session(from: ranked, script: .hiragana, size: .large,
+                                       mode: .shuffle, progress: [:], today: 1,
+                                       shuffle: { $0 })
+    #expect(session.count == ReadingDrill.Size.large.count)
+    #expect(session.allSatisfy { $0.rank == 1 }, "shuffle reached past the frequent bucket")
+}
+
+@Test func shuffleIgnoresTheScheduleEntirely() {
+    // The point of the mode: nothing is due, nothing is held back.
+    let ranked = (1...600).map { ReadingDrill.Word(w: "ひ\($0)", g: "g", s: "h", t: 1, f: 1) }
+    var progress: [String: ReadingDrill.Progress] = [:]
+    for word in ranked {
+        var p = ReadingDrill.Progress()
+        p.seen = 5
+        p.due = 9_999        // nothing is due
+        progress[word.text] = p
+    }
+    let session = ReadingDrill.session(from: ranked, script: .hiragana, size: .small,
+                                       mode: .shuffle, progress: progress, today: 1,
+                                       shuffle: { $0 })
+    #expect(session.count == ReadingDrill.Size.small.count)
+}
+
+@Test func frequencyBucketsAreTakenWholeNotCutInHalf() {
+    // Buckets are 500 wide. Asking for 500 takes the first; asking for 501
+    // takes the second whole rather than one arbitrary word from it.
+    let ranked = (1...500).map { ReadingDrill.Word(w: "a\($0)", g: "g", s: "h", t: 1, f: 1) }
+        + (1...500).map { ReadingDrill.Word(w: "b\($0)", g: "g", s: "h", t: 1, f: 2) }
+    #expect(ReadingDrill.mostFrequent(ranked, script: .hiragana, atLeast: 500).count == 500)
+    #expect(ReadingDrill.mostFrequent(ranked, script: .hiragana, atLeast: 501).count == 1000)
+}
+
+@Test func unrankedWordsSortBehindRankedOnes() {
+    #expect(ReadingDrill.Word(w: "x", g: "g", s: "h", t: 1, f: 0).rank
+            > ReadingDrill.Word(w: "y", g: "g", s: "h", t: 3, f: 48).rank)
+}

@@ -97,6 +97,12 @@ delete it with its images. The files are readable without the app and outlive it
 The **Reading** pane shows one word at a time and asks how it sounds. Pick
 hiragana, katakana or both, and a session of 20, 40 or 70 words.
 
+**Review** draws what the schedule says is due, then words you have not met.
+**Shuffle** ignores the schedule and draws at random from the five hundred most
+frequent words of that script — JMdict's frequency buckets are exactly five
+hundred wide, so that is a real number rather than a round one. Answers still
+count towards the schedule either way.
+
 A wrong answer does not show you the reading. It says so and leaves the field
 open, because the second or two in which you work it out is where the learning
 is. **Show answer** is there when you want it, and **Skip** moves on. Either way
@@ -104,16 +110,22 @@ the schedule records the first attempt: arriving at it on the second try is not
 the same as knowing it, and telling the schedule otherwise would push the word
 months out.
 
-Spellings that mean the same sound all count: `sushi` and `susi`, `tsunami` and
-`tunami`, `kyou` and `kyoo` and `kyō`, `shinbun` and `shimbun`. Vowel length does
-not get the same latitude — おばさん is an aunt and おばあさん is a grandmother,
-and being told you read the second when you read the first is not a kindness.
+Spellings that mean the same sound all count. Every kana contributes the set of
+spellings it can legitimately have, and an answer is accepted if it can be cut
+into one spelling per kana with nothing left over: `sushi` and `susi`, `kotchi`
+and `kocchi`, `koohii` and `kōhī` and `ko-hi-`, `toukyou` and `tookyoo` and
+`tōkyō`, `syashin` and `shashin`. `m` for ん counts before a labial and nowhere
+else, so `shimbun` passes and `amnai` does not.
 
-Words come from a bundled slice of JMdict: 23,000 readings, weighted towards the
+Vowel length is not folded away — おばさん is an aunt and おばあさん is a
+grandmother, and being told you read the second when you read the first is not a
+kindness.
+
+Words come from a bundled slice of JMdict: 23,072 readings, 16,959 of them
+carrying a newspaper-frequency rank. A review session is weighted towards the
 frequent ones with roughly one rarer word in five. Scheduling is SM-2, the same
 algorithm behind the rest of the app, so a word you miss returns tomorrow and one
-you know well moves months out. Due words come first; on the first run everything
-is new.
+you know well moves months out.
 
 Free and offline. After each answer you can hear the word and save it to your list.
 

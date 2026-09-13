@@ -48,6 +48,14 @@ public enum ReadingDrill {
         public let g: String
         public let s: String
         public let t: Int
+        /// JMdict's newspaper-frequency bucket, 500 words wide: 1 is the five
+        /// hundred most frequent words in the corpus. 0 means unranked, which
+        /// sorts last rather than first.
+        public let f: Int
+
+        public init(w: String, g: String, s: String, t: Int, f: Int = 0) {
+            self.w = w; self.g = g; self.s = s; self.t = t; self.f = f
+        }
 
         public var id: String { w }
         public var text: String { w }
@@ -55,6 +63,45 @@ public enum ReadingDrill {
         public var script: String { s }
         /// 1 is the most frequent tier.
         public var tier: Int { t }
+        /// Lower is more frequent; unranked words sort behind every ranked one.
+        public var rank: Int { f == 0 ? Int.max : f }
+    }
+
+    /// How a session is chosen.
+    public enum Mode: String, CaseIterable, Codable, Sendable, Identifiable {
+        /// Spaced repetition: what is due, then new material.
+        case review
+        /// Straight from the most frequent words, in a random order. No
+        /// schedule, no queue to clear -- sometimes that is the session you want.
+        case shuffle
+
+        public var id: String { rawValue }
+        public var label: String {
+            switch self {
+            case .review: "Review"
+            case .shuffle: "Shuffle"
+            }
+        }
+        public var summary: String {
+            switch self {
+            case .review: "What is due first, then words you have not met."
+            case .shuffle: "Random, from the most frequent words. Answers still count."
+            }
+        }
+    }
+
+    /// The most frequent words of a script, at least `atLeast` of them.
+    ///
+    /// Frequency comes in buckets of five hundred, so asking for five hundred
+    /// gets the first bucket and asking for more widens by whole buckets rather
+    /// than cutting one in half at an arbitrary word.
+    public static func mostFrequent(
+        _ words: [Word], script: Script, atLeast: Int = 500
+    ) -> [Word] {
+        let pool = words.filter(script.accepts).sorted { $0.rank < $1.rank }
+        guard pool.count > atLeast else { return pool }
+        let cutoff = pool[atLeast - 1].rank
+        return pool.filter { $0.rank <= cutoff }
     }
 
     /// What the learner has done with one word.
@@ -108,12 +155,16 @@ public enum ReadingDrill {
     /// schedule. When nothing is due the session is all new, which is the right
     /// answer on day one.
     public static func session(
-        from words: [Word], script: Script, size: Size,
+        from words: [Word], script: Script, size: Size, mode: Mode = .review,
         progress: [String: Progress], today: Int,
         shuffle: ([Word]) -> [Word] = { $0.shuffled() }
     ) -> [Word] {
         let pool = words.filter(script.accepts)
         guard !pool.isEmpty else { return [] }
+
+        if mode == .shuffle {
+            return Array(shuffle(mostFrequent(words, script: script)).prefix(size.count))
+        }
 
         let due = pool.filter { word in
             guard let seen = progress[word.w], seen.seen > 0 else { return false }

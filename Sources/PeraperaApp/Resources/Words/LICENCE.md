@@ -13,7 +13,9 @@ script and is two to six characters long, excluding those marked archaic,
 obsolete, rare, vulgar, slang, derogatory or colloquial. One record per distinct
 reading, carrying the reading, the first English gloss, the script, and a tier
 derived from JMdict's own priority markers: 1 for `ichi1`/`news1`/`spec1`/`gai1`,
-2 for the `2` variants, 3 otherwise.
+2 for the `2` variants, 3 otherwise; and JMdict's `nfXX` newspaper-frequency
+bucket where the entry has one, which is 500 words wide — `nf01` is the five
+hundred most frequent, and 0 means unranked.
 
 ## What this means for you
 
