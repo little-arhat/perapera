@@ -92,6 +92,24 @@ Every lesson is one JSON file that accretes answers and then feedback, never ove
 the archive shows what actually happened. Filter by grade, rename a lesson, annotate it, or
 delete it with its images. The files are readable without the app and outlive it.
 
+## Reading practice
+
+The **Reading** pane shows one word at a time and asks how it sounds. Pick
+hiragana, katakana or both, and a session of 20, 40 or 70 words.
+
+Spellings that mean the same sound all count: `sushi` and `susi`, `tsunami` and
+`tunami`, `kyou` and `kyoo` and `kyō`, `shinbun` and `shimbun`. Vowel length does
+not get the same latitude — おばさん is an aunt and おばあさん is a grandmother,
+and being told you read the second when you read the first is not a kindness.
+
+Words come from a bundled slice of JMdict: 23,000 readings, weighted towards the
+frequent ones with roughly one rarer word in five. Scheduling is SM-2, the same
+algorithm behind the rest of the app, so a word you miss returns tomorrow and one
+you know well moves months out. Due words come first; on the first run everything
+is new.
+
+Free and offline. After each answer you can hear the word and save it to your list.
+
 ## Reading kana you have not seen before
 
 The **Script** pane drills the pairs that actually get confused — シ/ツ, ソ/ン,

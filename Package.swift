@@ -21,6 +21,7 @@ let package = Package(
                 .copy("Resources/Prompts"),
                 .copy("Resources/Schemas"),
                 .copy("Resources/teacher-context.json"),
+                .copy("Resources/Words"),
             ]
         ),
 

@@ -58,7 +58,7 @@ for the other's half.
 | `Sources/PeraperaApp/` | The shell: views, plus the effectful edges `ClaudeClient`, `FluentStore` and `ImagePipeline`. |
 | `Sources/PeraperaApp/Resources/Prompts/` | Prompt text. Content, not code. |
 | `Sources/PeraperaApp/Resources/Schemas/` | The JSON contracts passed to `claude --json-schema`. |
-| `Tests/` | Grading rules, the `update-db.py` wire format, profile slugs, the migration. 149 tests, no network. |
+| `Tests/` | Grading rules, the `update-db.py` wire format, profile slugs, the migration, kana romanisation. 220 tests, no network. |
 | `tools/imgbench/` | Image-model benchmark. Its own `uv` project, 28 tests. |
 | `fluent/` | Fluent: skills, hooks, six databases, methodology, 29 Python tests. |
 

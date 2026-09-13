@@ -17,7 +17,8 @@ and [USAGE.md](USAGE.md).
 | `Sources/PeraperaApp/Resources/Schemas/` | The JSON contracts passed to `claude --json-schema`. |
 | `Tests/PeraperaCoreTests/` | Grading rules, decode fixtures, the `update-db.py` wire format, profile slugs, the teacher's brief. |
 | `Tests/PeraperaAppTests/` | The migration and the teacher-context assembly. |
-| `tools/imgbench/` | Image-model benchmark. Its own `uv` project, 28 tests. |
+| `Sources/PeraperaApp/Resources/Words/` | A slice of JMdict for the reading drill. **CC BY-SA 4.0**, not MIT — see the LICENCE beside it. |
+| `tools/imgbench/` | Image-model benchmark. Its own `uv` project, 32 tests. |
 | `fluent/` | Fluent: skills, hooks, six databases, methodology, 22 Python tests. |
 
 ## Rules that hold the design together
@@ -84,9 +85,9 @@ committing one.
 ## Testing
 
 ```bash
-swift test                                        # 149, no network
+swift test                                        # 220, no network
 cd fluent && python3 -m unittest discover -s tests # 29, stdlib only
-cd tools/imgbench && uv run pytest                # 28
+cd tools/imgbench && uv run pytest                # 32
 ```
 
 Fluent's Python must import nothing outside the standard library. Claude Code invokes the

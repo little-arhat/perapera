@@ -21,6 +21,7 @@ final class AppModel {
         case scratch
         case progress
         case script
+        case reading
     }
 
     /// Top-level areas, as the sidebar lists them.
@@ -32,6 +33,7 @@ final class AppModel {
         case practice = "Practice"
         case images = "Pictures"
         case dictionary = "Saved"
+        case reading = "Reading"
         case script = "Script"
         case progress = "Progress"
         case scratch = "Scratch"
@@ -44,6 +46,7 @@ final class AppModel {
             case .practice: "graduationcap"
             case .images: "photo.on.rectangle.angled"
             case .dictionary: "star"
+            case .reading: "text.viewfinder"
             case .script: "character.magnify"
             case .progress: "chart.line.uptrend.xyaxis"
             case .scratch: "text.book.closed"
@@ -56,7 +59,9 @@ final class AppModel {
             case .practice: .home
             case .images: .images
             case .dictionary: .lists
-            case .script: .script
+            case .reading: .reading
+            case .reading: .reading
+        case .script: .script
             case .script: .script
         case .progress: .progress
             case .progress: .progress
@@ -75,6 +80,7 @@ final class AppModel {
         case .lists: .dictionary
         case .progress: .progress
         case .script: .script
+        case .reading: .reading
         case .scratch: .scratch
         case .archive: .archive
         }
@@ -115,7 +121,27 @@ final class AppModel {
     /// Whatever the learner pasted into the scratch pad, kept with the profile.
     var scratchText = ""
     /// Per-character letterform accuracy, for the script drill.
-    var scriptProgress = LessonStore.ScriptProgress() 
+    var scriptProgress = LessonStore.ScriptProgress()
+    /// Per-word schedule for the reading drill.
+    var readingProgress: [String: ReadingDrill.Progress] = [:]
+
+    /// The bundled word list. Loaded once: it is 23,000 entries and does not
+    /// change between sessions.
+    private var loadedWords: [ReadingDrill.Word]?
+
+    var kanaWords: [ReadingDrill.Word] {
+        if let loadedWords { return loadedWords }
+        guard let url = Bundle.module.url(forResource: "kana-words", withExtension: "json",
+                                          subdirectory: "Words"),
+              let data = try? Data(contentsOf: url),
+              let words = try? JSONDecoder().decode([ReadingDrill.Word].self, from: data)
+        else {
+            loadedWords = []
+            return []
+        }
+        loadedWords = words
+        return words
+    } 
     var pictures: [StandalonePicture] = []
     /// What the app has spent on the learner's behalf.
     var spending = SpendLog()
@@ -302,6 +328,8 @@ final class AppModel {
             return "Saved items"
         case .images:
             return "Pictures"
+        case .reading:
+            return "Reading practice"
         case .script:
             return "Script drill"
         case .progress:
@@ -453,6 +481,7 @@ final class AppModel {
         savedItems = SavedItems()
         scratchText = ""
         scriptProgress = LessonStore.ScriptProgress()
+        readingProgress = [:]
         pictures = []
         spending = SpendLog()
         unreadableLessons = []
@@ -468,6 +497,7 @@ final class AppModel {
         savedItems = (try? lessonStore.loadSavedItems()) ?? SavedItems()
         scratchText = lessonStore.loadScratch()
         scriptProgress = lessonStore.loadScriptProgress()
+        readingProgress = lessonStore.loadReadingProgress()
         pictures = (try? lessonStore.loadPictures()) ?? []
         spending = (try? lessonStore.loadSpending()) ?? SpendLog()
         do {
@@ -591,6 +621,15 @@ final class AppModel {
     func recordScript(_ character: String, wasCorrect: Bool) {
         scriptProgress.record(character, wasCorrect: wasCorrect)
         try? lessonStore?.saveScriptProgress(scriptProgress)
+    }
+
+    /// Records one reading answer and reschedules the word.
+    func recordReading(_ word: String, wasCorrect: Bool) {
+        let today = ReadingDrill.day()
+        readingProgress[word] = ReadingDrill.record(
+            readingProgress[word] ?? ReadingDrill.Progress(),
+            wasCorrect: wasCorrect, today: today)
+        try? lessonStore?.saveReadingProgress(readingProgress)
     }
 
     func unsave(id: String) {

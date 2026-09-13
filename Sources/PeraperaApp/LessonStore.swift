@@ -169,6 +169,26 @@ final class LessonStore {
         _ = try FileManager.default.replaceItemAt(savedItemsURL, withItemAt: temp)
     }
 
+    // MARK: - Reading drill
+
+    private var readingURL: URL {
+        directory.deletingLastPathComponent().appending(path: "reading-progress.json")
+    }
+
+    func loadReadingProgress() -> [String: ReadingDrill.Progress] {
+        guard let data = try? Data(contentsOf: readingURL) else { return [:] }
+        return (try? JSONDecoder().decode([String: ReadingDrill.Progress].self,
+                                          from: data)) ?? [:]
+    }
+
+    func saveReadingProgress(_ progress: [String: ReadingDrill.Progress]) throws {
+        try prepare()
+        let data = try encoder.encode(progress)
+        let temp = readingURL.appendingPathExtension("tmp")
+        try data.write(to: temp, options: .atomic)
+        _ = try FileManager.default.replaceItemAt(readingURL, withItemAt: temp)
+    }
+
     // MARK: - Script drill
     //
     // Per-character counts, so the drill can ask about the one the learner keeps
