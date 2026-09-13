@@ -97,6 +97,13 @@ delete it with its images. The files are readable without the app and outlive it
 The **Reading** pane shows one word at a time and asks how it sounds. Pick
 hiragana, katakana or both, and a session of 20, 40 or 70 words.
 
+A wrong answer does not show you the reading. It says so and leaves the field
+open, because the second or two in which you work it out is where the learning
+is. **Show answer** is there when you want it, and **Skip** moves on. Either way
+the schedule records the first attempt: arriving at it on the second try is not
+the same as knowing it, and telling the schedule otherwise would push the word
+months out.
+
 Spellings that mean the same sound all count: `sushi` and `susi`, `tsunami` and
 `tunami`, `kyou` and `kyoo` and `kyō`, `shinbun` and `shimbun`. Vowel length does
 not get the same latitude — おばさん is an aunt and おばあさん is a grandmother,
