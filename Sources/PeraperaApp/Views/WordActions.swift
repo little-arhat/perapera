@@ -64,6 +64,8 @@ struct WordActionsPopover: View {
                 TextField("Meaning (optional)", text: $gloss)
                     .textFieldStyle(.roundedBorder)
                     .onSubmit(save)
+                // Only reached when the bundled dictionary has nothing, so the
+                // wait is the exception rather than the path.
                 Button {
                     Task {
                         found = await model.lookUp(word)
@@ -71,9 +73,9 @@ struct WordActionsPopover: View {
                     }
                 } label: {
                     if model.isLookingUp {
-                        Label("Looking up…", systemImage: "hourglass")
+                        Label("Asking…", systemImage: "hourglass")
                     } else {
-                        Label("Look up meaning", systemImage: "sparkle.magnifyingglass")
+                        Label("Ask for a meaning", systemImage: "sparkle.magnifyingglass")
                     }
                 }
                 .buttonStyle(.plain)

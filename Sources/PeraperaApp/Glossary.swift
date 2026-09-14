@@ -36,6 +36,13 @@ final class Glossary {
                          meaning: saved.gloss, source: "your dictionary")
         }
         if let cached = cache[word] { return cached }
+        // The bundled dictionary. Instant, offline, and it answers for most of
+        // what a learner clicks, which is the difference between a lookup that
+        // feels like part of reading and one you wait for.
+        if let entry = Bundled.shared.look(up: word) {
+            return Entry(word: word, reading: entry.reading ?? JapaneseReadings.reading(of: word),
+                         meaning: entry.gloss, source: "dictionary")
+        }
         if let system = SystemDictionary.define(word) {
             return Entry(word: word, reading: JapaneseReadings.reading(of: word),
                          meaning: system, source: "macOS dictionary")
@@ -80,6 +87,43 @@ final class Glossary {
         var errorDescription: String? {
             "Set the path to `claude` in Settings to look words up."
         }
+    }
+}
+
+/// The bundled slice of JMdict, loaded the first time something is looked up.
+///
+/// Four megabytes of JSON, so it is not decoded at launch: nothing needs it
+/// until a word is clicked, and paying that on every start for a feature that
+/// might not be used is the wrong trade.
+/// Main-actor confined rather than locked: every caller is a view or the model,
+/// which are already there, and a lock would be machinery for contention that
+/// cannot happen.
+@MainActor
+final class Bundled {
+    struct Entry: Decodable {
+        let r: String?
+        let g: String
+        var reading: String? { r }
+        var gloss: String { g }
+    }
+
+    static let shared = Bundled()
+    private var index: [String: Entry]?
+
+    func look(up word: String) -> Entry? {
+        if index == nil {
+            guard let url = Bundle.module.url(forResource: "lookup", withExtension: "json",
+                                              subdirectory: "Words"),
+                  let data = try? Data(contentsOf: url),
+                  let decoded = try? JSONDecoder().decode([String: Entry].self, from: data)
+            else {
+                index = [:]
+                return nil
+            }
+            index = decoded
+        }
+        // A clicked word may carry furigana markup from the lesson it came from.
+        return index?[Furigana.stripped(word)]
     }
 }
 

@@ -161,6 +161,14 @@ the readings are right more often than the word boundaries are. The pane says so
 What you paste is kept with the profile, not with the Mac, so it follows you when you
 switch profiles.
 
+## Looking a word up
+
+Clicking or selecting a word answers from a bundled slice of JMdict: 67,874
+written and read forms of the words the corpus marks common. Instant, offline,
+free. Failing that it tries a Japanese dictionary in Dictionary.app if you have
+one enabled, and only then offers to ask the model — which costs a fraction of a
+cent and is cached, so a word is paid for once.
+
 ## Profiles
 
 A profile is one learner and one target language, with its own schedule, archive,

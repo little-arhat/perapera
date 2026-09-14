@@ -47,3 +47,24 @@ private func loadWords() throws -> [ReadingDrill.Word] {
                 "\(script.label) cannot fill a large session")
     }
 }
+
+// The offline dictionary. A lookup that waits on a model call is a lookup you
+// stop using, so the words a learner actually clicks have to answer instantly.
+
+@Test @MainActor func theBundledDictionaryAnswersForCommonWords() {
+    for word in ["教室", "天才", "新幹線", "南口", "切符", "ラーメン", "きょうしつ"] {
+        let entry = Bundled.shared.look(up: word)
+        #expect(entry != nil, "\(word) is not in the bundled dictionary")
+        #expect(!(entry?.gloss.isEmpty ?? true), "\(word) has no gloss")
+    }
+}
+
+@Test @MainActor func furiganaMarkupIsStrippedBeforeLookup() {
+    // Words arrive from a lesson carrying their readings.
+    #expect(Bundled.shared.look(up: "教室[きょうしつ]")?.gloss
+            == Bundled.shared.look(up: "教室")?.gloss)
+}
+
+@Test @MainActor func anUnknownWordFallsThroughRatherThanInventing() {
+    #expect(Bundled.shared.look(up: "ぬるぽぬるぽ") == nil)
+}

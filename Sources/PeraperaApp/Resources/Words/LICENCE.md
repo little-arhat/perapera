@@ -1,4 +1,4 @@
-# kana-words.json
+# kana-words.json, lookup.json
 
 Derived from **JMdict**, the Japanese-Multilingual Dictionary, © the
 [Electronic Dictionary Research and Development Group](https://www.edrdg.org/),
@@ -7,6 +7,13 @@ used under a **Creative Commons Attribution-ShareAlike 4.0** licence.
 <https://www.edrdg.org/edrdg/licence.html>
 
 ## What was taken
+
+`lookup.json` is a dictionary index: every form (written and read) of every
+entry the corpus marks common, mapped to its reading and first two glosses.
+67,874 forms. It exists so clicking a word answers instantly and offline instead
+of waiting on a model call.
+
+`kana-words.json` is the reading drill's word list.
 
 Entries with a frequency marker whose reading is written entirely in one kana
 script and is two to six characters long, excluding those marked archaic,
