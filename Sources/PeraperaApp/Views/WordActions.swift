@@ -28,7 +28,14 @@ struct WordActionsPopover: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             RubyText(annotated: word, showFurigana: model.showFurigana, size: 22)
-                .onAppear { found = model.knownGloss(for: word) }
+                // Keyed on the word, not onAppear. Clicking a second word while
+                // the popover is open reuses this view rather than making a new
+                // one, so onAppear never fires again and the previous word's
+                // meaning stays on screen under the new word.
+                .task(id: word) {
+                    found = model.knownGloss(for: word)
+                    justSaved = false
+                }
 
             if let existing, !existing.gloss.isEmpty {
                 Text(existing.gloss)

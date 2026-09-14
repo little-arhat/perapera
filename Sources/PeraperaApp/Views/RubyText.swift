@@ -73,7 +73,10 @@ struct RubyText: View {
                 arrowEdge: .top
             ) {
                 if let tappedWord {
+                    // .id ties the view's identity to the word, so a second
+                    // click builds a new one instead of reusing the last.
                     WordActionsPopover(word: tappedWord) { self.tappedWord = nil }
+                        .id(tappedWord)
                 }
             }
         }
@@ -109,9 +112,30 @@ struct MarkdownRubyText: View {
             highlightWords: model.highlightWords,
             particleColor: model.tintParticles ? NSColor(palette.particle) : nil,
             availableWidth: 0,
-            isMarkdown: true
+            isMarkdown: true,
+            // Prose gets the same word actions as anything else. This view had
+            // the state for it and never passed the callback, so clicking a word
+            // in a preamble or a reading passage did nothing at all.
+            onWordTapped: model.highlightWords
+                ? { word, rect in
+                    tappedWord = word
+                    wordRect = rect
+                }
+                : nil
         )
         .fixedSize(horizontal: false, vertical: true)
+        .popover(
+            isPresented: Binding(
+                get: { tappedWord != nil },
+                set: { if !$0 { tappedWord = nil } }),
+            attachmentAnchor: .rect(.rect(wordRect)),
+            arrowEdge: .top
+        ) {
+            if let tappedWord {
+                WordActionsPopover(word: tappedWord) { self.tappedWord = nil }
+                    .id(tappedWord)
+            }
+        }
     }
 }
 
