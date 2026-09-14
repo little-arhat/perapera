@@ -30,7 +30,17 @@ struct ReadingPracticeView: View {
     /// first attempt only, so trying again costs nothing and changes nothing.
     @State private var graded: Bool?
     @State private var right = 0
+    /// What has been answered, newest first. A correct answer moves straight on,
+    /// so this is where the word you just read goes -- the pace is the point, and
+    /// a confirmation you have to dismiss is the thing that breaks it.
+    @State private var history: [Answered] = []
     @FocusState private var typing: Bool
+
+    struct Answered: Identifiable {
+        let id = UUID()
+        let word: ReadingDrill.Word
+        let firstTry: Bool
+    }
 
     private var current: ReadingDrill.Word? {
         queue.indices.contains(index) ? queue[index] : nil
@@ -44,8 +54,10 @@ struct ReadingPracticeView: View {
                     setup
                 } else if let current {
                     card(current)
+                    recent
                 } else {
                     finished
+                    recent
                 }
             }
             .padding(20)
@@ -147,10 +159,10 @@ struct ReadingPracticeView: View {
                 .textFieldStyle(.roundedBorder)
                 .font(.system(size: 22, design: .monospaced))
                 .focused($typing)
-                .disabled(settled)
-                .onSubmit { settled ? advance() : check(word) }
+                .disabled(revealed)
+                .onSubmit { revealed ? advance(word) : check(word) }
 
-            if settled {
+            if revealed {
                 answerBlock(word)
             } else {
                 if verdict == false {
@@ -165,7 +177,7 @@ struct ReadingPracticeView: View {
                         .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
                     if verdict == false {
                         Button("Show answer") { revealed = true }
-                        Button("Skip") { advance() }
+                        Button("Skip") { advance(word) }
                     }
                 }
             }
@@ -175,28 +187,19 @@ struct ReadingPracticeView: View {
         .onAppear { typing = true }
     }
 
-    /// Right, or given up on. Either way the word is no longer a question.
-    private var settled: Bool { verdict == true || revealed }
-
-    private var answerHeadline: String {
-        if graded == true { return "Right" }
-        if verdict == true { return "Right on the second try — counted as a miss" }
-        return "The answer"
-    }
-
     private func answerBlock(_ word: ReadingDrill.Word) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            // Says which it was. Counting a second-try success as a hit would
-            // flatter the score and, worse, tell the schedule the word is known.
-            Label(answerHeadline,
-                  systemImage: graded == true ? "checkmark.circle.fill" : "lightbulb")
-                .foregroundStyle(graded == true ? palette.correct : palette.secondaryText)
+            // Only reached by asking to be shown, which means the first attempt
+            // was wrong. A correct answer never stops here -- it moves on and
+            // lands in the strip below.
+            Label("The answer", systemImage: "lightbulb")
+                .foregroundStyle(palette.secondaryText)
             Text("\(word.text) — \(KanaRomaji.romaji(word.text)) — \(word.gloss)")
                 .font(.callout)
                 .foregroundStyle(palette.bodyText)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 10) {
-                Button("Next") { advance() }
+                Button("Next") { advance(word) }
                     .buttonStyle(.borderedProminent)
                     .tint(palette.accent)
                     .keyboardShortcut(.defaultAction)
@@ -218,6 +221,59 @@ struct ReadingPracticeView: View {
         .background(palette.surface, in: .rect(cornerRadius: 10))
     }
 
+    /// What you just read, smaller and out of the way.
+    ///
+    /// A correct answer no longer stops to show a panel, so this is where the
+    /// reading and the meaning go. Three rows: enough to glance back at the one
+    /// you half-guessed, not so many that it competes with the word in front.
+    @ViewBuilder
+    private var recent: some View {
+        if !history.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(history.prefix(3)) { entry in
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Image(systemName: entry.firstTry
+                              ? "checkmark.circle.fill" : "circle.dotted")
+                            .font(.caption2)
+                            .foregroundStyle(entry.firstTry
+                                             ? palette.correct : palette.secondaryText)
+                        Text(entry.word.text)
+                            .font(.system(size: 17))
+                            .foregroundStyle(palette.bodyText)
+                        Text(KanaRomaji.romaji(entry.word.text))
+                            .font(.system(size: 13, design: .monospaced))
+                            .foregroundStyle(palette.secondaryText)
+                        Text(entry.word.gloss)
+                            .font(.caption)
+                            .foregroundStyle(palette.secondaryText)
+                            .lineLimit(1)
+                        Spacer()
+                        if entry.id == history.first?.id {
+                            Button {
+                                speech.speak(entry.word.text, language: model.voiceLanguage,
+                                             rate: Float(model.speechRate),
+                                             voiceIdentifier: model.voiceIdentifier.isEmpty
+                                                 ? nil : model.voiceIdentifier)
+                            } label: { Image(systemName: "speaker.wave.2") }
+                                .buttonStyle(.plain)
+                                .help("Hear it")
+                            Button {
+                                model.save(content: entry.word.text, gloss: entry.word.gloss,
+                                           kind: .word, lessonId: nil)
+                            } label: { Image(systemName: "star") }
+                                .buttonStyle(.plain)
+                                .help("Save to my list")
+                        }
+                    }
+                    .opacity(entry.id == history.first?.id ? 1 : 0.55)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(palette.surface.opacity(0.5), in: .rect(cornerRadius: 10))
+        }
+    }
+
     private var finished: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Done — \(right) of \(queue.count)")
@@ -226,7 +282,7 @@ struct ReadingPracticeView: View {
             Text("Words you missed are scheduled for tomorrow; the rest move further out.")
                 .font(.footnote)
                 .foregroundStyle(palette.secondaryText)
-            Button("Again") { queue = []; index = 0; right = 0 }
+            Button("Again") { queue = []; index = 0; right = 0; history = [] }
                 .buttonStyle(.borderedProminent)
                 .tint(palette.accent)
                 .keyboardShortcut(.defaultAction)
@@ -247,6 +303,7 @@ struct ReadingPracticeView: View {
         verdict = nil
         revealed = false
         graded = nil
+        history = []
     }
 
     private func check(_ word: ReadingDrill.Word) {
@@ -260,9 +317,17 @@ struct ReadingPracticeView: View {
             if correct { right += 1 }
             model.recordReading(word.text, wasCorrect: correct)
         }
+        // Right means on to the next one. The word lands in the strip below with
+        // its reading, so nothing is lost by not stopping to read a panel.
+        if correct { advance(word) }
     }
 
-    private func advance() {
+    private func advance(_ word: ReadingDrill.Word) {
+        history.insert(Answered(word: word, firstTry: graded == true), at: 0)
+        moveOn()
+    }
+
+    private func moveOn() {
         typed = ""
         verdict = nil
         revealed = false

@@ -103,6 +103,10 @@ frequent words of that script — JMdict's frequency buckets are exactly five
 hundred wide, so that is a real number rather than a round one. Answers still
 count towards the schedule either way.
 
+A correct answer moves straight to the next word. The one you just read drops
+into a strip below with its reading and meaning, in smaller type, so nothing is
+lost by not stopping — and the last one there has buttons to hear it or save it.
+
 A wrong answer does not show you the reading. It says so and leaves the field
 open, because the second or two in which you work it out is where the learning
 is. **Show answer** is there when you want it, and **Skip** moves on. Either way
