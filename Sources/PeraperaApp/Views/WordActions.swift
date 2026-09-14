@@ -13,7 +13,6 @@ struct WordActionsPopover: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.palette) private var palette
-    @State private var gloss = ""
     @State private var justSaved = false
     /// A meaning found without asking anyone, or the answer to asking.
     @State private var found: Glossary.Entry?
@@ -58,30 +57,11 @@ struct WordActionsPopover: View {
                     .font(.caption2)
                     .foregroundStyle(palette.secondaryText)
             } else {
-                // Type what you know, or ask. A lookup is a few hundredths of a
-                // cent on the cheapest model and is cached for good, so the
-                // second time this word appears it is free and offline.
-                TextField("Meaning (optional)", text: $gloss)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit(save)
-                // Only reached when the bundled dictionary has nothing, so the
-                // wait is the exception rather than the path.
-                Button {
-                    Task {
-                        found = await model.lookUp(word)
-                        if let found { gloss = found.meaning }
-                    }
-                } label: {
-                    if model.isLookingUp {
-                        Label("Asking…", systemImage: "hourglass")
-                    } else {
-                        Label("Ask for a meaning", systemImage: "sparkle.magnifyingglass")
-                    }
-                }
-                .buttonStyle(.plain)
-                .font(.caption)
-                .foregroundStyle(palette.accent)
-                .disabled(model.isLookingUp)
+                // Nothing knows it. Saying so beats a blank field asking the
+                // learner to supply the meaning they opened this to find.
+                Text("Not in the dictionary — Look up opens JapanDict.")
+                    .font(.caption)
+                    .foregroundStyle(palette.secondaryText)
             }
 
             HStack(spacing: 8) {
@@ -116,7 +96,10 @@ struct WordActionsPopover: View {
     }
 
     private func save() {
-        model.save(content: word, gloss: gloss, kind: kind, lessonId: nil)
+        // Saved with whatever was found, and the reading too. Adding a word
+        // with a blank meaning makes a list you have to look up all over again.
+        model.save(content: word, gloss: found?.meaning ?? "", kind: kind,
+                   lessonId: nil, reading: found?.reading)
         justSaved = true
     }
 
@@ -126,13 +109,17 @@ struct WordActionsPopover: View {
         return stripped.count > 8 ? .phrase : .word
     }
 
-    /// A real dictionary, opened in the browser. Free, and better than any
-    /// gloss a model would invent — Jisho gives readings, senses and example
-    /// sentences that a one-line translation cannot.
+    /// A real dictionary, opened in the browser.
+    ///
+    /// Better than any one-line gloss: JapanDict gives readings, every sense,
+    /// inflections and example sentences, which is what you actually want for
+    /// the words the bundled dictionary does not carry.
     private func lookUp() {
+        var allowed = CharacterSet.alphanumerics
+        allowed.insert(charactersIn: "-._~")
         let encoded = Furigana.stripped(word)
-            .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
-        if let url = URL(string: "https://jisho.org/search/\(encoded)") {
+            .addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+        if let url = URL(string: "https://www.japandict.com/?s=\(encoded)&lang=eng") {
             NSWorkspace.shared.open(url)
         }
         onDismiss()

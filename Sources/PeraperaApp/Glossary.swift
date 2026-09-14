@@ -1,14 +1,16 @@
 import Foundation
 import PeraperaCore
 
-/// What a word means, from the cheapest source that knows.
+/// What a word means, from whatever already knows.
 ///
-/// The learner's own dictionary first, then whatever Dictionary.app has enabled,
-/// then a small model call. Each answer is cached in the profile, so a word is
-/// paid for once and then belongs to the learner offline.
+/// No model call. Asking one cost a fraction of a cent and several seconds, and
+/// a lookup you wait for is a lookup you stop using -- which for a reading aid
+/// is the same as it not working. A bundled dictionary answers instantly for the
+/// words a learner actually clicks, and JapanDict is one button away for the
+/// rest, with more than a one-line gloss when you get there.
 @MainActor
-final class Glossary {
-    struct Entry: Codable, Equatable, Sendable {
+struct Glossary {
+    struct Entry: Equatable, Sendable {
         let word: String
         let reading: String?
         let meaning: String
@@ -16,77 +18,25 @@ final class Glossary {
         let source: String
     }
 
-    private let store: LessonStore
-    private let claude: ClaudeClient?
-    /// Answers already paid for. A word is looked up once, ever.
-    private var cache: [String: Entry]
-
-    init(store: LessonStore, claude: ClaudeClient?) {
-        self.store = store
-        self.claude = claude
-        self.cache = store.loadGlosses()
-    }
-
-    /// An answer that costs nothing, or nil.
+    /// The learner's own dictionary first: a note they wrote outranks a gloss.
     func known(_ word: String, savedItems: SavedItems) -> Entry? {
+        let bare = Furigana.stripped(word)
         if let saved = savedItems.items.first(where: {
             $0.id == SavedItem.identifier(for: word)
         }), !saved.gloss.isEmpty {
             return Entry(word: word, reading: saved.reading,
                          meaning: saved.gloss, source: "your dictionary")
         }
-        if let cached = cache[word] { return cached }
-        // The bundled dictionary. Instant, offline, and it answers for most of
-        // what a learner clicks, which is the difference between a lookup that
-        // feels like part of reading and one you wait for.
         if let entry = Bundled.shared.look(up: word) {
-            return Entry(word: word, reading: entry.reading ?? JapaneseReadings.reading(of: word),
+            return Entry(word: word,
+                         reading: entry.reading ?? JapaneseReadings.reading(of: bare),
                          meaning: entry.gloss, source: "dictionary")
         }
-        if let system = SystemDictionary.define(word) {
-            return Entry(word: word, reading: JapaneseReadings.reading(of: word),
+        if let system = SystemDictionary.define(bare) {
+            return Entry(word: word, reading: JapaneseReadings.reading(of: bare),
                          meaning: system, source: "macOS dictionary")
         }
         return nil
-    }
-
-    /// Asks the model, once, and remembers the answer.
-    ///
-    /// Schema-validated like every other call, and deliberately tiny: one word
-    /// in, a reading and a short meaning out. Anything longer is a lesson, not a
-    /// gloss.
-    func lookUp(
-        _ word: String, onSpend: (@Sendable (Double, String) -> Void)? = nil
-    ) async throws -> Entry {
-        guard let claude else { throw Failure.noClaude }
-        struct Reply: Decodable {
-            let reading: String
-            let meaning: String
-        }
-        let schema = """
-            {"type":"object","properties":{"reading":{"type":"string"},\
-            "meaning":{"type":"string"}},"required":["reading","meaning"],\
-            "additionalProperties":false}
-            """
-        let reply = try await claude.request(
-            Reply.self,
-            prompt: "Japanese word: \(word)\n\nGive its kana reading and a short "
-                + "English meaning, at most eight words. No notes, no examples.",
-            systemPrompt: "You are a Japanese-English dictionary. You answer with "
-                + "one JSON object matching the schema and nothing else.",
-            schema: schema, onSpend: onSpend)
-        let entry = Entry(word: word, reading: reply.reading,
-                          meaning: reply.meaning, source: "looked up")
-        cache[word] = entry
-        try? store.saveGlosses(cache)
-        return entry
-    }
-
-    enum Failure: LocalizedError {
-        case noClaude
-        var errorDescription: String? {
-            "Set the path to `claude` in Settings to look words up."
-        }
     }
 }
 
@@ -95,6 +45,7 @@ final class Glossary {
 /// Four megabytes of JSON, so it is not decoded at launch: nothing needs it
 /// until a word is clicked, and paying that on every start for a feature that
 /// might not be used is the wrong trade.
+///
 /// Main-actor confined rather than locked: every caller is a view or the model,
 /// which are already there, and a lock would be machinery for contention that
 /// cannot happen.
@@ -139,8 +90,6 @@ enum SystemDictionary {
                                               CFRangeMake(0, word.utf16.count))?
             .takeRetainedValue() as String?
         else { return nil }
-        // The definition arrives as one long line with the headword first.
-        // A popover wants a sentence, not a dictionary page.
         let trimmed = raw.replacingOccurrences(of: "\n", with: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : String(trimmed.prefix(200))

@@ -385,15 +385,6 @@ final class AppModel {
         let store = FluentStore(config: .init(fluentRoot: fluentRoot,
                                               dataDirectory: directory))
         self.store = store
-        glossary = Glossary(
-            store: lessonStore,
-            claude: claudePath.isEmpty ? nil : ClaudeClient(config: .init(
-                executable: claudePath,
-                // A gloss is eight words; the cheapest model is the right one,
-                // and the lesson generator's choice should not drag it up.
-                model: "haiku",
-                maxBudgetUSD: 0.05,
-                workingDirectory: directory)))
         lessons = LessonService(
             claude: ClaudeClient(config: .init(
                 executable: claudePath,
@@ -416,31 +407,9 @@ final class AppModel {
     /// One store, shared with `LessonService`. `refresh()` used to build a second
     /// one of its own, which meant two answers to "where are the databases".
     private var store: FluentStore?
-    /// Word meanings, from the cheapest source that knows.
-    private var glossary: Glossary?
-    var isLookingUp = false
-
-    /// A meaning that costs nothing: the learner's dictionary, the cache, or a
-    /// system dictionary if one is enabled.
+    /// A meaning, from whatever already knows. Never a model call.
     func knownGloss(for word: String) -> Glossary.Entry? {
-        glossary?.known(word, savedItems: savedItems)
-    }
-
-    /// Asks the model, once, and remembers the answer for good.
-    @discardableResult
-    func lookUp(_ word: String) async -> Glossary.Entry? {
-        isLookingUp = true
-        defer { isLookingUp = false }
-        guard let glossary else { return nil }
-        do {
-            let entry = try await glossary.lookUp(word, onSpend: { [weak self] cost, model in
-                Task { @MainActor in self?.noteSpend("Word lookup", cost, model) }
-            })
-            return entry
-        } catch {
-            self.error = error.localizedDescription
-            return nil
-        }
+        Glossary().known(word, savedItems: savedItems)
     }
 
     /// Empty when no key is configured, which disables photo exercises rather
@@ -595,9 +564,10 @@ final class AppModel {
 
     // MARK: - Saved items
 
-    func save(content: String, gloss: String, kind: SavedItem.Kind, lessonId: String?) {
+    func save(content: String, gloss: String, kind: SavedItem.Kind, lessonId: String?,
+              reading: String? = nil) {
         savedItems.add(SavedItem(content: content, gloss: gloss, kind: kind,
-                                 sourceLessonId: lessonId))
+                                 sourceLessonId: lessonId, reading: reading))
         persistSavedItems()
     }
 

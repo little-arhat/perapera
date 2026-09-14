@@ -164,10 +164,14 @@ switch profiles.
 ## Looking a word up
 
 Clicking or selecting a word answers from a bundled slice of JMdict: 67,874
-written and read forms of the words the corpus marks common. Instant, offline,
-free. Failing that it tries a Japanese dictionary in Dictionary.app if you have
-one enabled, and only then offers to ask the model — which costs a fraction of a
-cent and is cached, so a word is paid for once.
+written and read forms of the words the corpus marks common, mapped to a reading
+and a gloss. Instant, offline, free. Failing that it tries a Japanese dictionary
+in Dictionary.app, if you have one enabled.
+
+No model is asked. A gloss is not worth a wait, and **Look up** opens
+[JapanDict](https://www.japandict.com/) with the word, which gives every sense,
+the inflections and example sentences rather than one line. **Add** saves the
+word with whatever reading and meaning were found.
 
 ## Profiles
 
