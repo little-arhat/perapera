@@ -28,10 +28,10 @@ public struct PictureRequest: Equatable, Sendable {
         public var summary: String {
             switch self {
             case .enamelPlate: "Weathered, high contrast. The gentlest of these."
-            case .noren: "Brush-painted on hanging cloth, folded and angled."
-            case .menuBoard: "Marker on wood, everyday handwriting."
-            case .stationSign: "Clean gothic type. Closest to a screen."
-            case .shopWindow: "Bold display katakana, reflections, at an angle."
+            case .noren: "Brush on hanging cloth, mostly vertical, folded and angled."
+            case .menuBoard: "Marker or brush on wood, everyday handwriting."
+            case .stationSign: "Printed type. Closest to a screen."
+            case .shopWindow: "Display lettering, reflections, at an angle."
             case .handwrittenNote: "Casual pen. The hardest to read."
             }
         }
@@ -49,35 +49,109 @@ public struct PictureRequest: Equatable, Sendable {
             }
         }
 
-        /// The scene handed to the image model. The literal text is added by
-        /// the pipeline, which also verifies it came out right.
-        public func scene(language: String) -> String {
+        /// The place and material, without the lettering: that is rolled
+        /// separately, so the same surface does not always read the same way.
+        public func setting(language: String) -> String {
             switch self {
             case .enamelPlate:
-                return "A close-up photograph of an old weathered enamel metal "
-                    + "sign bolted to a concrete wall, black text on white, "
-                    + "rust creeping in at the edges, daylight, slight angle."
+                "A close-up photograph of an old weathered enamel metal sign "
+                    + "bolted to a concrete wall, dark text on white, rust "
+                    + "creeping in at the edges, daylight, slight angle."
             case .noren:
-                return "A photograph of a navy noren curtain hanging in a shop "
-                    + "doorway, the text brush-painted in white, the cloth "
-                    + "folded and moving slightly, warm afternoon light."
+                "A photograph of a navy noren curtain hanging in a shop doorway, "
+                    + "the text in white on the cloth, which is folded and "
+                    + "moving slightly, warm afternoon light."
             case .menuBoard:
-                return "A close-up photograph of a handwritten menu board on "
-                    + "wood inside a small restaurant, black marker in natural "
-                    + "everyday handwriting, warm interior lighting."
+                "A close-up photograph of a handwritten menu board on wood "
+                    + "inside a small restaurant, warm interior lighting."
             case .stationSign:
-                return "A photograph of a \(language) railway station sign, "
-                    + "white board with black gothic lettering on a pole, "
-                    + "platform blurred behind, daylight."
+                "A photograph of a \(language) railway station sign, white "
+                    + "board with dark lettering on a pole, platform blurred "
+                    + "behind, daylight."
             case .shopWindow:
-                return "A photograph of a shop window poster in bold display "
-                    + "lettering, seen at an angle with a slight reflection in "
-                    + "the glass, street visible behind, daylight."
+                "A photograph of a shop window poster, seen at an angle with a "
+                    + "slight reflection in the glass, street visible behind, "
+                    + "daylight."
             case .handwrittenNote:
-                return "A close-up photograph of a handwritten note on paper "
-                    + "taped to a glass door, casual ballpoint handwriting, "
-                    + "slightly creased paper, daylight."
+                "A close-up photograph of a handwritten note on paper taped to "
+                    + "a glass door, slightly creased paper, daylight."
             }
+        }
+
+        /// The letterings this surface is seen with. A station sign is never
+        /// brushed; a noren is never in gothic type.
+        public var letterings: [Lettering] {
+            switch self {
+            case .enamelPlate: [.gothic, .mincho, .kaisho]
+            case .noren: [.kaisho, .gyosho, .edomoji]
+            case .menuBoard: [.marker, .kaisho, .gyosho]
+            case .stationSign: [.gothic, .mincho]
+            case .shopWindow: [.gothic, .mincho, .edomoji, .stencil]
+            case .handwrittenNote: [.ballpoint, .marker]
+            }
+        }
+
+        /// Vertical twice on a noren: that is how they are mostly written,
+        /// and the roll is uniform over the list.
+        public var directions: [Direction] {
+            switch self {
+            case .stationSign: [.horizontal]
+            case .noren: [.vertical, .vertical, .horizontal]
+            default: [.horizontal, .vertical]
+            }
+        }
+    }
+
+    /// How the characters are formed. This is where a sign gets hard: the
+    /// same word in gothic type and in running brush script are different
+    /// reading tasks, and a scene that varies only the backdrop trains one.
+    public enum Lettering: String, CaseIterable, Sendable {
+        case gothic, mincho, kaisho, gyosho, edomoji, marker, ballpoint, stencil
+
+        /// The prompt fragment.
+        public var description: String {
+            switch self {
+            case .gothic: "clean printed gothic (sans-serif) type"
+            case .mincho: "printed mincho (serif) type with thin horizontals"
+            case .kaisho: "bold brush calligraphy in regular script (kaisho), thick confident strokes"
+            case .gyosho: "flowing brush calligraphy in semi-cursive script (gyosho), strokes running into one another"
+            case .edomoji: "thick rounded Edo-style display lettering (edomoji), strokes filling the space"
+            case .marker: "natural everyday marker handwriting"
+            case .ballpoint: "quick casual ballpoint handwriting"
+            case .stencil: "stencilled letters with visible bridges"
+            }
+        }
+    }
+
+    /// Japanese is written both ways, and vertical text is where a learner
+    /// used to screens stalls.
+    public enum Direction: String, CaseIterable, Sendable {
+        case horizontal, vertical
+
+        public var description: String {
+            switch self {
+            case .horizontal: "horizontally, left to right"
+            case .vertical: "vertically, top to bottom, in a single column"
+            }
+        }
+    }
+
+    /// One lettering and one direction this surface is seen with.
+    public struct Style: Equatable, Sendable {
+        public let lettering: Lettering
+        public let direction: Direction
+
+        public init(lettering: Lettering, direction: Direction) {
+            self.lettering = lettering
+            self.direction = direction
+        }
+
+        public static func roll(
+            for surface: Surface,
+            pick: (Int) -> Int = { Int.random(in: 0..<$0) }
+        ) -> Style {
+            Style(lettering: surface.letterings[pick(surface.letterings.count)],
+                  direction: surface.directions[pick(surface.directions.count)])
         }
     }
 
@@ -147,16 +221,31 @@ public struct PictureRequest: Equatable, Sendable {
     public let targets: [String]
     public let accepted: [String]
     public let surface: Surface
+    public let style: Style
     /// Where the words came from, for the library's provenance line.
     public let sourceLabel: String
 
     public init(
-        targets: [String], accepted: [String], surface: Surface, sourceLabel: String
+        targets: [String], accepted: [String], surface: Surface,
+        style: Style? = nil, sourceLabel: String
     ) {
         self.targets = targets
         self.accepted = accepted
         self.surface = surface
+        self.style = style ?? Style.roll(for: surface)
         self.sourceLabel = sourceLabel
+    }
+
+    /// The scene handed to the image model. The literal text is added by the
+    /// pipeline, which also verifies it came out right.
+    ///
+    /// The text is asked to fill the frame: the exercise is the lettering, and
+    /// a wide shot spends the picture on the street instead.
+    public func scene(language: String) -> String {
+        surface.setting(language: language)
+            + " The text is written \(style.direction.description), in "
+            + "\(style.lettering.description), and fills most of the frame; "
+            + "the surroundings are soft and secondary."
     }
 
     /// The forms of a word that the chosen scripts allow.
@@ -204,6 +293,28 @@ public struct PictureRequest: Equatable, Sendable {
         }
         var seen = Set<String>()
         return out.filter { !$0.isEmpty && seen.insert($0).inserted }
+    }
+
+    /// Whether what was typed reads the sign.
+    ///
+    /// Romaji is the natural way to answer at a keyboard, so it is matched
+    /// against every kana form with `KanaRomaji.accepts`; kana or kanji typed
+    /// through an IME are matched as written. Both, rather than converting the
+    /// romaji to kana first: the converter would have to guess at ambiguities
+    /// (づ/ず, おう/おお) that the matcher already resolves per word.
+    public static func reads(_ typed: String, _ accepted: [String]) -> Bool {
+        let given = Grader.normalize(typed)
+        guard !given.isEmpty else { return false }
+        if accepted.contains(where: { Grader.normalize($0) == given }) { return true }
+        return accepted.contains {
+            !KanaInput.containsKanji($0) && KanaRomaji.accepts(typed, for: $0)
+        }
+    }
+
+    /// The kana reading among the accepted forms, for showing after an answer.
+    /// The first one, so a katakana word reads back as katakana.
+    public static func reading(among accepted: [String]) -> String? {
+        accepted.first { !KanaInput.containsKanji($0) && !$0.isEmpty }
     }
 
     /// Builds a request from a saved word.

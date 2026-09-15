@@ -76,10 +76,16 @@ drawing みなみりぢち, confidently, in an otherwise convincing sign, and a 
 reading drill teaches a wrong letterform.
 
 You can also make pictures on demand from the Pictures screen. By default the word comes
-from the 500 most frequent of each script you allow and you are not told what it is: the
-picture appears as soon as it is made, and you find out by reading it. A batch of five or
-ten is a session; each picture rolls its own surface. The other sources are one of your
-saved words, also unnamed, or a word you type.
+from the 500 most frequent of each script you allow and you are not told what it is: you
+find out by reading it. A batch of five or ten is a session, shown from the first once
+the whole batch is made. Each picture rolls its own surface, and on that surface its own
+lettering and direction — bold or running brush, edomoji, mincho, marker, vertical or
+horizontal — because the difficulty of a sign is in the hand, not the backdrop. The
+other sources are one of your saved words, also unnamed, or a word you type.
+
+Answer in romaji; kana through the IME works too. A right answer moves straight on and
+the card underneath shows what it said, its reading, the meaning, and a JapanDict link.
+A wrong one stays for another go, with Skip and Show answer beside it.
 
 Images cost about $0.069 each, so the per-lesson budget is yours to set, not the model's.
 A lesson takes at most eight.

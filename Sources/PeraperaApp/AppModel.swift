@@ -143,9 +143,9 @@ final class AppModel {
         return words
     } 
     var pictures: [StandalonePicture] = []
-    /// Made on demand and not yet looked at, oldest first. Review shows these
-    /// before choosing at random: a picture you asked for a minute ago is the
-    /// one you want to read.
+    /// Made on demand and not yet looked at, in the order they were made.
+    /// Review shows these before choosing at random: a batch you asked for a
+    /// minute ago is the session you want, first picture first.
     var unshownPictures: [StandalonePicture] = []
     /// What the app has spent on the learner's behalf.
     var spending = SpendLog()
@@ -699,9 +699,9 @@ final class AppModel {
     /// Makes pictures now, outside any lesson, one after another.
     ///
     /// The scene is composed locally from a surface template, so each costs one
-    /// image call and nothing for a model to write the description. Each one
-    /// joins `unshownPictures` as it lands, so a batch can be read while the
-    /// rest is still being made.
+    /// image call and nothing for a model to write the description. The batch
+    /// joins `unshownPictures` whole, once it is complete: a session that
+    /// starts before it is made would be interrupted by its own pictures.
     func makePictures(_ requests: [PictureRequest]) async {
         guard let lessonStore, !requests.isEmpty else { return }
         guard canGenerateImages else {
@@ -715,13 +715,14 @@ final class AppModel {
         let language = snapshot?.databases.learner_profile.learner.target_language
             ?? "Japanese"
         var failures: [String] = []
+        var made: [StandalonePicture] = []
 
         for (index, request) in requests.enumerated() {
             beginProgress(requests.count == 1
                           ? "Making a picture…"
                           : "Making picture \(index + 1) of \(requests.count)…")
             let spec = Exercise.ImageSpec(
-                scene: request.surface.scene(language: language),
+                scene: request.scene(language: language),
                 targets: request.targets,
                 question: "What does it say?")
             do {
@@ -739,8 +740,8 @@ final class AppModel {
                     targets: request.targets, accepted: request.accepted,
                     question: spec.question, sourceLabel: request.sourceLabel)
                 pictures.insert(picture, at: 0)
-                unshownPictures.append(picture)
                 try lessonStore.savePictures(pictures)
+                made.append(picture)
             } catch {
                 // The pipeline throws when the writing came out wrong, which is
                 // the point — a picture spelling the word incorrectly is worse
@@ -748,6 +749,7 @@ final class AppModel {
                 failures.append(error.localizedDescription)
             }
         }
+        unshownPictures += made
         if let first = failures.first {
             error = failures.count == 1
                 ? first

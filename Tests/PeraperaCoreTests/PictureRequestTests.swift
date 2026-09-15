@@ -170,3 +170,74 @@ private let kudasai = ReadingDrill.Word(w: "ください", g: "please", s: "h", 
     #expect(drawn.count == 1)
     #expect(drawn.first?.accepted.contains("切符") == true)
 }
+
+// Lettering. The reading difficulty is in how the characters are formed, so a
+// surface rolls its lettering and direction rather than always reading the
+// same way.
+
+@Test func everySurfaceHasLetteringsItIsActuallySeenWith() {
+    for surface in PictureRequest.Surface.allCases {
+        #expect(!surface.letterings.isEmpty, "\(surface) has no lettering")
+        #expect(!surface.directions.isEmpty, "\(surface) has no direction")
+    }
+    // A station sign is printed and horizontal; a noren is never in gothic type.
+    #expect(PictureRequest.Surface.stationSign.directions == [.horizontal])
+    #expect(!PictureRequest.Surface.stationSign.letterings.contains(.kaisho))
+    #expect(!PictureRequest.Surface.noren.letterings.contains(.gothic))
+    #expect(PictureRequest.Surface.noren.directions.contains(.vertical))
+}
+
+@Test func aRollStaysWithinWhatTheSurfaceAllows() {
+    for surface in PictureRequest.Surface.allCases {
+        for _ in 0..<20 {
+            let style = PictureRequest.Style.roll(for: surface)
+            #expect(surface.letterings.contains(style.lettering))
+            #expect(surface.directions.contains(style.direction))
+        }
+    }
+    // The injected pick reaches the last entry, not just the first.
+    let last = PictureRequest.Style.roll(for: .shopWindow) { $0 - 1 }
+    #expect(last.lettering == .stencil)
+    #expect(last.direction == .vertical)
+}
+
+@Test func theSceneSaysHowTheTextIsWrittenAndThatItFillsTheFrame() {
+    let request = PictureRequest(
+        targets: ["安全"], accepted: ["安全", "あんぜん"], surface: .noren,
+        style: .init(lettering: .gyosho, direction: .vertical), sourceLabel: "安全")
+    let scene = request.scene(language: "Japanese")
+    #expect(scene.contains("noren"))
+    #expect(scene.contains("vertically"))
+    #expect(scene.contains("gyosho"))
+    #expect(scene.contains("fills most of the frame"))
+    // The setting no longer decides the lettering: the same surface can come
+    // out in a different hand.
+    let other = PictureRequest(
+        targets: ["安全"], accepted: ["安全"], surface: .noren,
+        style: .init(lettering: .kaisho, direction: .horizontal), sourceLabel: "安全")
+    #expect(other.scene(language: "Japanese") != scene)
+}
+
+// Answering. Romaji at a keyboard, kana or kanji through an IME: all read the
+// sign, and nothing else does.
+
+@Test func romajiReadsTheSignAndSoDoesKanaOrKanji() {
+    let accepted = ["安全", "あんぜん", "アンゼン"]
+    #expect(PictureRequest.reads("anzen", accepted))
+    #expect(PictureRequest.reads("ANZEN ", accepted))
+    #expect(PictureRequest.reads("あんぜん", accepted))
+    #expect(PictureRequest.reads("安全", accepted))
+    #expect(!PictureRequest.reads("anzon", accepted))
+    #expect(!PictureRequest.reads("", accepted))
+    // Long vowels however the learner spells them.
+    let coffee = ["コーヒー", "こーひー"]
+    #expect(PictureRequest.reads("koohii", coffee))
+    #expect(PictureRequest.reads("kōhī", coffee))
+    #expect(!PictureRequest.reads("kohi", coffee))
+}
+
+@Test func theReadingShownIsTheFirstKanaFormSoKatakanaStaysKatakana() {
+    #expect(PictureRequest.reading(among: ["安全", "あんぜん", "アンゼン"]) == "あんぜん")
+    #expect(PictureRequest.reading(among: ["コーヒー", "こーひー"]) == "コーヒー")
+    #expect(PictureRequest.reading(among: ["駐車場"]) == nil)
+}

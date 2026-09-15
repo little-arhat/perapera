@@ -122,13 +122,7 @@ struct WordActionsPopover: View {
     /// inflections and example sentences, which is what you actually want for
     /// the words the bundled dictionary does not carry.
     private func lookUp() {
-        var allowed = CharacterSet.alphanumerics
-        allowed.insert(charactersIn: "-._~")
-        let encoded = Furigana.stripped(word)
-            .addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
-        if let url = URL(string: "https://www.japandict.com/?s=\(encoded)&lang=eng") {
-            NSWorkspace.shared.open(url)
-        }
+        JapanDict.open(word)
         onDismiss()
     }
 }

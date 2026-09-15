@@ -12,12 +12,28 @@ struct ImagesView: View {
 
     enum Mode: String, CaseIterable { case review = "Review", browse = "All" }
 
+    /// How the picture before this one ended, for the card under the field.
+    /// A right answer moves straight on, so this is the only confirmation.
+    struct Answered: Equatable {
+        enum Outcome { case correct, shown, skipped }
+        let image: LibraryImage
+        let outcome: Outcome
+    }
+
     @State private var mode: Mode = .review
     @State private var current: LibraryImage?
     @State private var typed = ""
-    @State private var verdict: Verdict?
+    /// A wrong check on this picture. The answer is not shown for it: the
+    /// learner tries again, or asks.
+    @State private var missed = false
+    @State private var revealed = false
+    @State private var last: Answered?
     @State private var inspecting: LibraryImage?
     @State private var making = false
+
+    /// Nothing has happened on this picture yet, so it can be replaced by one
+    /// just made without losing anything.
+    private var untouched: Bool { typed.isEmpty && !missed && !revealed }
 
     private var images: [LibraryImage] { model.imageLibrary }
 
@@ -34,17 +50,15 @@ struct ImagesView: View {
             }
         }
         .onAppear(perform: pickIfNeeded)
-        // A picture just made is shown as soon as it lands — unless an answer is
-        // half typed, in which case it waits for Next. Only a rise counts: taking
-        // one off the queue also changes the count, and reacting to that would
-        // skip straight past the picture just taken.
+        // A batch just made is shown as soon as it lands — unless this picture
+        // has been started on, in which case it waits for the next advance.
+        // Only a rise counts: taking one off the queue also changes the count,
+        // and reacting to that would skip straight past the picture just taken.
         .onChange(of: model.unshownPictures.count) { before, after in
-            if after > before, mode == .review, typed.isEmpty, verdict == nil { advance() }
+            if after > before, mode == .review, untouched { advance() }
         }
         .onChange(of: mode) { _, mode in
-            if mode == .review, !model.unshownPictures.isEmpty, typed.isEmpty, verdict == nil {
-                advance()
-            }
+            if mode == .review, !model.unshownPictures.isEmpty, untouched { advance() }
         }
         .sheet(item: $inspecting) { detail($0) }
         .sheet(isPresented: $making) { MakePictureSheet() }
@@ -122,23 +136,12 @@ struct ImagesView: View {
                         .font(.system(size: 19))
                         .foregroundStyle(palette.emphasizedText)
 
-                    if verdict == nil {
-                        KanaTextField(text: $typed)
-                        HStack {
-                            Button("Skip") { reveal(scoring: false) }
-                                .buttonStyle(.plain)
-                                .foregroundStyle(palette.secondaryText)
-                            Spacer()
-                            Button("Check") { reveal(scoring: true) }
-                                .buttonStyle(.borderedProminent)
-                                .tint(palette.accent)
-                                .keyboardShortcut(.return, modifiers: [])
-                                .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
-                        }
-                        .controlSize(.large)
+                    if revealed {
+                        answer(current)
                     } else {
-                        outcome(current)
+                        prompt(current)
                     }
+                    if let last, !revealed { lastCard(last) }
                 }
                 .padding(24)
                 .frame(maxWidth: 720, alignment: .leading)
@@ -148,34 +151,49 @@ struct ImagesView: View {
     }
 
     @ViewBuilder
-    private func outcome(_ image: LibraryImage) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if let verdict {
-                Label(verdict.isCorrect ? "Correct" : "Not quite",
-                      systemImage: verdict.isCorrect
-                          ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .font(.headline)
-                    .foregroundStyle(verdict.isCorrect ? palette.correct : palette.wrong)
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                Text("It says").font(.caption).foregroundStyle(palette.secondaryText)
-                ForEach(image.targets, id: \.self) { target in
-                    RubyText(annotated: target, showFurigana: true, size: 22)
-                }
-                Text(image.accepted.joined(separator: " / "))
-                    .font(.callout)
-                    .foregroundStyle(palette.secondaryText)
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(palette.surface, in: .rect(cornerRadius: 10))
-
-            Button("Next picture") { advance() }
+    private func prompt(_ image: LibraryImage) -> some View {
+        // Plain text, not the kana field: romaji is the natural answer at a
+        // keyboard, and the check reads it as such. Kana through an IME still
+        // count.
+        TextField("Type the reading in romaji", text: $typed)
+            .textFieldStyle(.roundedBorder)
+            .font(.system(size: 17))
+            .autocorrectionDisabled()
+        if missed {
+            Text("Not quite. Try again, or show the answer.")
+                .font(.callout)
+                .foregroundStyle(palette.wrong)
+        }
+        HStack {
+            Button("Skip") { moveOn(.skipped) }
+                .buttonStyle(.plain)
+                .foregroundStyle(palette.secondaryText)
+            Button("Show answer") { revealed = true }
+                .buttonStyle(.plain)
+                .foregroundStyle(palette.secondaryText)
+            Spacer()
+            Button("Check") { check(image) }
                 .buttonStyle(.borderedProminent)
                 .tint(palette.accent)
-                .controlSize(.large)
                 .keyboardShortcut(.return, modifiers: [])
+                .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
         }
+        .controlSize(.large)
+    }
+
+    @ViewBuilder
+    private func answer(_ image: LibraryImage) -> some View {
+        AnswerCard(image: image, outcome: nil)
+        Button("Next picture") { moveOn(.shown) }
+            .buttonStyle(.borderedProminent)
+            .tint(palette.accent)
+            .controlSize(.large)
+            .keyboardShortcut(.return, modifiers: [])
+    }
+
+    private func lastCard(_ last: Answered) -> some View {
+        AnswerCard(image: last.image, outcome: last.outcome)
+            .padding(.top, 8)
     }
 
     // MARK: - Contact sheet
@@ -258,18 +276,85 @@ struct ImagesView: View {
         current = model.takeUnshownPicture().map(ImageLibrary.image(for:))
             ?? ImageLibrary.next(from: images, excluding: current?.id)
         typed = ""
-        verdict = nil
+        missed = false
+        revealed = false
     }
 
-    /// Graded exactly as the lesson would, so the answer that passes here is
-    /// the answer that passes there.
-    private func reveal(scoring: Bool) {
-        guard let current else { return }
-        verdict = scoring
-            ? Grader.gradeText(
-                accepted: current.accepted, answer: .text(typed),
-                prompt: current.question ?? "", allowDeferral: false).verdict
-            : Verdict(isCorrect: false, score: 0,
-                      correctVersion: current.accepted.first ?? "")
+    /// A right answer moves straight on; a wrong one stays, unrevealed, for
+    /// another go.
+    private func check(_ image: LibraryImage) {
+        if PictureRequest.reads(typed, image.accepted) {
+            moveOn(.correct)
+        } else {
+            missed = true
+            typed = ""
+        }
+    }
+
+    private func moveOn(_ outcome: Answered.Outcome) {
+        if let current { last = Answered(image: current, outcome: outcome) }
+        advance()
+    }
+}
+
+/// What the sign said: the spelling, its reading in kana and romaji, and the
+/// meaning, with the real dictionary a click away.
+private struct AnswerCard: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.palette) private var palette
+
+    let image: LibraryImage
+    /// Nil while the picture is still the current one.
+    let outcome: ImagesView.Answered.Outcome?
+
+    private var word: String { image.targets.first ?? "" }
+    private var reading: String? { PictureRequest.reading(among: image.accepted) }
+    private var meaning: String? { model.knownGloss(for: word)?.meaning }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            if let outcome {
+                Image(systemName: icon(outcome))
+                    .foregroundStyle(outcome == .correct ? palette.correct : palette.secondaryText)
+                    .padding(.top, 4)
+            } else {
+                Text("It says").font(.caption).foregroundStyle(palette.secondaryText)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    ForEach(image.targets, id: \.self) { target in
+                        RubyText(annotated: target, showFurigana: true, size: 22)
+                    }
+                    if let reading {
+                        Text("\(reading)  \(KanaRomaji.romaji(reading))")
+                            .font(.callout)
+                            .foregroundStyle(palette.secondaryText)
+                    }
+                }
+                if let meaning {
+                    Text(meaning)
+                        .font(.callout)
+                        .foregroundStyle(palette.emphasizedText)
+                }
+            }
+            Spacer()
+            Button { JapanDict.open(word) } label: {
+                Label("JapanDict", systemImage: "arrow.up.right.square")
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(palette.accent)
+            .help("Open in JapanDict")
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(palette.surface, in: .rect(cornerRadius: 10))
+    }
+
+    private func icon(_ outcome: ImagesView.Answered.Outcome) -> String {
+        switch outcome {
+        case .correct: "checkmark.circle.fill"
+        case .shown: "eye"
+        case .skipped: "forward"
+        }
     }
 }
