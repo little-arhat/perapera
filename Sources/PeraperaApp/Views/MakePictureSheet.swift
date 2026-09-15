@@ -1,55 +1,80 @@
 import SwiftUI
 import PeraperaCore
 
-/// Make one picture now, of a word you are actually learning.
+/// Make pictures now, of words you are not told.
 ///
-/// The words come from the dictionary rather than being typed from scratch,
-/// because a picture of a word you have already met is worth more than a
-/// picture of one you invented — and it is the same $0.07 either way.
+/// The point of a picture is to be read, and a word chosen from a menu has
+/// already been read. So the default draws from the dictionary and keeps the
+/// word to itself; the saved-word source does the same with your own list.
+/// Typing a word is still possible, for when a particular one is wanted.
 struct MakePictureSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.palette) private var palette
     @Environment(\.dismiss) private var dismiss
 
-    enum Source: String, CaseIterable { case saved = "A saved word", custom = "Something else" }
+    enum Source: String, CaseIterable {
+        case dictionary = "From the dictionary"
+        case saved = "A saved word"
+        case custom = "Something else"
 
-    @State private var source: Source = .saved
-    @State private var selectedId: String?
-    @State private var custom = ""
-    @State private var surface: PictureRequest.Surface = .enamelPlate
-    /// Let the app choose the surface.
-    ///
-    /// Text in the street does not announce what it is written on. Always
-    /// picking the surface yourself means always picking the one you are
-    /// comfortable reading, which trains the surface as much as the word.
-    @State private var surprise = false
-    /// Rolled once, when Make is pressed. A computed property would reroll on
-    /// every redraw and the summary would disagree with what was generated.
-    @State private var rolled: PictureRequest.Surface?
-
-    private var chosenSurface: PictureRequest.Surface {
-        surprise ? (rolled ?? .stationSign) : surface
+        /// Whether the word is kept from the learner until the picture is read.
+        var isHidden: Bool { self != .custom }
     }
+
+    /// How many at once. Ten is a session; more than that is a bill.
+    enum Batch: Int, CaseIterable, Identifiable {
+        case one = 1, five = 5, ten = 10
+        var id: Int { rawValue }
+    }
+
+    @State private var source: Source = .dictionary
+    @State private var batch: Batch = .one
+    @State private var custom = ""
+    @State private var surface: PictureRequest.SurfaceChoice = .surprise
     @AppStorage("picture.scripts") private var scriptsRaw = PictureRequest.Scripts.all.rawValue
 
     private var scripts: PictureRequest.Scripts {
         PictureRequest.Scripts(rawValue: scriptsRaw)
     }
 
-    private var candidates: [SavedItem] {
-        model.savedItems.items
-            .filter { !Furigana.stripped($0.content).isEmpty }
-            .sorted { $0.savedAt > $1.savedAt }
+    private var savedCandidates: [SavedItem] {
+        model.savedItems.items.filter { !Furigana.stripped($0.content).isEmpty }
     }
 
-    private var request: PictureRequest? {
+    private var dictionaryPool: [ReadingDrill.Word] {
+        PictureRequest.dictionaryPool(model.kanaWords, scripts: scripts)
+    }
+
+    /// How many the current settings can produce, capped by the batch size.
+    /// Counted rather than assumed so the button is disabled for a real reason.
+    private var available: Int {
         switch source {
+        case .dictionary:
+            return min(batch.rawValue, dictionaryPool.count)
         case .saved:
-            guard let item = candidates.first(where: { $0.id == selectedId })
-            else { return nil }
-            return PictureRequest.from(item, surface: chosenSurface, scripts: scripts)
+            let usable = savedCandidates.filter {
+                PictureRequest.from($0, surface: .stationSign, scripts: scripts) != nil
+            }
+            return min(batch.rawValue, usable.count)
         case .custom:
-            return PictureRequest.from(text: custom, surface: chosenSurface, scripts: scripts)
+            return PictureRequest.from(text: custom, surface: .stationSign, scripts: scripts) == nil
+                ? 0 : 1
+        }
+    }
+
+    /// Drawn once, when Make is pressed. Drawing in a computed property would
+    /// reroll on every redraw and the words would differ from what was counted.
+    private func requests() -> [PictureRequest] {
+        switch source {
+        case .dictionary:
+            return PictureRequest.fromDictionary(
+                model.kanaWords, count: batch.rawValue, surface: surface, scripts: scripts)
+        case .saved:
+            return PictureRequest.fromSaved(
+                savedCandidates, count: batch.rawValue, surface: surface, scripts: scripts)
+        case .custom:
+            return PictureRequest.from(text: custom, surface: surface.surface(), scripts: scripts)
+                .map { [$0] } ?? []
         }
     }
 
@@ -66,14 +91,16 @@ struct MakePictureSheet: View {
             .labelsHidden()
 
             switch source {
-            case .saved: savedPicker
+            case .dictionary: dictionaryNote
+            case .saved: savedNote
             case .custom: customField
             }
 
+            if source.isHidden { batchPicker }
             surfacePicker
             scriptPicker
 
-            if request == nil, hasChosenSomething {
+            if available == 0, hasChosenSomething {
                 // Why the button is disabled, rather than leaving it a mystery.
                 Text(unavailableReason)
                     .font(.caption)
@@ -81,9 +108,7 @@ struct MakePictureSheet: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            Text("The app writes the scene itself, so this costs one image — "
-                 + "about $0.07 — and is checked before you see it. If the "
-                 + "writing comes out wrong it is discarded.")
+            Text(costNote)
                 .font(.caption)
                 .foregroundStyle(palette.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
@@ -91,33 +116,33 @@ struct MakePictureSheet: View {
             HStack {
                 Button("Cancel") { dismiss() }
                 Spacer()
-                Button("Make it") {
-                    // Roll before reading `request`, which uses the result.
-                    if surprise { rolled = PictureRequest.Surface.surprise() }
-                    if let request {
-                        Task { await model.makePicture(request) }
+                Button(available > 1 ? "Make \(available)" : "Make it") {
+                    let drawn = requests()
+                    if !drawn.isEmpty {
+                        Task { await model.makePictures(drawn) }
                         dismiss()
                     }
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(palette.accent)
-                .disabled(request == nil || model.isMakingPicture)
+                .disabled(available == 0 || model.isMakingPicture)
             }
         }
         .padding(20)
         .frame(width: 440)
-        .onAppear {
-            selectedId = selectedId ?? candidates.first?.id
-            // Opening on a source with nothing in it looks like a broken
-            // dialog: the button is disabled and the reason is a line of small
-            // grey text.
-            if candidates.isEmpty { source = .custom }
-        }
+    }
+
+    private var dictionaryNote: some View {
+        Text("One of the \(dictionaryPool.count) most frequent words, which you are not "
+             + "told. You find out what it says by reading it.")
+            .font(.callout)
+            .foregroundStyle(palette.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     @ViewBuilder
-    private var savedPicker: some View {
-        if candidates.isEmpty {
+    private var savedNote: some View {
+        if savedCandidates.isEmpty {
             Label("No saved words yet", systemImage: "star")
                 .font(.callout)
                 .foregroundStyle(palette.warning)
@@ -127,18 +152,12 @@ struct MakePictureSheet: View {
                 .foregroundStyle(palette.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         } else {
-            Picker("Word", selection: $selectedId) {
-                ForEach(candidates) { item in
-                    Text(label(for: item)).tag(Optional(item.id))
-                }
-            }
-            .labelsHidden()
+            Text("One of your ^[\(savedCandidates.count) saved word](inflect: true), "
+                 + "at random and not named.")
+                .font(.callout)
+                .foregroundStyle(palette.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
         }
-    }
-
-    private func label(for item: SavedItem) -> String {
-        let written = Furigana.stripped(item.content)
-        return item.gloss.isEmpty ? written : "\(written) — \(item.gloss)"
     }
 
     @ViewBuilder
@@ -165,6 +184,19 @@ struct MakePictureSheet: View {
     }
 
     private var isJapanese: Bool { model.voiceLanguage == "ja-JP" }
+
+    private var batchPicker: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("How many").font(.caption)
+                .foregroundStyle(palette.secondaryText)
+            Picker("", selection: $batch) {
+                ForEach(Batch.allCases) { Text("\($0.rawValue)").tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(width: 180)
+        }
+    }
 
     /// Which writing systems the sign may use.
     ///
@@ -198,42 +230,45 @@ struct MakePictureSheet: View {
     }
 
     private var hasChosenSomething: Bool {
-        source == .custom ? !custom.isEmpty : selectedId != nil
+        switch source {
+        case .dictionary: true
+        case .saved: !savedCandidates.isEmpty
+        case .custom: !custom.isEmpty
+        }
     }
 
     /// Named honestly: the usual cause is asking for a form the word has no way
     /// of taking.
     private var unavailableReason: String {
-        if !scripts.contains(.kanji), source == .custom,
-           KanaInput.containsKanji(custom) {
-            return "That word is written with kanji. Turn Kanji on, or type it in kana."
+        switch source {
+        case .custom where !scripts.contains(.kanji) && KanaInput.containsKanji(custom):
+            "That word is written with kanji. Turn Kanji on, or type it in kana."
+        case .saved:
+            "None of your saved words can be written that way. Words saved "
+                + "without a reading can only be shown in kanji."
+        default:
+            "Nothing to put on the sign with those settings."
         }
-        if source == .saved,
-           let item = candidates.first(where: { $0.id == selectedId }),
-           item.reading == nil, !scripts.contains(.kanji) {
-            return "No reading saved for this word, so it can only be shown in "
-                + "kanji. Turn Kanji on, or add a reading to the entry."
-        }
-        return "Nothing to put on the sign with those settings."
+    }
+
+    private var costNote: String {
+        let each = "The app writes the scene itself, so each picture costs one image — "
+            + "about $0.07 — and is checked before you see it. If the writing comes "
+            + "out wrong it is discarded."
+        return available > 1
+            ? each + " \(available) pictures: about $\(String(format: "%.2f", 0.07 * Double(available)))."
+            : each
     }
 
     private var surfacePicker: some View {
         VStack(alignment: .leading, spacing: 4) {
             Picker("Surface", selection: $surface) {
-                ForEach(PictureRequest.surfaces) { option in
+                ForEach(PictureRequest.SurfaceChoice.all, id: \.self) { option in
                     Text(option.label).tag(option)
                 }
             }
             .labelsHidden()
-            .disabled(surprise)
-            Toggle("Surprise me", isOn: $surprise)
-                .font(.caption)
-                .help("Pick the surface at random. Text in the street does not tell you "
-                      + "what it is written on.")
-            Text(surprise
-                 ? "One of the \(PictureRequest.surfaces.count) at random, chosen when you "
-                     + "press Make."
-                 : surface.summary)
+            Text(surface.summary)
                 .font(.caption2)
                 .foregroundStyle(palette.secondaryText)
         }

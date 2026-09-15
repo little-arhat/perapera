@@ -12,16 +12,6 @@ public struct PictureRequest: Equatable, Sendable {
     public enum Surface: String, CaseIterable, Sendable, Identifiable {
         case enamelPlate, noren, menuBoard, stationSign, shopWindow, handwrittenNote
 
-        /// One at random.
-        ///
-        /// Text in the wild does not announce what it is written on, and always
-        /// choosing the familiar surface trains the surface as much as the word.
-        public static func surprise(
-            using pick: ([Surface]) -> Surface = { $0.randomElement() ?? .stationSign }
-        ) -> Surface {
-            pick(allCases)
-        }
-
         public var id: String { rawValue }
 
         public var label: String {
@@ -91,6 +81,50 @@ public struct PictureRequest: Equatable, Sendable {
         }
     }
 
+    /// What the learner asked for: a surface, or the app's pick.
+    ///
+    /// Text in the wild does not announce what it is written on, and always
+    /// choosing the familiar surface trains the surface as much as the word —
+    /// which is why the pick is the default, and why a batch rolls it once per
+    /// picture rather than once per batch.
+    public enum SurfaceChoice: Hashable, Sendable {
+        case surprise
+        case only(Surface)
+
+        public func surface(
+            pick: ([Surface]) -> Surface = { $0.randomElement() ?? .stationSign }
+        ) -> Surface {
+            switch self {
+            case .surprise: pick(Surface.allCases)
+            case let .only(surface): surface
+            }
+        }
+
+        public var label: String {
+            switch self {
+            case .surprise: "Surprise me"
+            case let .only(surface): surface.label
+            }
+        }
+
+        public var summary: String {
+            switch self {
+            case .surprise: "One of the \(Surface.allCases.count), chosen for each picture."
+            case let .only(surface): surface.summary
+            }
+        }
+
+        /// Ordered so the easier surfaces come first, after the pick.
+        public static var all: [SurfaceChoice] {
+            [.surprise] + Surface.allCases
+                .sorted {
+                    $0.difficulty == $1.difficulty
+                        ? $0.label < $1.label : $0.difficulty < $1.difficulty
+                }
+                .map(SurfaceChoice.only)
+        }
+    }
+
     /// Which writing systems the picture may use.
     ///
     /// A real sign picks one, so this is a filter on what may be *asked for*
@@ -123,14 +157,6 @@ public struct PictureRequest: Equatable, Sendable {
         self.accepted = accepted
         self.surface = surface
         self.sourceLabel = sourceLabel
-    }
-
-    /// Ordered so the easier surfaces come first.
-    public static var surfaces: [Surface] {
-        Surface.allCases.sorted {
-            $0.difficulty == $1.difficulty
-                ? $0.label < $1.label : $0.difficulty < $1.difficulty
-        }
     }
 
     /// The forms of a word that the chosen scripts allow.
@@ -201,6 +227,95 @@ public struct PictureRequest: Equatable, Sendable {
             accepted: acceptedForms(written: written, reading: item.reading),
             surface: surface,
             sourceLabel: item.gloss.isEmpty ? written : "\(written) — \(item.gloss)")
+    }
+
+    /// Builds a request from a dictionary word.
+    ///
+    /// Unlike a saved word, a dictionary word is never converted between
+    /// scripts: the list is large enough that a script is served by words
+    /// actually written in it, and a hiragana rendering of コーヒー is a sign
+    /// nobody has seen. Kanji is offered where the entry has an ordinary kanji
+    /// spelling, which for a hiragana-read word is what a sign would say.
+    public static func from(
+        _ word: ReadingDrill.Word, surface: Surface, scripts: Scripts
+    ) -> PictureRequest? {
+        guard let shown = forms(of: word, scripts: scripts).randomElement() else { return nil }
+        let written = word.kanji ?? word.text
+        return PictureRequest(
+            targets: [shown],
+            accepted: acceptedForms(written: written, reading: word.text),
+            surface: surface,
+            sourceLabel: "\(written) — \(word.gloss)")
+    }
+
+    /// The forms of a dictionary word that the chosen scripts allow.
+    public static func forms(of word: ReadingDrill.Word, scripts: Scripts) -> [String] {
+        var out: [String] = []
+        if scripts.contains(.kanji), let kanji = word.kanji {
+            out.append(kanji)
+        }
+        let native: Scripts = word.script == "k" ? .katakana : .hiragana
+        if scripts.contains(native) {
+            out.append(word.text)
+        }
+        return out
+    }
+
+    /// The words a dictionary picture may be drawn from: the most frequent of
+    /// each script asked for (see `ReadingDrill.mostFrequent`).
+    ///
+    /// Per script rather than overall, because the overall frequency list is
+    /// newspaper Japanese and holds two katakana words in its first thousand,
+    /// both place names. Asking for katakana should yield コーヒー, not 北京.
+    public static func dictionaryPool(
+        _ words: [ReadingDrill.Word], scripts: Scripts
+    ) -> [ReadingDrill.Word] {
+        var pool: [ReadingDrill.Word] = []
+        if scripts.contains(.kanji) {
+            pool += ReadingDrill.mostFrequent(words.filter { $0.kanji != nil }, script: .both)
+        }
+        if scripts.contains(.hiragana) {
+            pool += ReadingDrill.mostFrequent(words, script: .hiragana)
+        }
+        if scripts.contains(.katakana) {
+            pool += ReadingDrill.mostFrequent(words, script: .katakana)
+        }
+        var seen = Set<String>()
+        return pool.filter { seen.insert($0.id).inserted }
+    }
+
+    /// Draws `count` pictures of words the learner is not told.
+    ///
+    /// The point of a picture is to be read; a word chosen from a menu has
+    /// already been read. Every word in the pool has a form the scripts allow,
+    /// so a draw yields a picture rather than a refusal.
+    public static func fromDictionary(
+        _ words: [ReadingDrill.Word], count: Int, surface: SurfaceChoice,
+        scripts: Scripts, shuffle: ([ReadingDrill.Word]) -> [ReadingDrill.Word] = { $0.shuffled() }
+    ) -> [PictureRequest] {
+        let pool = dictionaryPool(words, scripts: scripts)
+        return draw(count, from: shuffle(pool)) { from($0, surface: surface.surface(), scripts: scripts) }
+    }
+
+    /// The same, from the learner's own saved words.
+    public static func fromSaved(
+        _ items: [SavedItem], count: Int, surface: SurfaceChoice,
+        scripts: Scripts, shuffle: ([SavedItem]) -> [SavedItem] = { $0.shuffled() }
+    ) -> [PictureRequest] {
+        draw(count, from: shuffle(items)) { from($0, surface: surface.surface(), scripts: scripts) }
+    }
+
+    /// The first `count` of the pool that make a request. Walking the whole
+    /// pool rather than taking a prefix: with kanji switched off, the prefix
+    /// might be all kanji-only entries and yield nothing.
+    private static func draw<Word>(
+        _ count: Int, from pool: [Word], _ build: (Word) -> PictureRequest?
+    ) -> [PictureRequest] {
+        var out: [PictureRequest] = []
+        for word in pool where out.count < count {
+            if let request = build(word) { out.append(request) }
+        }
+        return out
     }
 
     /// Builds one from free text the learner typed.

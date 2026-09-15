@@ -74,11 +74,14 @@ private let ticket = SavedItem(
     }
 }
 
-@Test func surfacesAreOrderedEasiestFirst() {
-    // A beginner should not be offered handwriting before a station sign.
-    let ordered = PictureRequest.surfaces
-    #expect(ordered.first == .stationSign)
-    #expect(ordered.last == .handwrittenNote)
+@Test func surfacesAreOrderedEasiestFirstAfterThePick() {
+    // A beginner should not be offered handwriting before a station sign, and
+    // the app's own pick comes first because it is the default.
+    let ordered = PictureRequest.SurfaceChoice.all
+    #expect(ordered.first == .surprise)
+    #expect(ordered.dropFirst().first == .only(.stationSign))
+    #expect(ordered.last == .only(.handwrittenNote))
+    #expect(ordered.count == PictureRequest.Surface.allCases.count + 1)
 }
 
 @Test func surpriseChoosesFromEverySurface() {
@@ -86,11 +89,84 @@ private let ticket = SavedItem(
     // the three I already read comfortably".
     var chosen: Set<PictureRequest.Surface> = []
     for index in PictureRequest.Surface.allCases.indices {
-        chosen.insert(PictureRequest.Surface.surprise { $0[index] })
+        chosen.insert(PictureRequest.SurfaceChoice.surprise.surface { $0[index] })
     }
     #expect(chosen.count == PictureRequest.Surface.allCases.count)
+    #expect(PictureRequest.SurfaceChoice.only(.noren).surface { _ in .menuBoard } == .noren)
 }
 
-@Test func surpriseAlwaysReturnsSomething() {
-    #expect(PictureRequest.Surface.allCases.contains(PictureRequest.Surface.surprise()))
+// Dictionary words. The learner is not told the word, so the request has to
+// be right without them checking it.
+
+private let anzen = ReadingDrill.Word(w: "あんぜん", g: "safety", s: "h", t: 1, f: 1, k: "安全")
+private let coffee = ReadingDrill.Word(w: "コーヒー", g: "coffee", s: "k", t: 1, f: 3)
+private let kudasai = ReadingDrill.Word(w: "ください", g: "please", s: "h", t: 1, f: 2)
+
+@Test func aDictionaryWordIsShownInItsOwnScriptOrItsKanji() {
+    #expect(PictureRequest.forms(of: anzen, scripts: .all) == ["安全", "あんぜん"])
+    #expect(PictureRequest.forms(of: anzen, scripts: .kanji) == ["安全"])
+    // Never converted: a hiragana コーヒー is a sign nobody has seen.
+    #expect(PictureRequest.forms(of: coffee, scripts: .hiragana).isEmpty)
+    #expect(PictureRequest.forms(of: coffee, scripts: .katakana) == ["コーヒー"])
+    // No kanji form, so kanji-only has nothing to show.
+    #expect(PictureRequest.forms(of: kudasai, scripts: .kanji).isEmpty)
+}
+
+@Test func aDictionaryWordAcceptsEveryWritingOfItself() {
+    let request = try! #require(PictureRequest.from(anzen, surface: .noren, scripts: .kanji))
+    #expect(request.targets == ["安全"])
+    #expect(request.accepted.contains("あんぜん"))
+    #expect(request.accepted.contains("アンゼン"))
+    #expect(request.sourceLabel == "安全 — safety")
+}
+
+@Test func theDictionaryPoolServesEachScriptFromItsOwnFrequencyList() {
+    // Two hundred common kanji words and three katakana ones: asking for
+    // katakana must reach the three, not draw blanks from the kanji majority.
+    let kanjiWords = (1...200).map {
+        ReadingDrill.Word(w: "か\($0)", g: "g", s: "h", t: 1, f: 1, k: "漢\($0)")
+    }
+    let katakana = ["コーヒー", "ビール", "パン"].map {
+        ReadingDrill.Word(w: $0, g: "g", s: "k", t: 1, f: 40)
+    }
+    let words = kanjiWords + katakana
+    #expect(PictureRequest.dictionaryPool(words, scripts: .katakana).map(\.text)
+            == katakana.map(\.text))
+    #expect(PictureRequest.dictionaryPool(words, scripts: .kanji).count == 200)
+    // A word in two lists appears once.
+    #expect(PictureRequest.dictionaryPool(words, scripts: .all).count == 203)
+}
+
+@Test func aDrawSkipsWordsTheScriptsCannotShowRatherThanComingUpShort() {
+    // Three requested, kanji only, and the first two of the shuffled pool have
+    // no kanji: the draw walks on to find three, and every one is kanji.
+    let words = [kudasai, coffee, anzen,
+                 ReadingDrill.Word(w: "いみ", g: "meaning", s: "h", t: 1, f: 1, k: "意味"),
+                 ReadingDrill.Word(w: "いけん", g: "opinion", s: "h", t: 1, f: 1, k: "意見")]
+    let drawn = PictureRequest.fromDictionary(
+        words, count: 3, surface: .only(.enamelPlate), scripts: .kanji, shuffle: { $0 })
+    #expect(drawn.map(\.targets) == [["安全"], ["意味"], ["意見"]])
+    #expect(drawn.allSatisfy { $0.surface == .enamelPlate })
+}
+
+@Test func aBatchRollsTheSurfacePerPictureNotPerBatch() {
+    // Ten pictures on one surface is a lesson in that surface. With every
+    // surface equally likely, ten identical rolls happen once in 8,000 runs.
+    let words = (1...10).map {
+        ReadingDrill.Word(w: "か\($0)", g: "g", s: "h", t: 1, f: 1, k: "漢\($0)")
+    }
+    let drawn = PictureRequest.fromDictionary(
+        words, count: 10, surface: .surprise, scripts: .kanji, shuffle: { $0 })
+    #expect(drawn.count == 10)
+    #expect(Set(drawn.map(\.surface)).count > 1)
+}
+
+@Test func savedWordsAreDrawnHiddenToo() {
+    let items = [ticket,
+                 SavedItem(content: "駐車場", gloss: "car park", kind: .word, sourceLessonId: nil)]
+    // Kana only: the entry without a reading cannot be shown and is passed over.
+    let drawn = PictureRequest.fromSaved(
+        items, count: 2, surface: .only(.noren), scripts: [.hiragana, .katakana], shuffle: { $0 })
+    #expect(drawn.count == 1)
+    #expect(drawn.first?.accepted.contains("切符") == true)
 }

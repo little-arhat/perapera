@@ -59,7 +59,7 @@ app: build check-kit
 	  > $(CONTENTS)/Resources/bundle-version.txt
 	@codesign --force --sign - --timestamp=none $(APP) 2>/dev/null \
 		|| echo "warning: ad-hoc signing failed; the app still runs"
-	@echo "Built $(APP) from $$(cut -c1-8 $(CONTENTS)/Resources/bundle-version.txt)"
+	@echo "Built $(APP) from $$(sed 's/^\(.\{8\}\)[0-9a-f]*/\1/' $(CONTENTS)/Resources/bundle-version.txt)"
 
 run: app
 	open $(APP)
@@ -71,7 +71,7 @@ install: app
 	@pkill -x PeraperaApp 2>/dev/null && sleep 1 || true
 	@rm -rf /Applications/$(APP)
 	@cp -R $(APP) /Applications/
-	@echo "Installed /Applications/$(APP) from $$(git rev-parse --short HEAD)"
+	@echo "Installed /Applications/$(APP) from $$(sed 's/^\(.\{8\}\)[0-9a-f]*/\1/' $(CONTENTS)/Resources/bundle-version.txt)"
 	@echo "Run it with: open -a Perapera"
 
 clean:

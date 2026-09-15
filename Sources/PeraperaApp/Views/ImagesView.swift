@@ -34,6 +34,18 @@ struct ImagesView: View {
             }
         }
         .onAppear(perform: pickIfNeeded)
+        // A picture just made is shown as soon as it lands — unless an answer is
+        // half typed, in which case it waits for Next. Only a rise counts: taking
+        // one off the queue also changes the count, and reacting to that would
+        // skip straight past the picture just taken.
+        .onChange(of: model.unshownPictures.count) { before, after in
+            if after > before, mode == .review, typed.isEmpty, verdict == nil { advance() }
+        }
+        .onChange(of: mode) { _, mode in
+            if mode == .review, !model.unshownPictures.isEmpty, typed.isEmpty, verdict == nil {
+                advance()
+            }
+        }
         .sheet(item: $inspecting) { detail($0) }
         .sheet(isPresented: $making) { MakePictureSheet() }
     }
@@ -48,7 +60,9 @@ struct ImagesView: View {
             .frame(width: 200)
 
             Spacer()
-            Text("^[\(images.count) picture](inflect: true)")
+            Text(model.unshownPictures.isEmpty
+                 ? "^[\(images.count) picture](inflect: true)"
+                 : "^[\(model.unshownPictures.count) new picture](inflect: true) waiting")
                 .font(.caption)
                 .foregroundStyle(palette.secondaryText)
 
@@ -241,7 +255,8 @@ struct ImagesView: View {
     }
 
     private func advance() {
-        current = ImageLibrary.next(from: images, excluding: current?.id)
+        current = model.takeUnshownPicture().map(ImageLibrary.image(for:))
+            ?? ImageLibrary.next(from: images, excluding: current?.id)
         typed = ""
         verdict = nil
     }

@@ -143,6 +143,10 @@ final class AppModel {
         return words
     } 
     var pictures: [StandalonePicture] = []
+    /// Made on demand and not yet looked at, oldest first. Review shows these
+    /// before choosing at random: a picture you asked for a minute ago is the
+    /// one you want to read.
+    var unshownPictures: [StandalonePicture] = []
     /// What the app has spent on the learner's behalf.
     var spending = SpendLog()
     var isMakingPicture = false
@@ -452,6 +456,7 @@ final class AppModel {
         scriptProgress = LessonStore.ScriptProgress()
         readingProgress = [:]
         pictures = []
+        unshownPictures = []
         spending = SpendLog()
         unreadableLessons = []
         error = nil
@@ -691,54 +696,68 @@ final class AppModel {
         ImageLibrary.collect(from: records, standalone: pictures)
     }
 
-    /// Makes one picture now, outside any lesson.
+    /// Makes pictures now, outside any lesson, one after another.
     ///
-    /// The scene is composed locally from a surface template, so this costs one
-    /// image call and nothing for a model to write the description.
-    func makePicture(_ request: PictureRequest) async {
-        guard let lessonStore else { return }
+    /// The scene is composed locally from a surface template, so each costs one
+    /// image call and nothing for a model to write the description. Each one
+    /// joins `unshownPictures` as it lands, so a batch can be read while the
+    /// rest is still being made.
+    func makePictures(_ requests: [PictureRequest]) async {
+        guard let lessonStore, !requests.isEmpty else { return }
         guard canGenerateImages else {
             error = "No OpenRouter key. Add one in Settings."
             return
         }
         isMakingPicture = true
-        beginProgress("Making a picture of \(request.sourceLabel)…")
         defer { isMakingPicture = false; endProgress() }
 
         let pipeline = ImagePipeline(config: .init(apiKey: openRouterKey))
         let language = snapshot?.databases.learner_profile.learner.target_language
             ?? "Japanese"
-        let spec = Exercise.ImageSpec(
-            scene: request.surface.scene(language: language),
-            targets: request.targets,
-            question: "What does it say?")
+        var failures: [String] = []
 
-        do {
-            let built = try await pipeline.build(
-                for: Exercise.placeholder(id: UUID().uuidString), spec: spec
-            ) { [weak self] note in
-                self?.progressPhase = note
+        for (index, request) in requests.enumerated() {
+            beginProgress(requests.count == 1
+                          ? "Making a picture…"
+                          : "Making picture \(index + 1) of \(requests.count)…")
+            let spec = Exercise.ImageSpec(
+                scene: request.surface.scene(language: language),
+                targets: request.targets,
+                question: "What does it say?")
+            do {
+                let built = try await pipeline.build(
+                    for: Exercise.placeholder(id: UUID().uuidString), spec: spec
+                ) { [weak self] note in
+                    self?.progressPhase = note
+                }
+                noteSpend("Picture", built.costUSD, pipeline.config.generationModel)
+                let id = UUID().uuidString
+                let fileName = try lessonStore.saveImage(
+                    built.jpeg, lessonId: ImageLibrary.standaloneFolder, exerciseId: id)
+                let picture = StandalonePicture(
+                    id: id, fileName: fileName,
+                    targets: request.targets, accepted: request.accepted,
+                    question: spec.question, sourceLabel: request.sourceLabel)
+                pictures.insert(picture, at: 0)
+                unshownPictures.append(picture)
+                try lessonStore.savePictures(pictures)
+            } catch {
+                // The pipeline throws when the writing came out wrong, which is
+                // the point — a picture spelling the word incorrectly is worse
+                // than none. The rest of the batch still gets made.
+                failures.append(error.localizedDescription)
             }
-            noteSpend("Picture", built.costUSD, pipeline.config.generationModel)
-            let picture = StandalonePicture(
-                fileName: "",
-                targets: request.targets, accepted: request.accepted,
-                question: spec.question, sourceLabel: request.sourceLabel)
-            let fileName = try lessonStore.saveImage(
-                built.jpeg, lessonId: ImageLibrary.standaloneFolder,
-                exerciseId: picture.id)
-            pictures.insert(
-                StandalonePicture(
-                    id: picture.id, fileName: fileName, targets: picture.targets,
-                    accepted: picture.accepted, question: picture.question,
-                    sourceLabel: picture.sourceLabel, createdAt: picture.createdAt),
-                at: 0)
-            try lessonStore.savePictures(pictures)
-        } catch {
-            // The pipeline throws when the writing came out wrong, which is the
-            // point — a picture spelling the word incorrectly is worse than none.
-            self.error = error.localizedDescription
         }
+        if let first = failures.first {
+            error = failures.count == 1
+                ? first
+                : "\(failures.count) of \(requests.count) pictures were discarded. The first:\n\(first)"
+        }
+    }
+
+    /// The next picture waiting to be read, if any.
+    func takeUnshownPicture() -> StandalonePicture? {
+        unshownPictures.isEmpty ? nil : unshownPictures.removeFirst()
     }
 
     func imageURL(lessonId: String, fileName: String) -> URL? {

@@ -65,22 +65,24 @@ public enum ImageLibrary {
                         lessonTitle: record.displayTitle))
             }
         }
-        // Pictures made outside a lesson live under a reserved lesson id, so
-        // the rest of the app — file paths, review, the contact sheet — needs
-        // no special case for them.
-        for picture in standalone {
-            images.append(
-                LibraryImage(
-                    lessonId: standaloneFolder,
-                    exerciseId: picture.id,
-                    fileName: picture.fileName,
-                    targets: picture.targets,
-                    accepted: picture.accepted,
-                    question: picture.question,
-                    capturedAt: picture.createdAt,
-                    lessonTitle: picture.sourceLabel))
-        }
+        images += standalone.map(image(for:))
         return images.sorted { $0.capturedAt > $1.capturedAt }
+    }
+
+    /// A picture made outside a lesson, as the library sees it.
+    ///
+    /// Such pictures live under a reserved lesson id, so the rest of the app —
+    /// file paths, review, the contact sheet — needs no special case for them.
+    public static func image(for picture: StandalonePicture) -> LibraryImage {
+        LibraryImage(
+            lessonId: standaloneFolder,
+            exerciseId: picture.id,
+            fileName: picture.fileName,
+            targets: picture.targets,
+            accepted: picture.accepted,
+            question: picture.question,
+            capturedAt: picture.createdAt,
+            lessonTitle: picture.sourceLabel)
     }
 
     /// Where on-demand pictures are stored. Not a lesson id any lesson can

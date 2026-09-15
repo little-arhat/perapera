@@ -26,6 +26,21 @@ private func loadWords() throws -> [ReadingDrill.Word] {
     }
 }
 
+@Test func theFrequentWordsCarryTheirKanji() throws {
+    // A dictionary picture of a hiragana-read word says the kanji, so the words
+    // most likely to be drawn had better have it. Loanwords legitimately lack
+    // one, which is why the check is on kanji-eligible words, not all.
+    let words = try loadWords()
+    let frequent = ReadingDrill.mostFrequent(words, script: .hiragana)
+    let withKanji = frequent.filter { $0.kanji != nil }
+    #expect(withKanji.count * 10 > frequent.count * 9,
+            "\(withKanji.count) of \(frequent.count) frequent hiragana words have kanji")
+    for word in withKanji {
+        #expect(KanaInput.containsKanji(word.kanji!), "\(word.text) -> \(word.kanji!) is not kanji")
+    }
+    #expect(PictureRequest.dictionaryPool(words, scripts: .katakana).count >= 500)
+}
+
 @Test func everyWordRomanisesToSomethingLatin() throws {
     // A word the romaniser cannot read would be unanswerable: the learner types
     // a reading and is told they are wrong whatever they type.

@@ -75,9 +75,14 @@ dropped if the writing came out wrong. A model asked for みなみぐち has bee
 drawing みなみりぢち, confidently, in an otherwise convincing sign, and a wrong glyph in a
 reading drill teaches a wrong letterform.
 
-You can also make one on demand from the Pictures screen and choose which scripts it may
-use. Images cost about $0.069 each, so the per-lesson budget is yours to set, not the
-model's. A lesson takes at most eight.
+You can also make pictures on demand from the Pictures screen. By default the word comes
+from the 500 most frequent of each script you allow and you are not told what it is: the
+picture appears as soon as it is made, and you find out by reading it. A batch of five or
+ten is a session; each picture rolls its own surface. The other sources are one of your
+saved words, also unnamed, or a word you type.
+
+Images cost about $0.069 each, so the per-lesson budget is yours to set, not the model's.
+A lesson takes at most eight.
 
 ## What it costs
 

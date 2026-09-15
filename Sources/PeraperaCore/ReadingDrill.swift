@@ -52,9 +52,12 @@ public enum ReadingDrill {
         /// hundred most frequent words in the corpus. 0 means unranked, which
         /// sorts last rather than first.
         public let f: Int
+        /// The ordinary kanji spelling of this reading, where the entry has
+        /// one. What a sign says; the drill itself never shows it.
+        public let k: String?
 
-        public init(w: String, g: String, s: String, t: Int, f: Int = 0) {
-            self.w = w; self.g = g; self.s = s; self.t = t; self.f = f
+        public init(w: String, g: String, s: String, t: Int, f: Int = 0, k: String? = nil) {
+            self.w = w; self.g = g; self.s = s; self.t = t; self.f = f; self.k = k
         }
 
         public var id: String { w }
@@ -65,6 +68,7 @@ public enum ReadingDrill {
         public var tier: Int { t }
         /// Lower is more frequent; unranked words sort behind every ranked one.
         public var rank: Int { f == 0 ? Int.max : f }
+        public var kanji: String? { k }
     }
 
     /// How a session is chosen.
