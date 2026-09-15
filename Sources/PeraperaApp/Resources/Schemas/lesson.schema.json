@@ -226,7 +226,7 @@
               "scene": {
                 "type": "string",
                 "minLength": 20,
-                "description": "The photograph, described for an image model: what object, what material, what lighting, what angle. Favour the surfaces that are genuinely hard to read — brush on a noren, marker on a wooden menu board, weathered enamel, a shop window poster in display katakana. Do NOT name real companies or brands."
+                "description": "The photograph, described for an image model: what object, what material, what lighting, what angle, and how the characters are formed (bold brush, running brush, edomoji, mincho, marker, ballpoint) and which way they run (vertical or horizontal). Favour the surfaces that are genuinely hard to read — brush on a noren, marker on a wooden menu board, weathered enamel, a shop window poster in display katakana. Do NOT name real companies or brands."
               },
               "targets": {
                 "type": "array",

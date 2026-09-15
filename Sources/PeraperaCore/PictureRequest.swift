@@ -236,16 +236,12 @@ public struct PictureRequest: Equatable, Sendable {
         self.sourceLabel = sourceLabel
     }
 
-    /// The scene handed to the image model. The literal text is added by the
-    /// pipeline, which also verifies it came out right.
-    ///
-    /// The text is asked to fill the frame: the exercise is the lettering, and
-    /// a wide shot spends the picture on the street instead.
+    /// The scene handed to the image model. The literal text and the framing
+    /// are added by the pipeline, which also verifies the text came out right.
     public func scene(language: String) -> String {
         surface.setting(language: language)
             + " The text is written \(style.direction.description), in "
-            + "\(style.lettering.description), and fills most of the frame; "
-            + "the surroundings are soft and secondary."
+            + "\(style.lettering.description)."
     }
 
     /// The forms of a word that the chosen scripts allow.

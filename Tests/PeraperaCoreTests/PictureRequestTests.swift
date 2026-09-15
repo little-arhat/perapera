@@ -201,7 +201,7 @@ private let kudasai = ReadingDrill.Word(w: "ください", g: "please", s: "h", 
     #expect(last.direction == .vertical)
 }
 
-@Test func theSceneSaysHowTheTextIsWrittenAndThatItFillsTheFrame() {
+@Test func theSceneSaysHowTheTextIsWritten() {
     let request = PictureRequest(
         targets: ["安全"], accepted: ["安全", "あんぜん"], surface: .noren,
         style: .init(lettering: .gyosho, direction: .vertical), sourceLabel: "安全")
@@ -209,7 +209,6 @@ private let kudasai = ReadingDrill.Word(w: "ください", g: "please", s: "h", 
     #expect(scene.contains("noren"))
     #expect(scene.contains("vertically"))
     #expect(scene.contains("gyosho"))
-    #expect(scene.contains("fills most of the frame"))
     // The setting no longer decides the lettering: the same surface can come
     // out in a different hand.
     let other = PictureRequest(

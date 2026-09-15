@@ -107,21 +107,28 @@ struct ImagePipeline {
 
     // MARK: - OpenRouter
 
-    private func generate(spec: Exercise.ImageSpec) async throws -> (Data, Double) {
-        let instruction = """
+    /// The whole prompt. The scene says where and in what hand; this adds what
+    /// every picture needs regardless: the exact text, and that the text is the
+    /// subject. Without the last line the model frames a street with a sign in
+    /// it, and the picture spends itself on the street.
+    static func instruction(for spec: Exercise.ImageSpec) -> String {
+        """
         \(spec.scene)
 
         The image must contain this text, rendered exactly and completely, every \
         character correctly formed:
         \(spec.targets.map { "- \($0)" }.joined(separator: "\n"))
 
-        Photorealistic. No watermarks, no invented extra signage, no real \
-        company names or logos.
+        The text is the subject: it fills most of the frame and is in sharp \
+        focus, with the surroundings soft and secondary. Photorealistic. No \
+        watermarks, no invented extra signage, no real company names or logos.
         """
+    }
 
+    private func generate(spec: Exercise.ImageSpec) async throws -> (Data, Double) {
         let body: [String: Any] = [
             "model": config.generationModel,
-            "messages": [["role": "user", "content": instruction]],
+            "messages": [["role": "user", "content": Self.instruction(for: spec)]],
             "modalities": ["image", "text"],
             "usage": ["include": true],
         ]

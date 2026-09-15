@@ -165,6 +165,11 @@ Skill mastery (0-5): {{SKILL_MASTERY}}
    - Choose surfaces that are genuinely harder than a screen: brush-painted
      noren, handwritten menu board, weathered enamel plate, display katakana in
      a shop window, a vertical wooden sign.
+   - Say in `scene` how the characters are formed and which way they run: bold
+     brush (kaisho), running brush (gyosho), thick rounded edomoji, printed
+     mincho, marker, ballpoint; vertical or horizontal. The difficulty of a
+     sign is in the hand, not the backdrop, and left unsaid the hand is always
+     the same clean print. Vary it across the lesson.
    - Keep `targets` short — two or three words. Long text is where image models
      start inventing characters, and an image whose writing is wrong is thrown
      away at your expense.
