@@ -14,9 +14,9 @@
 
 ```bash
 git clone git@github.com:little-arhat/perapera.git && cd perapera
-make app     # build, assemble Perapera.app, ad-hoc sign
-make run     # and launch it
-swift test   # 127 tests, no network
+make install # build, bundle Fluent, sign, copy to /Applications
+make run     # build and launch the local copy without installing
+swift test   # no network, no cost
 ```
 
 There is no `.xcodeproj` on purpose. This is a plain Swift package, and the bundle is four

@@ -64,10 +64,15 @@ app: build check-kit
 run: app
 	open $(APP)
 
+# Quits a running copy first. Replacing the bundle under a live process leaves
+# it running from a directory that no longer exists, which fails later and
+# somewhere else.
 install: app
+	@pkill -x PeraperaApp 2>/dev/null && sleep 1 || true
 	@rm -rf /Applications/$(APP)
 	@cp -R $(APP) /Applications/
-	@echo "Installed /Applications/$(APP)"
+	@echo "Installed /Applications/$(APP) from $$(git rev-parse --short HEAD)"
+	@echo "Run it with: open -a Perapera"
 
 clean:
 	rm -rf .build $(APP)
