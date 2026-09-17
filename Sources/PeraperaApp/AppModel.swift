@@ -725,14 +725,14 @@ final class AppModel {
                 scene: request.scene(language: language),
                 targets: request.targets,
                 question: "What does it say?")
+            let id = UUID().uuidString
             do {
                 let built = try await pipeline.build(
-                    for: Exercise.placeholder(id: UUID().uuidString), spec: spec
+                    for: Exercise.placeholder(id: id), spec: spec
                 ) { [weak self] note in
                     self?.progressPhase = note
                 }
                 noteSpend("Picture", built.costUSD, pipeline.config.generationModel)
-                let id = UUID().uuidString
                 let fileName = try lessonStore.saveImage(
                     built.jpeg, lessonId: ImageLibrary.standaloneFolder, exerciseId: id)
                 let picture = StandalonePicture(
@@ -743,10 +743,12 @@ final class AppModel {
                 try lessonStore.savePictures(pictures)
                 made.append(picture)
             } catch {
-                // The pipeline throws when the writing came out wrong, which is
-                // the point — a picture spelling the word incorrectly is worse
-                // than none. The rest of the batch still gets made.
                 failures.append(error.localizedDescription)
+                // The writing coming out wrong is one picture's bad luck, and the
+                // point of checking; the rest of the batch goes on. Anything
+                // else — no network, a rejected key, a full disk — would fail
+                // the next nine the same way.
+                guard case ImagePipeline.Failure.unreadable = error else { break }
             }
         }
         unshownPictures += made

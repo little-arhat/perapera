@@ -30,6 +30,7 @@ struct ImagesView: View {
     @State private var last: Answered?
     @State private var inspecting: LibraryImage?
     @State private var making = false
+    @FocusState private var typing: Bool
 
     /// Nothing has happened on this picture yet, so it can be replaced by one
     /// just made without losing anything.
@@ -81,11 +82,11 @@ struct ImagesView: View {
                 .foregroundStyle(palette.secondaryText)
 
             Button { making = true } label: {
-                Label("Make one", systemImage: "camera")
+                Label("Make", systemImage: "camera")
             }
             .disabled(!model.canGenerateImages || model.isMakingPicture)
             .help(model.canGenerateImages
-                  ? "Generate a picture of a word you are learning — about $0.07."
+                  ? "Make pictures of words to read — about $0.07 each."
                   : "Needs an OpenRouter key in Settings")
         }
         .padding(20)
@@ -99,14 +100,14 @@ struct ImagesView: View {
             Text("No photographs yet")
                 .font(.headline)
                 .foregroundStyle(palette.emphasizedText)
-            Text("Generate a lesson with photographs turned on, or make one now "
-                 + "from a word you have saved.")
+            Text("Generate a lesson with photographs turned on, or make some now "
+                 + "from the dictionary.")
                 .font(.callout)
                 .foregroundStyle(palette.secondaryText)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 380)
             Button { making = true } label: {
-                Label("Make one", systemImage: "camera")
+                Label("Make pictures", systemImage: "camera")
             }
             .buttonStyle(.borderedProminent)
             .tint(palette.accent)
@@ -122,15 +123,10 @@ struct ImagesView: View {
         if let current {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    if let url = model.imageURL(lessonId: current.lessonId,
-                                                fileName: current.fileName),
-                       let picture = NSImage(contentsOf: url) {
-                        Image(nsImage: picture)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(maxHeight: 420)
-                            .clipShape(.rect(cornerRadius: 12))
-                    }
+                    PhotoView(url: model.imageURL(lessonId: current.lessonId,
+                                                  fileName: current.fileName))
+                        .frame(maxHeight: 420)
+                        .clipShape(.rect(cornerRadius: 12))
 
                     Text(current.question ?? "What does it say?")
                         .font(.system(size: 19))
@@ -159,6 +155,9 @@ struct ImagesView: View {
             .textFieldStyle(.roundedBorder)
             .font(.system(size: 17))
             .autocorrectionDisabled()
+            .focused($typing)
+            .onSubmit { check(image) }
+            .onAppear { typing = true }
         if missed {
             Text("Not quite. Try again, or show the answer.")
                 .font(.callout)
@@ -175,7 +174,6 @@ struct ImagesView: View {
             Button("Check") { check(image) }
                 .buttonStyle(.borderedProminent)
                 .tint(palette.accent)
-                .keyboardShortcut(.return, modifiers: [])
                 .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
         }
         .controlSize(.large)
@@ -188,7 +186,7 @@ struct ImagesView: View {
             .buttonStyle(.borderedProminent)
             .tint(palette.accent)
             .controlSize(.large)
-            .keyboardShortcut(.return, modifiers: [])
+            .keyboardShortcut(.defaultAction)
     }
 
     private func lastCard(_ last: Answered) -> some View {
@@ -215,16 +213,11 @@ struct ImagesView: View {
 
     private func thumbnail(_ image: LibraryImage) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            if let url = model.imageURL(lessonId: image.lessonId,
-                                        fileName: image.fileName),
-               let picture = NSImage(contentsOf: url) {
-                Image(nsImage: picture)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 130)
-                    .clipped()
-                    .clipShape(.rect(cornerRadius: 8))
-            }
+            PhotoView(url: model.imageURL(lessonId: image.lessonId, fileName: image.fileName),
+                      contentMode: .fill)
+                .frame(height: 130)
+                .clipped()
+                .clipShape(.rect(cornerRadius: 8))
             // The transcription is the point of the sheet: it is how you find
             // the picture you half remember.
             ForEach(image.targets, id: \.self) { target in
@@ -241,14 +234,8 @@ struct ImagesView: View {
 
     private func detail(_ image: LibraryImage) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let url = model.imageURL(lessonId: image.lessonId,
-                                        fileName: image.fileName),
-               let picture = NSImage(contentsOf: url) {
-                Image(nsImage: picture)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: 720, maxHeight: 520)
-            }
+            PhotoView(url: model.imageURL(lessonId: image.lessonId, fileName: image.fileName))
+                .frame(maxWidth: 720, maxHeight: 520)
             ForEach(image.targets, id: \.self) { target in
                 RubyText(annotated: target, showFurigana: true, size: 22)
             }
@@ -278,11 +265,13 @@ struct ImagesView: View {
         typed = ""
         missed = false
         revealed = false
+        typing = true
     }
 
     /// A right answer moves straight on; a wrong one stays, unrevealed, for
     /// another go.
     private func check(_ image: LibraryImage) {
+        guard !typed.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         if PictureRequest.reads(typed, image.accepted) {
             moveOn(.correct)
         } else {
@@ -298,18 +287,24 @@ struct ImagesView: View {
 }
 
 /// What the sign said: the spelling, its reading in kana and romaji, and the
-/// meaning, with the real dictionary a click away.
+/// meaning, with the real dictionary a click away. Hear it and Save, as the
+/// reading drill offers: a word just read off a sign is one worth keeping.
 private struct AnswerCard: View {
     @Environment(AppModel.self) private var model
+    @Environment(Speech.self) private var speech
     @Environment(\.palette) private var palette
 
     let image: LibraryImage
     /// Nil while the picture is still the current one.
     let outcome: ImagesView.Answered.Outcome?
 
+    /// Looked up once per picture: the fallback is the system dictionary,
+    /// which is not a call to make on every redraw.
+    @State private var meaning: String?
+
     private var word: String { image.targets.first ?? "" }
     private var reading: String? { PictureRequest.reading(among: image.accepted) }
-    private var meaning: String? { model.knownGloss(for: word)?.meaning }
+    private var isSaved: Bool { model.savedItems.contains(word) }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -338,16 +333,40 @@ private struct AnswerCard: View {
                 }
             }
             Spacer()
-            Button { JapanDict.open(word) } label: {
-                Label("JapanDict", systemImage: "arrow.up.right.square")
+            HStack(spacing: 12) {
+                if let reading {
+                    Button {
+                        speech.speak(reading, language: model.voiceLanguage,
+                                     rate: Float(model.speechRate),
+                                     voiceIdentifier: model.voiceIdentifier.isEmpty
+                                         ? nil : model.voiceIdentifier)
+                    } label: {
+                        Image(systemName: "speaker.wave.2")
+                    }
+                    .help("Hear it")
+                }
+                Button {
+                    model.save(content: word, gloss: meaning ?? "", kind: .word,
+                               lessonId: nil, reading: reading)
+                } label: {
+                    Image(systemName: isSaved ? "star.fill" : "star")
+                        .foregroundStyle(isSaved ? palette.warning : palette.secondaryText)
+                }
+                .disabled(isSaved)
+                .help(isSaved ? "In your list" : "Save to my list")
+                Button { JapanDict.open(word) } label: {
+                    Label("JapanDict", systemImage: "arrow.up.right.square")
+                }
+                .foregroundStyle(palette.accent)
+                .help("Open in JapanDict")
             }
             .buttonStyle(.plain)
-            .foregroundStyle(palette.accent)
-            .help("Open in JapanDict")
+            .foregroundStyle(palette.secondaryText)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(palette.surface, in: .rect(cornerRadius: 10))
+        .task(id: image.id) { meaning = model.knownGloss(for: word)?.meaning }
     }
 
     private func icon(_ outcome: ImagesView.Answered.Outcome) -> String {

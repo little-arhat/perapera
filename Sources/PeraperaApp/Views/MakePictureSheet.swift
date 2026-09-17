@@ -41,9 +41,9 @@ struct MakePictureSheet: View {
         model.savedItems.items.filter { !Furigana.stripped($0.content).isEmpty }
     }
 
-    private var dictionaryPool: [ReadingDrill.Word] {
-        PictureRequest.dictionaryPool(model.kanaWords, scripts: scripts)
-    }
+    /// Kept rather than computed: the pool sorts the whole word list once per
+    /// script, and a body that did that would do it on every keystroke.
+    @State private var dictionaryPool: [ReadingDrill.Word] = []
 
     /// How many the current settings can produce, capped by the batch size.
     /// Counted rather than assumed so the button is disabled for a real reason.
@@ -130,6 +130,12 @@ struct MakePictureSheet: View {
         }
         .padding(20)
         .frame(width: 440)
+        .onAppear(perform: refreshPool)
+        .onChange(of: scriptsRaw) { refreshPool() }
+    }
+
+    private func refreshPool() {
+        dictionaryPool = PictureRequest.dictionaryPool(model.kanaWords, scripts: scripts)
     }
 
     private var dictionaryNote: some View {

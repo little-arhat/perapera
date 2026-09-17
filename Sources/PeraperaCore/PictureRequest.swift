@@ -2,10 +2,10 @@ import Foundation
 
 /// A photograph made on demand rather than as part of a lesson.
 ///
-/// Composed locally: the surface descriptions below are templates, so asking
-/// for one costs a single image call and nothing for a model to write the
-/// scene. The learner supplies what the sign should *say*; the app supplies
-/// what it should look like.
+/// Composed locally: the surface and lettering descriptions below are
+/// templates, so asking for one costs a single image call and nothing for a
+/// model to write the scene. The word comes from the dictionary, the saved
+/// list or the learner; the app decides what it looks like and where.
 public struct PictureRequest: Equatable, Sendable {
     /// Where the writing appears. These are the surfaces that are genuinely
     /// harder to read than a screen — the reason the exercise exists.
@@ -226,13 +226,13 @@ public struct PictureRequest: Equatable, Sendable {
     public let sourceLabel: String
 
     public init(
-        targets: [String], accepted: [String], surface: Surface,
-        style: Style? = nil, sourceLabel: String
+        targets: [String], accepted: [String], surface: Surface, style: Style,
+        sourceLabel: String
     ) {
         self.targets = targets
         self.accepted = accepted
         self.surface = surface
-        self.style = style ?? Style.roll(for: surface)
+        self.style = style
         self.sourceLabel = sourceLabel
     }
 
@@ -332,7 +332,7 @@ public struct PictureRequest: Equatable, Sendable {
         return PictureRequest(
             targets: [shown],
             accepted: acceptedForms(written: written, reading: item.reading),
-            surface: surface,
+            surface: surface, style: .roll(for: surface),
             sourceLabel: item.gloss.isEmpty ? written : "\(written) — \(item.gloss)")
     }
 
@@ -351,7 +351,7 @@ public struct PictureRequest: Equatable, Sendable {
         return PictureRequest(
             targets: [shown],
             accepted: acceptedForms(written: written, reading: word.text),
-            surface: surface,
+            surface: surface, style: .roll(for: surface),
             sourceLabel: "\(written) — \(word.gloss)")
     }
 
@@ -440,7 +440,7 @@ public struct PictureRequest: Equatable, Sendable {
         return PictureRequest(
             targets: [shown],
             accepted: acceptedForms(written: written, reading: nil),
-            surface: surface, sourceLabel: written)
+            surface: surface, style: .roll(for: surface), sourceLabel: written)
     }
 }
 

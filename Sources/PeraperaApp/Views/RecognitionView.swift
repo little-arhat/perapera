@@ -20,10 +20,8 @@ struct RecognitionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if let fileURL, let loaded = NSImage(contentsOf: fileURL) {
-                Image(nsImage: loaded)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
+            if let fileURL, FileManager.default.fileExists(atPath: fileURL.path) {
+                PhotoView(url: fileURL)
                     .frame(maxHeight: zoomed ? 640 : 340)
                     .clipShape(.rect(cornerRadius: 10))
                     .onTapGesture { withAnimation(.easeOut(duration: 0.15)) { zoomed.toggle() } }
