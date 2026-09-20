@@ -191,7 +191,7 @@ struct DrillView: View {
                 Button("Done") { finish() }
                     .buttonStyle(.borderedProminent)
                     .tint(palette.accent)
-                    .keyboardShortcut(.return, modifiers: [])
+                    .keyboardShortcut(.return, modifiers: .command)
             }
         }
         .controlSize(.large)

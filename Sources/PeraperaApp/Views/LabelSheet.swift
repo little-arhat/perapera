@@ -57,7 +57,9 @@ struct LabelSheet: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(palette.accent)
-                .keyboardShortcut(.return, modifiers: [])
+                // Not bare Return: the name may be typed through a Japanese
+                // input method, whose conversion Return confirms.
+                .keyboardShortcut(.return, modifiers: .command)
             }
         }
         .padding(20)

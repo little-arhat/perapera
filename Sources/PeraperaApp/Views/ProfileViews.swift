@@ -116,7 +116,7 @@ struct NewProfileSheet: View {
                 Button("Cancel") { dismiss() }
                 Spacer()
                 Button("Create") { create() }
-                    .keyboardShortcut(.defaultAction)
+                    .keyboardShortcut(.return, modifiers: .command)
                     .disabled(incomplete || busy)
             }
         }

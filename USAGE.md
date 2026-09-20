@@ -48,11 +48,15 @@ kanji. Toggle them per lesson. The ruby is real Core Text ruby, so selection spa
 line and toggling readings does not reflow the page.
 
 Type Japanese directly. The app bypasses the system IME, so kana stay kana: typing tests
-recall rather than recognition.
+recall rather than recognition. Your own input method still works in every field, and
+Return there does what it does everywhere else on the Mac: confirms the conversion. It
+answers only when a text field hands it on with nothing left to convert. Answer, Next and
+Finish are ⌘Return, never bare Return, so an Enter meant for the input method cannot
+answer or advance past an exercise.
 
 Text size is adjustable and persists. Word highlighting underlines the word under the
 pointer and copies it on click, which is a genuine reading aid in a language without spaces.
-Click a word for its meaning, to add it to your saved list, to copy it, or to open Jisho.
+Click a word for its meaning, to add it to your saved list, to copy it, or to open JapanDict.
 
 Playback speed is a stored value rather than a preset because the scale is badly
 non-linear. Measured on one Japanese sentence: 0.5 takes 4.2 s, 0.375 takes 4.6 s and is

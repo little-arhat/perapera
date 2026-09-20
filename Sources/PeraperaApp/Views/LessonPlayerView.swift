@@ -75,6 +75,16 @@ private struct LessonPlayer: View {
                         // reappears as -- and is submitted as -- the answer to
                         // the next.
                         .id(exercise.id)
+                        // Return in a text field answers — but only when the
+                        // field itself hands Return on, which a Japanese input
+                        // method does not do while a conversion is open. A key
+                        // equivalent on the button fired first and answered
+                        // with the conversion still uncommitted.
+                        .onSubmit {
+                            if !revealed, draft.isAnswerable(for: exercise) {
+                                commit(draft.answer(for: exercise))
+                            }
+                        }
                     if revealed { verdictView }
                 }
                 .padding(28)
@@ -217,11 +227,16 @@ private struct LessonPlayer: View {
 
     private var controls: some View {
         HStack(spacing: 12) {
+            // ⌘Return, never bare Return: a bare Return key equivalent takes
+            // the key before the text field's input method sees it, so an
+            // Enter meant to confirm a kana-to-kanji conversion answered or
+            // advanced instead.
             if revealed {
                 Button(isLast ? "Finish" : "Next") { advance() }
                     .buttonStyle(.borderedProminent)
                     .tint(palette.accent)
-                    .keyboardShortcut(.return, modifiers: [])
+                    .keyboardShortcut(.return, modifiers: .command)
+                    .help("⌘↩")
             } else {
                 Button("Skip") { commit(.skipped) }
                     .foregroundStyle(palette.secondaryText)
@@ -230,7 +245,8 @@ private struct LessonPlayer: View {
                     .buttonStyle(.borderedProminent)
                     .tint(palette.accent)
                     .disabled(!draft.isAnswerable(for: exercise))
-                    .keyboardShortcut(.return, modifiers: [])
+                    .keyboardShortcut(.return, modifiers: .command)
+                    .help("⌘↩, or Return in the answer field")
             }
         }
         .controlSize(.large)
