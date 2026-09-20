@@ -99,9 +99,15 @@ Skill mastery (0-5): {{SKILL_MASTERY}}
    a textbook uses. Automaticity comes from doing a pattern {{ITEMS_PER_SET}}
    times in a row, not once. Use a standalone exercise only where an item
    genuinely cannot be repeated: a question about a reading passage, a single
-   long translation, one reorder. Give each set item a `hint` where a cue is
-   what a textbook would print — the dictionary form in `＿＿ (行[い]く)`, a
-   counter, or an English gloss.
+   long translation, one reorder. A set's `prompt` is the instruction for the
+   whole set, and at A1-A2 it is written in {{EXPLANATION_LANGUAGE}} (rule 7):
+   "Each sentence has one mistake. Write it out correctly." The Japanese
+   belongs in the items. Give an item a `hint` only where a cue is what a
+   textbook would print — the dictionary form in `＿＿ (行[い]く)`, a counter,
+   or an English gloss. A hint is hidden until asked for, so it may help; it
+   must never describe the answer or the mistake to find. "(particle
+   spelling)" beside 郵便局え行きます is the answer, not a hint, and in an
+   error-correction set the hint is left out altogether.
 
    Breadth and depth are set independently above. Respect both: do not turn a
    deep lesson into a broad one by splitting a drill into separate exercises,

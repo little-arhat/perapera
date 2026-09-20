@@ -16,6 +16,11 @@ struct SetInputView: View {
     @Environment(\.textScale) private var scale
     @Environment(AppModel.self) private var model
 
+    /// Cues asked for, by item. A cue printed beside every item is read before
+    /// the item is, and for an easy one it is the answer; behind a button it
+    /// costs a click, which is what makes it a hint.
+    @State private var hintsShown: Set<Int> = []
+
     /// Per-item verdicts, once answered.
     private var verdicts: [Bool?] {
         guard isLocked else { return Array(repeating: nil, count: items.count) }
@@ -55,10 +60,18 @@ struct SetInputView: View {
                                  showFurigana: model.showFurigana, size: 18)
                             .foregroundStyle(palette.emphasizedText)
                         if let hint = item.hint, !hint.isEmpty {
-                            Text("(\(hint))")
-                                .font(.callout)
-                                .foregroundStyle(palette.secondaryText)
-                                .selectableIf(scale.selectable)
+                            if isLocked || hintsShown.contains(index) {
+                                Text("(\(hint))")
+                                    .font(.callout)
+                                    .foregroundStyle(palette.secondaryText)
+                                    .selectableIf(scale.selectable)
+                            } else {
+                                Button("hint") { hintsShown.insert(index) }
+                                    .buttonStyle(.plain)
+                                    .font(.caption)
+                                    .foregroundStyle(palette.secondaryText)
+                                    .help("Show the cue for this item")
+                            }
                         }
                     }
 

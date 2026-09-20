@@ -206,7 +206,7 @@
                 },
                 "hint": {
                   "type": "string",
-                  "description": "Optional cue shown beside the gap, like the infinitive in '___ (ir)'. Use for the dictionary form of a verb, a counter, or an English gloss."
+                  "description": "Optional cue the learner can ask for, like the infinitive in '___ (ir)': the dictionary form of a verb, a counter, or an English gloss. Never a description of the answer or of the mistake to find -- 'particle spelling' beside an error-correction item is the answer. Omit it in error-correction sets."
                 },
                 "explanation": {
                   "type": "string"
