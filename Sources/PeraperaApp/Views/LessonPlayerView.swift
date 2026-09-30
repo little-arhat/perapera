@@ -87,7 +87,8 @@ private struct LessonPlayer: View {
                         }
                     if revealed { verdictView }
                 }
-                .padding(28)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 20)
                 .frame(maxWidth: scale.width(720), alignment: .leading)
                 .frame(maxWidth: .infinity)
             }
@@ -115,9 +116,11 @@ private struct LessonPlayer: View {
             ProgressView(value: Double(index), total: Double(record.lesson.exercises.count))
                 .tint(palette.accent)
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 16)
-        .padding(.bottom, 10)
+        .padding(.horizontal, 24)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .frame(maxWidth: scale.width(720))
+        .frame(maxWidth: .infinity)
     }
 
     private var prompt: some View {
@@ -201,6 +204,8 @@ private struct LessonPlayer: View {
                                ? Furigana.parenthesized(explanation)
                                : Furigana.stripped(explanation)))
                         .foregroundStyle(palette.bodyText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: scale.prose(720), alignment: .leading)
                         .selectableIf(scale.selectable)
                 }
             }
@@ -250,8 +255,12 @@ private struct LessonPlayer: View {
             }
         }
         .controlSize(.large)
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: revealed ? .trailing : .leading)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 10)
+        // The same column as the exercise above it, so Answer sits under the
+        // answer rather than out at the window's edge.
+        .frame(maxWidth: scale.width(720), alignment: revealed ? .trailing : .leading)
+        .frame(maxWidth: .infinity)
         .background(palette.surface)
     }
 

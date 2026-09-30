@@ -17,7 +17,9 @@ struct RootView: View {
                         .tag(section)
                 }
             }
-            .navigationSplitViewColumnWidth(min: 160, ideal: 180, max: 240)
+            // Eight fixed labels, none long. Room to grow with the text size
+            // and no more: a wider column is empty space, not information.
+            .navigationSplitViewColumnWidth(min: 150, ideal: 168, max: 200)
         } detail: {
             VStack(spacing: 0) {
                 ZStack {

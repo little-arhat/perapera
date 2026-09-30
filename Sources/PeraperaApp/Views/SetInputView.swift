@@ -28,11 +28,15 @@ struct SetInputView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             ForEach(items.indices, id: \.self) { index in
                 row(index)
             }
         }
+        // A numbered drill is a list of short answers, not a table: at the full
+        // card width each row is a 360pt field in a 1000pt band. Scaled, so the
+        // rows grow with the text rather than pinning it at one size.
+        .frame(maxWidth: scale.width(480), alignment: .leading)
         .onAppear {
             // Grow to fit without discarding what is already there: a restored
             // answer arrives before this runs, and replacing the array
@@ -43,71 +47,85 @@ struct SetInputView: View {
         }
     }
 
+    /// The gutter the number sits in, and what the rest of the row is inset by
+    /// so the field lines up under the sentence rather than under the number.
+    private let gutter: CGFloat = 26
+
     private func row(_ index: Int) -> some View {
         let item = items[index]
         let verdict = verdicts[index]
 
         return VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .top, spacing: 10) {
+            // The number rides with the sentence, not above it: furigana adds
+            // a line of height to the prompt, and a top-aligned number floats
+            // clear of the text it belongs to.
+            HStack(alignment: .center, spacing: 8) {
                 Text("\(index + 1).")
                     .font(.callout.monospacedDigit())
                     .foregroundStyle(palette.secondaryText)
-                    .frame(width: 24, alignment: .trailing)
+                    .frame(width: gutter - 8, alignment: .trailing)
 
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(alignment: .center, spacing: 8) {
-                        RubyText(annotated: item.prompt,
-                                 showFurigana: model.showFurigana, size: 18)
-                            .foregroundStyle(palette.emphasizedText)
-                        if let hint = item.hint, !hint.isEmpty {
-                            if isLocked || hintsShown.contains(index) {
-                                Text("(\(hint))")
-                                    .font(.callout)
-                                    .foregroundStyle(palette.secondaryText)
-                                    .selectableIf(scale.selectable)
-                            } else {
-                                Button("hint") { hintsShown.insert(index) }
-                                    .buttonStyle(.plain)
-                                    .font(.caption)
-                                    .foregroundStyle(palette.secondaryText)
-                                    .help("Show the cue for this item")
-                            }
-                        }
-                    }
-
-                    HStack(spacing: 8) {
-                        field(index)
-                            .frame(maxWidth: 320)
-
-                        if let verdict {
-                            Image(systemName: verdict
-                                  ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                .foregroundStyle(verdict ? palette.correct : palette.wrong)
-                        } else if isLocked {
-                            Image(systemName: "person.fill.questionmark")
-                                .foregroundStyle(palette.review)
-                        }
-                    }
-
-                    // Only shown once answered, and only where it helps.
-                    if isLocked, verdict == false {
-                        Text("→ \(item.acceptedAnswers.first ?? "")")
+                RubyText(annotated: item.prompt,
+                         showFurigana: model.showFurigana, size: 18)
+                    .foregroundStyle(palette.emphasizedText)
+                    .layoutPriority(1)
+                if let hint = item.hint, !hint.isEmpty {
+                    if isLocked || hintsShown.contains(index) {
+                        Text("(\(hint))")
                             .font(.callout)
-                            .foregroundStyle(palette.emphasizedText)
+                            .foregroundStyle(palette.secondaryText)
                             .selectableIf(scale.selectable)
-                        if let explanation = item.explanation, !explanation.isEmpty {
-                            Text(model.showFurigana
-                                 ? Furigana.parenthesized(explanation)
-                                 : Furigana.stripped(explanation))
-                                .font(.caption)
-                                .foregroundStyle(palette.secondaryText)
-                                .selectableIf(scale.selectable)
-                        }
+                    } else {
+                        Button("hint") { hintsShown.insert(index) }
+                            .buttonStyle(.plain)
+                            .font(.caption)
+                            .foregroundStyle(palette.secondaryText)
+                            .help("Show the cue for this item")
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    field(index)
+                        .frame(maxWidth: 360)
+
+                    if let verdict {
+                        Image(systemName: verdict
+                              ? "checkmark.circle.fill" : "xmark.circle.fill")
+                            .foregroundStyle(verdict ? palette.correct : palette.wrong)
+                    } else if isLocked {
+                        Image(systemName: "person.fill.questionmark")
+                            .foregroundStyle(palette.review)
+                    }
+                }
+
+                // Only shown once answered, and only where it helps.
+                if isLocked, verdict == false {
+                    Text("→ \(item.acceptedAnswers.first ?? "")")
+                        .font(.callout)
+                        .foregroundStyle(palette.emphasizedText)
+                        .selectableIf(scale.selectable)
+                    if let explanation = item.explanation, !explanation.isEmpty {
+                        // Wraps rather than running off the card: a sentence
+                        // laid out at its ideal width is clipped by the row,
+                        // and half an explanation teaches nothing.
+                        Text(model.showFurigana
+                             ? Furigana.parenthesized(explanation)
+                             : Furigana.stripped(explanation))
+                            .font(.caption)
+                            .foregroundStyle(palette.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .selectableIf(scale.selectable)
                     }
                 }
             }
+            .padding(.leading, gutter)
         }
-        .padding(10)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(palette.surface.opacity(0.6), in: .rect(cornerRadius: 8))
     }

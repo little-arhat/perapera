@@ -42,8 +42,8 @@ struct SpendFooter: View {
             .foregroundStyle(palette.secondaryText)
         }
         .font(.caption)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 4)
         .background(palette.surface)
         .popover(isPresented: $showingHistory) { history }
     }
