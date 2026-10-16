@@ -33,6 +33,10 @@ and [USAGE.md](USAGE.md).
 - **Grading splits by what each side can know.** The app supplies what it measures; the
   teacher supplies judgement. Neither is asked for the other's half.
 - **Target language is Japanese.** Kana input, furigana, ruby and voice selection assume it.
+- **The dictionary is a value, passed in.** `JapaneseDictionary` is loaded once by
+  `AppModel.start()` and handed to whatever needs it. `PeraperaCore` segments text against
+  a `Set<String>` of known forms rather than reaching for a dictionary of its own; it is a
+  pure module and the word list lives in the app's bundle.
 - **One writer at a time, enforced.** The app and a terminal tutor session write the
   same six databases through `update-db.py`, which takes an exclusive advisory lock
   (`fluent/.claude/hooks/fluent_lock.py`) across the whole read-modify-write;
@@ -85,7 +89,7 @@ committing one.
 ## Testing
 
 ```bash
-swift test                                        # 246, no network
+swift test                                        # 254, no network
 cd fluent && python3 -m unittest discover -s tests # 29, stdlib only
 cd tools/imgbench && uv run pytest                # 32
 ```
@@ -128,5 +132,11 @@ make icon     # regenerate the icon from tools/make-icon.swift
 
 `make app` refuses to build while `fluent/` has uncommitted changes: it snapshots the
 subtree with `git archive`, which ships the commit rather than the working tree.
+
+Building needs full Xcode selected, not just the Command Line Tools: SwiftUI's macros
+(`@State`, `@Observable`) ship as compiler plugins that the CLT does not carry, and with
+the CLT selected SwiftPM fails at `Could not initialize build system`. Fix it once with
+`sudo xcode-select -s /Applications/Xcode.app`, or prefix a command with
+`DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`.
 
 App Sandbox is off because the app spawns `claude` and `python3`.

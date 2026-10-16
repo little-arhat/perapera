@@ -32,7 +32,8 @@ struct ScratchPadView: View {
 
             HStack(spacing: 12) {
                 Button {
-                    annotated = JapaneseReadings.annotate(model.scratchText)
+                    annotated = JapaneseReadings.annotate(
+                        model.scratchText, knownWords: model.dictionary.knownWords)
                 } label: {
                     Label("Read it", systemImage: "text.magnifyingglass")
                 }

@@ -20,11 +20,11 @@ public enum JapaneseReadings {
     /// than `食[た]べる`. Splitting the reading across the stem boundary needs
     /// morphology the tokenizer does not expose, and a whole-word reading is both
     /// correct and what Anki decks use.
-    public static func annotate(_ text: String) -> String {
+    public static func annotate(_ text: String, knownWords: Set<String>) -> String {
         var result = ""
         var cursor = text.startIndex
 
-        for (range, reading) in readings(in: text) {
+        for (range, reading) in readings(in: text, knownWords: knownWords) {
             result += text[cursor..<range.lowerBound]
             let token = String(text[range])
             result += annotated(token: token, reading: reading)
@@ -87,9 +87,11 @@ public enum JapaneseReadings {
     /// then concatenated within each merged span. Transcribing a span on its own
     /// loses the context the tokenizer reads it in, and 枚 out of context comes
     /// back as ばい where 2枚 gives まい.
-    public static func readings(in text: String) -> [(Range<String.Index>, String?)] {
+    public static func readings(
+        in text: String, knownWords: Set<String>
+    ) -> [(Range<String.Index>, String?)] {
         let latin = transcriptions(in: text)
-        return JapaneseText.tokens(in: text)
+        return JapaneseText.tokens(in: text, knownWords: knownWords)
             .filter { containsKanji($0.text) }
             .map { token in
                 let pieces = latin

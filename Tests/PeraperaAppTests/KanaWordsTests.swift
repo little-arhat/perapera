@@ -66,20 +66,51 @@ private func loadWords() throws -> [ReadingDrill.Word] {
 // The offline dictionary. A lookup that waits on a model call is a lookup you
 // stop using, so the words a learner actually clicks have to answer instantly.
 
-@Test @MainActor func theBundledDictionaryAnswersForCommonWords() {
+private let dictionary = JapaneseDictionary.bundled()
+
+@Test func theBundledDictionaryAnswersForCommonWords() {
     for word in ["教室", "天才", "新幹線", "南口", "切符", "ラーメン", "きょうしつ"] {
-        let entry = Bundled.shared.look(up: word)
+        let entry = dictionary.look(up: word)
         #expect(entry != nil, "\(word) is not in the bundled dictionary")
         #expect(!(entry?.gloss.isEmpty ?? true), "\(word) has no gloss")
     }
 }
 
-@Test @MainActor func furiganaMarkupIsStrippedBeforeLookup() {
+@Test func furiganaMarkupIsStrippedBeforeLookup() {
     // Words arrive from a lesson carrying their readings.
-    #expect(Bundled.shared.look(up: "教室[きょうしつ]")?.gloss
-            == Bundled.shared.look(up: "教室")?.gloss)
+    #expect(dictionary.look(up: "教室[きょうしつ]")?.gloss
+            == dictionary.look(up: "教室")?.gloss)
 }
 
-@Test @MainActor func anUnknownWordFallsThroughRatherThanInventing() {
-    #expect(Bundled.shared.look(up: "ぬるぽぬるぽ") == nil)
+@Test func anUnknownWordFallsThroughRatherThanInventing() {
+    #expect(dictionary.look(up: "ぬるぽぬるぽ") == nil)
+}
+
+@Test func anEmptyDictionaryAnswersNothingRatherThanCrashing() {
+    // What every view holds until the file has been read.
+    #expect(JapaneseDictionary.empty.look(up: "教室") == nil)
+    #expect(JapaneseDictionary.empty.knownWords.isEmpty)
+}
+
+// Segmentation against the real word list. The unit tests use a handful of
+// words; these check the file a learner actually gets.
+
+@Test func theWordListSegmentsKanaCompoundsTheTokenizerSplits() {
+    let known = dictionary.knownWords
+    func words(_ text: String) -> [String] {
+        JapaneseText.tokens(in: text, knownWords: known).map(\.text)
+    }
+    #expect(words("まどぐちは三番です").contains("まどぐち"))
+    #expect(words("ゆうびんきょくへ行きます").contains("ゆうびんきょく"))
+    // And the particles still stand apart, which is what the tinting needs.
+    #expect(words("まどぐちは三番です").contains("は"))
+    #expect(words("ゆうびんきょくへ行きます").contains("へ"))
+}
+
+@Test func theWordListDoesNotSwallowAParticleItHappensToList() {
+    let known = dictionary.knownWords
+    // では and ではない are both entries. Merging either hides two particles.
+    let tokens = JapaneseText.tokens(in: "学生ではない", knownWords: known).map(\.text)
+    #expect(tokens.contains("で"))
+    #expect(tokens.contains("は"))
 }

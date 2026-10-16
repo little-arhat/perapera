@@ -52,6 +52,7 @@ struct RubyText: View {
                 selectable: scale.selectable,
                 highlightWords: interactive,
                 particleColor: model.tintParticles ? NSColor(palette.particle) : nil,
+                knownWords: model.dictionary.knownWords,
                 availableWidth: 0,
                 // Only offered when word highlighting is on: without it there
                 // is no indication a word is a target, and a click that opens a
@@ -111,6 +112,7 @@ struct MarkdownRubyText: View {
             selectable: scale.selectable,
             highlightWords: model.highlightWords,
             particleColor: model.tintParticles ? NSColor(palette.particle) : nil,
+            knownWords: model.dictionary.knownWords,
             availableWidth: 0,
             isMarkdown: true,
             // Prose gets the same word actions as anything else. This view had

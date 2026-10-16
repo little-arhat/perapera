@@ -9,10 +9,16 @@ import NaturalLanguage
 /// for every Japanese token, verified on macOS 15 — so role has to come from
 /// somewhere else.
 ///
-/// Both gaps are closed here without a dictionary. Adjacent all-kanji tokens are
-/// rejoined, which is the compound case that misleads a learner most. Particles
-/// are identified from the closed set the language actually has, which is how
-/// function words are recognised in a language that has a finite list of them.
+/// Both gaps are closed here. Adjacent tokens whose joined form is a word the
+/// caller's dictionary knows are rejoined, which is the only way to tell that
+/// まど + ぐち is one word when both halves are also words. Adjacent all-kanji
+/// tokens are rejoined whether the dictionary knows them or not, since 東京駅 is
+/// a compound no dictionary lists. Particles are identified from the closed set
+/// the language actually has, which is how function words are recognised in a
+/// language that has a finite list of them.
+///
+/// The dictionary arrives as a parameter rather than being reached for: this is
+/// a pure module, and the word list lives in the app's bundle.
 public enum JapaneseText {
     public enum Role: Equatable, Sendable {
         /// は, を, に and the rest: the words that mark what everything else is doing.
@@ -49,20 +55,27 @@ public enum JapaneseText {
     ]
 
     /// Every token, with compounds rejoined and roles assigned.
-    public static func tokens(in text: String) -> [Token] {
-        merge(rawTokens(in: text), in: text).map { range in
+    ///
+    /// `knownWords` is every form a dictionary lists; pass an empty set to
+    /// segment without one, which is what the kanji rule alone can manage.
+    public static func tokens(in text: String, knownWords: Set<String>) -> [Token] {
+        let raw = rawTokens(in: text)
+        let joined = mergeKnownWords(raw, in: text, knownWords: knownWords)
+        return merge(joined, in: text).map { range in
             let token = String(text[range])
             return Token(text: token, range: range, role: role(of: token))
         }
     }
 
     /// The token containing a UTF-16 offset, after merging. What a hover needs.
-    public static func token(at offset: Int, in text: String) -> Token? {
+    public static func token(
+        at offset: Int, in text: String, knownWords: Set<String>
+    ) -> Token? {
         guard let index = String.Index(
             text.utf16.index(text.utf16.startIndex, offsetBy: offset, limitedBy: text.utf16.endIndex)
                 ?? text.utf16.endIndex, within: text)
         else { return nil }
-        return tokens(in: text).first { $0.range.contains(index) }
+        return tokens(in: text, knownWords: knownWords).first { $0.range.contains(index) }
     }
 
     public static func role(of token: String) -> Role {
@@ -87,6 +100,53 @@ public enum JapaneseText {
         return tokenizer.tokens(for: text.startIndex..<text.endIndex)
     }
 
+    /// The longest span a merge may produce, in characters.
+    ///
+    /// ゆうびんきょく is seven. Past eight, a wrong join swallows a clause rather
+    /// than a word, and the dictionary is not reliable enough at that length to
+    /// be worth the risk.
+    private static let maxCompound = 8
+
+    /// Rejoins adjacent tokens whose joined form is a word.
+    ///
+    /// `NLTokenizer` splits まどぐち into まど + ぐち. Both halves are words, so
+    /// no rule about character classes can tell that the pair is one; only a
+    /// dictionary can. Longest match wins, so 郵便 + 局 becomes 郵便局 rather
+    /// than stopping at the first pair that happens to be listed.
+    ///
+    /// A particle is never swallowed, even when the span containing it is
+    /// itself an entry — では and ではない both are. Particles are what this app
+    /// tints and what a learner most needs to see standing apart, so an entry
+    /// that hides one costs more than it gives.
+    private static func mergeKnownWords(
+        _ ranges: [Range<String.Index>], in text: String, knownWords: Set<String>
+    ) -> [Range<String.Index>] {
+        guard !knownWords.isEmpty else { return ranges }
+        var merged: [Range<String.Index>] = []
+        var start = ranges.startIndex
+        while start < ranges.endIndex {
+            var last = start
+            if !isParticle(text[ranges[start]]) {
+                var end = start
+                while end + 1 < ranges.endIndex,
+                      ranges[end].upperBound == ranges[end + 1].lowerBound,
+                      !isParticle(text[ranges[end + 1]]) {
+                    let span = ranges[start].lowerBound..<ranges[end + 1].upperBound
+                    guard text[span].count <= maxCompound else { break }
+                    end += 1
+                    if knownWords.contains(String(text[span])) { last = end }
+                }
+            }
+            merged.append(ranges[start].lowerBound..<ranges[last].upperBound)
+            start = last + 1
+        }
+        return merged
+    }
+
+    private static func isParticle(_ slice: Substring) -> Bool {
+        particles.contains(String(slice))
+    }
+
     /// Rejoins adjacent all-kanji tokens.
     ///
     /// Two kanji words touching with nothing between them are a compound in
@@ -94,9 +154,9 @@ public enum JapaneseText {
     /// nouns. Merging is capped at six characters, past which the risk of
     /// swallowing a real boundary outgrows the benefit.
     ///
-    /// Kana compounds (まどぐち splits to まど + ぐち) are left alone: は and を
-    /// are kana too, and merging kana runs would swallow the particles this app
-    /// most wants to keep separate. Fixing those needs a real dictionary.
+    /// Kana runs are not merged here whatever they spell: は and を are kana
+    /// too, and a rule about character classes would swallow the particles this
+    /// app most wants to keep separate. Kana compounds are the dictionary's job.
     private static func merge(
         _ ranges: [Range<String.Index>], in text: String
     ) -> [Range<String.Index>] {

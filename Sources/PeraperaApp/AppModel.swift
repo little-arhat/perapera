@@ -413,7 +413,7 @@ final class AppModel {
     private var store: FluentStore?
     /// A meaning, from whatever already knows. Never a model call.
     func knownGloss(for word: String) -> Glossary.Entry? {
-        Glossary().known(word, savedItems: savedItems)
+        Glossary().known(word, savedItems: savedItems, dictionary: dictionary)
     }
 
     /// Empty when no key is configured, which disables photo exercises rather
@@ -422,7 +422,18 @@ final class AppModel {
 
     var canGenerateImages: Bool { !openRouterKey.isEmpty }
 
+    /// The bundled dictionary: meanings, and the word list segmentation needs.
+    ///
+    /// Empty until it has been read, which is a real state rather than a
+    /// failure -- text segments without it, just less well, and the views
+    /// redraw when it lands.
+    private(set) var dictionary = JapaneseDictionary.empty
+
     func start() async {
+        // Four megabytes of JSON. Read alongside the migration rather than on
+        // the first click, which is where it used to land.
+        async let loaded = Task.detached { JapaneseDictionary.bundled() }.value
+
         // Off the main actor: this hashes every file of the profile, which is a
         // visible hang once there are a few hundred lesson images.
         let migrator = Migrator(legacy: Locations.legacyDataDirectory,
@@ -441,6 +452,7 @@ final class AppModel {
         activeProfile = profiles.active
         rebuildServices()
         await refresh()
+        dictionary = await loaded
     }
 
     /// Switching is a change of subject, not a reload. Everything derived from the

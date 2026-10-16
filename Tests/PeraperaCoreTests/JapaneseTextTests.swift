@@ -4,8 +4,15 @@ import Testing
 // Segmentation is what a learner hovers, what gets tinted, and what a reading is
 // attached to. A wrong boundary teaches a word that does not exist.
 
+/// Segmentation with no dictionary: what the kanji rule alone can do.
 private func words(_ text: String) -> [String] {
-    JapaneseText.tokens(in: text).map(\.text)
+    JapaneseText.tokens(in: text, knownWords: []).map(\.text)
+}
+
+/// Segmentation with one. A handful of words, so the test says what it relies
+/// on rather than depending on whatever the bundled file happens to list.
+private func words(_ text: String, knowing known: Set<String>) -> [String] {
+    JapaneseText.tokens(in: text, knownWords: known).map(\.text)
 }
 
 @Test func adjacentKanjiCompoundsAreRejoined() {
@@ -45,7 +52,7 @@ private func words(_ text: String) -> [String] {
     // A token whose range does not match its text would tint or hover the wrong
     // span, which is silent and confusing.
     let source = "東京駅から新幹線に乗って京都まで行きます"
-    for token in JapaneseText.tokens(in: source) {
+    for token in JapaneseText.tokens(in: source, knownWords: []) {
         #expect(String(source[token.range]) == token.text)
     }
 }
@@ -60,7 +67,7 @@ private func words(_ text: String) -> [String] {
 @Test func hoveringFindsTheMergedToken() {
     let source = "新幹線に乗る"
     // Offset 1 is inside 幹, which NLTokenizer would report as part of 幹線.
-    #expect(JapaneseText.token(at: 1, in: source)?.text == "新幹線")
+    #expect(JapaneseText.token(at: 1, in: source, knownWords: [])?.text == "新幹線")
 }
 
 @Test func emptyAndLatinTextAreHandled() {
@@ -73,9 +80,9 @@ private func words(_ text: String) -> [String] {
     // beginner pastes into the scratch pad. If it were treated as plain text
     // the words would be inert, which is the whole feature missing.
     let source = "ひらがなだけのぶんです"
-    let tokens = JapaneseText.tokens(in: source)
+    let tokens = JapaneseText.tokens(in: source, knownWords: [])
     #expect(tokens.count > 1, "kana text must still break into words")
-    #expect(JapaneseText.token(at: 0, in: source) != nil)
+    #expect(JapaneseText.token(at: 0, in: source, knownWords: []) != nil)
     for token in tokens {
         #expect(String(source[token.range]) == token.text)
     }
@@ -86,7 +93,58 @@ private func words(_ text: String) -> [String] {
     // resolve to something, or some characters are silently unclickable.
     let source = "切符を2枚ください"
     for offset in 0..<source.utf16.count {
-        #expect(JapaneseText.token(at: offset, in: source) != nil,
+        #expect(JapaneseText.token(at: offset, in: source, knownWords: []) != nil,
+                "offset \(offset) resolves to no word")
+    }
+}
+
+// A dictionary is the only thing that can tell まど + ぐち is one word: both
+// halves are words too, so no rule about character classes reaches it.
+
+@Test func aKnownWordIsRejoinedEvenWhenBothHalvesAreAlsoWords() {
+    #expect(words("まどぐちは三番です").contains("まどぐち") == false,
+            "no dictionary, no join -- that is the point of the next one")
+    #expect(words("まどぐちは三番です", knowing: ["まどぐち", "まど", "ぐち"])
+            .contains("まどぐち"))
+}
+
+@Test func theLongestKnownSpanWinsNotTheFirst() {
+    // The tokenizer gives ゆうびん + きょく. Both the first pair and the whole
+    // are listed, so taking the first match would stop at ゆうびん.
+    let known: Set<String> = ["ゆうびん", "きょく", "ゆうびんきょく"]
+    let tokens = words("ゆうびんきょくへ行きます", knowing: known)
+    #expect(tokens.contains("ゆうびんきょく"))
+    #expect(!tokens.contains("ゆうびん"))
+    #expect(tokens.contains("へ"))
+}
+
+@Test func aParticleIsNeverSwallowedEvenWhenTheDictionaryListsTheSpan() {
+    // では and ではない are both real entries. Joining either hides the two
+    // particles this app exists to make visible.
+    let tokens = words("学生ではない", knowing: ["では", "ではない", "学生"])
+    #expect(tokens.contains("で"))
+    #expect(tokens.contains("は"))
+    #expect(!tokens.contains("では"))
+}
+
+@Test func aKnownJoinIsCappedLikeTheKanjiOne() {
+    // A listed form long enough to span a clause is more likely a phrase the
+    // tokenizer should have broken up than a word worth highlighting, so the
+    // span is never even tested past the cap.
+    let long = "あいうえおかきくけこ"
+    let tokens = words(long, knowing: [long])
+    #expect(!tokens.contains(long))
+    #expect(tokens.allSatisfy { $0.count <= 8 })
+}
+
+@Test func joiningLeavesEveryCharacterAccountedFor() {
+    let source = "まどぐちは三番です"
+    let known: Set<String> = ["まどぐち", "まど", "ぐち", "三番", "です"]
+    for token in JapaneseText.tokens(in: source, knownWords: known) {
+        #expect(String(source[token.range]) == token.text)
+    }
+    for offset in 0..<source.utf16.count {
+        #expect(JapaneseText.token(at: offset, in: source, knownWords: known) != nil,
                 "offset \(offset) resolves to no word")
     }
 }

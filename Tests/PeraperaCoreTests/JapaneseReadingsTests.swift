@@ -6,7 +6,7 @@ import Testing
 // the kanji has no way to catch the error.
 
 @Test func annotatesKanjiAndLeavesKanaAlone() {
-    let annotated = JapaneseReadings.annotate("私は学生です")
+    let annotated = JapaneseReadings.annotate("私は学生です", knownWords: [])
     #expect(annotated.contains("["))
     // Kana-only runs must survive untouched, brackets and all.
     let segments = Furigana.parse(annotated)
@@ -14,14 +14,14 @@ import Testing
 }
 
 @Test func textWithNoKanjiIsReturnedUnchanged() {
-    #expect(JapaneseReadings.annotate("ひらがなだけ") == "ひらがなだけ")
-    #expect(JapaneseReadings.annotate("Hello, world.") == "Hello, world.")
-    #expect(JapaneseReadings.annotate("") == "")
+    #expect(JapaneseReadings.annotate("ひらがなだけ", knownWords: []) == "ひらがなだけ")
+    #expect(JapaneseReadings.annotate("Hello, world.", knownWords: []) == "Hello, world.")
+    #expect(JapaneseReadings.annotate("", knownWords: []) == "")
 }
 
 @Test func whitespaceAndLineBreaksAreThePastedTextsOwn() {
     let source = "山\n川\n\n海"
-    let segments = Furigana.parse(JapaneseReadings.annotate(source))
+    let segments = Furigana.parse(JapaneseReadings.annotate(source, knownWords: []))
     #expect(segments.map(\.base).joined() == source)
 }
 
@@ -41,7 +41,7 @@ import Testing
 @Test func theAnnotationRoundTripsThroughTheParserTheAppAlreadyUses() {
     // Whatever this produces has to be renderable by the same code that renders
     // a generated lesson, or the scratch pad needs a second rendering path.
-    let annotated = JapaneseReadings.annotate("切符を2枚ください")
+    let annotated = JapaneseReadings.annotate("切符を2枚ください", knownWords: [])
     let segments = Furigana.parse(annotated)
     #expect(segments.map(\.base).joined() == "切符を2枚ください")
     #expect(segments.contains { $0.reading != nil })
@@ -83,7 +83,7 @@ import Testing
                    "キラキラダイアモンド輝く星のように",
                    "栄光志望校なんとかして入ろう",
                    "切符を2枚ください"] {
-        let annotated = JapaneseReadings.annotate(source)
+        let annotated = JapaneseReadings.annotate(source, knownWords: [])
         let segments = Furigana.parse(annotated)
         #expect(segments.map(\.base).joined() == source,
                 "round trip changed the text for \(source): \(annotated)")

@@ -31,6 +31,8 @@ struct RubyTextView: NSViewRepresentable {
     let highlightWords: Bool
     /// Non-nil tints particles this colour.
     var particleColor: NSColor?
+    /// Every form the bundled dictionary lists, for segmentation.
+    var knownWords: Set<String> = []
     /// Width to lay out into. SwiftUI measures after layout, so the view needs
     /// telling rather than asking.
     let availableWidth: CGFloat
@@ -50,12 +52,17 @@ struct RubyTextView: NSViewRepresentable {
     func makeNSView(context: Context) -> RubyCanvas {
         let view = RubyCanvas()
         view.onWordTapped = onWordTapped
+        view.setKnownWords(knownWords)
         view.configure(with: model)
         return view
     }
 
     func updateNSView(_ view: RubyCanvas, context: Context) {
         view.onWordTapped = onWordTapped
+        // Before `configure`: the word list arrives after the first render, and
+        // the text has to be rebuilt once it does or the segmentation stays as
+        // it was drawn without it.
+        view.setKnownWords(knownWords)
         view.configure(with: model)
     }
 
@@ -85,6 +92,7 @@ struct RubyTextView: NSViewRepresentable {
             rubyColor: rubyColor,
             selectable: selectable,
             highlightWords: highlightWords,
+            particleColor: particleColor,
             isMarkdown: isMarkdown
         )
     }
@@ -127,6 +135,10 @@ final class RubyCanvas: NSView {
     private var frame_: CTFrame?
     private var lines: [(line: CTLine, origin: CGPoint)] = []
 
+    /// Kept out of `Model`, which is compared on every update: comparing a
+    /// 68,000-element set to decide whether to redraw is the wrong trade.
+    private var knownWords: Set<String> = []
+
     private var selection: Range<Int>?
     private var anchor: Int?
     private var hoveredWord: Range<Int>?
@@ -154,6 +166,17 @@ final class RubyCanvas: NSView {
             invalidateIntrinsicContentSize()
             needsDisplay = true
         }
+    }
+
+    /// Returns having rebuilt if the list changed, since segmentation depends
+    /// on it. Separate from `configure` so the comparison is a count, not a set.
+    func setKnownWords(_ words: Set<String>) {
+        guard words.count != knownWords.count else { return }
+        knownWords = words
+        guard !model.annotated.isEmpty else { return }
+        rebuild()
+        invalidateIntrinsicContentSize()
+        needsDisplay = true
     }
 
     func configure(with model: Model) {
@@ -231,7 +254,8 @@ final class RubyCanvas: NSView {
     private func tintParticles(in result: NSMutableAttributedString) {
         guard let color = model.particleColor else { return }
         let text = result.string
-        for token in JapaneseText.tokens(in: text) where token.role == .particle {
+        for token in JapaneseText.tokens(in: text, knownWords: knownWords)
+        where token.role == .particle {
             let range = NSRange(token.range, in: text)
             result.addAttribute(.foregroundColor, value: color, range: range)
         }
@@ -470,7 +494,8 @@ final class RubyCanvas: NSView {
     /// highlighted half a word and offered to save a word that does not exist.
     private func wordRange(containing index: Int) -> Range<Int>? {
         guard !plainText.isEmpty,
-              let token = JapaneseText.token(at: index, in: plainText)
+              let token = JapaneseText.token(at: index, in: plainText,
+                                             knownWords: knownWords)
         else { return nil }
         let lower = plainText.utf16.distance(
             from: plainText.utf16.startIndex,

@@ -56,7 +56,10 @@ answer or advance past an exercise.
 
 Text size is adjustable and persists. Word highlighting underlines the word under the
 pointer and copies it on click, which is a genuine reading aid in a language without spaces.
-Click a word for its meaning, to add it to your saved list, to copy it, or to open JapanDict.
+Click a word for its meaning, to add it to your saved list, to copy it, or to open
+JapanDict. Words are found by the bundled dictionary, so まどぐち is one word rather than
+まど plus ぐち — the system tokenizer splits compounds, and both halves of that one are
+words in their own right.
 
 Playback speed is a stored value rather than a preset because the scale is badly
 non-linear. Measured on one Japanese sentence: 0.5 takes 4.2 s, 0.375 takes 4.6 s and is

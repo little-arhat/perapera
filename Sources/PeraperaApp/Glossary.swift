@@ -19,7 +19,9 @@ struct Glossary {
     }
 
     /// The learner's own dictionary first: a note they wrote outranks a gloss.
-    func known(_ word: String, savedItems: SavedItems) -> Entry? {
+    func known(
+        _ word: String, savedItems: SavedItems, dictionary: JapaneseDictionary
+    ) -> Entry? {
         let bare = Furigana.stripped(word)
         if let saved = savedItems.items.first(where: {
             $0.id == SavedItem.identifier(for: word)
@@ -27,7 +29,7 @@ struct Glossary {
             return Entry(word: word, reading: saved.reading,
                          meaning: saved.gloss, source: "your dictionary")
         }
-        if let entry = Bundled.shared.look(up: word) {
+        if let entry = dictionary.look(up: word) {
             return Entry(word: word,
                          reading: entry.reading ?? JapaneseReadings.reading(of: bare),
                          meaning: entry.gloss, source: "dictionary")
@@ -40,41 +42,46 @@ struct Glossary {
     }
 }
 
-/// The bundled slice of JMdict, loaded the first time something is looked up.
+/// The bundled slice of JMdict: what a word means, and which forms are words.
 ///
-/// Four megabytes of JSON, so it is not decoded at launch: nothing needs it
-/// until a word is clicked, and paying that on every start for a feature that
-/// might not be used is the wrong trade.
+/// A value, loaded once and passed to whatever needs it. It was a lazily-loading
+/// singleton, which meant the first click paid four megabytes of JSON decoding
+/// on the main thread, and nothing could say whether it was loaded yet.
 ///
-/// Main-actor confined rather than locked: every caller is a view or the model,
-/// which are already there, and a lock would be machinery for contention that
-/// cannot happen.
-@MainActor
-final class Bundled {
-    struct Entry: Decodable {
+/// `knownWords` is every form in the index. Segmentation needs it: まど and ぐち
+/// are both words, so only a dictionary can say that まどぐち is one.
+struct JapaneseDictionary: Sendable {
+    struct Entry: Decodable, Sendable {
         let r: String?
         let g: String
         var reading: String? { r }
         var gloss: String { g }
     }
 
-    static let shared = Bundled()
-    private var index: [String: Entry]?
+    private let entries: [String: Entry]
+    let knownWords: Set<String>
 
+    static let empty = JapaneseDictionary(entries: [:])
+
+    private init(entries: [String: Entry]) {
+        self.entries = entries
+        self.knownWords = Set(entries.keys)
+    }
+
+    /// Reads the bundled index. Call it off the main actor: this is four
+    /// megabytes of JSON and a 68,000-key set.
+    static func bundled() -> JapaneseDictionary {
+        guard let url = Bundle.module.url(forResource: "lookup", withExtension: "json",
+                                          subdirectory: "Words"),
+              let data = try? Data(contentsOf: url),
+              let decoded = try? JSONDecoder().decode([String: Entry].self, from: data)
+        else { return .empty }
+        return JapaneseDictionary(entries: decoded)
+    }
+
+    /// A clicked word may carry furigana markup from the lesson it came from.
     func look(up word: String) -> Entry? {
-        if index == nil {
-            guard let url = Bundle.module.url(forResource: "lookup", withExtension: "json",
-                                              subdirectory: "Words"),
-                  let data = try? Data(contentsOf: url),
-                  let decoded = try? JSONDecoder().decode([String: Entry].self, from: data)
-            else {
-                index = [:]
-                return nil
-            }
-            index = decoded
-        }
-        // A clicked word may carry furigana markup from the lesson it came from.
-        return index?[Furigana.stripped(word)]
+        entries[Furigana.stripped(word)]
     }
 }
 
