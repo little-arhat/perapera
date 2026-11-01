@@ -89,7 +89,7 @@ committing one.
 ## Testing
 
 ```bash
-swift test                                        # 254, no network
+swift test                                        # 268, no network
 cd fluent && python3 -m unittest discover -s tests # 29, stdlib only
 cd tools/imgbench && uv run pytest                # 32
 ```

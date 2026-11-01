@@ -156,6 +156,27 @@ extension View {
 
 /// The furigana toggle. Small, always in the same place, so it becomes muscle
 /// memory rather than a hunt.
+/// Spaces between the words, for text that has none.
+///
+/// Japanese is written without them, and finding where a word starts comes
+/// before reading it. A crutch worth having and worth putting down.
+struct SeparatorToggle: View {
+    @Binding var isOn: Bool
+    @Environment(\.palette) private var palette
+
+    var body: some View {
+        Button { isOn.toggle() } label: {
+            Label(isOn ? "Join words" : "Space words",
+                  systemImage: isOn ? "rectangle.compress.vertical"
+                                    : "rectangle.expand.vertical")
+                .font(.caption)
+                .foregroundStyle(palette.secondaryText)
+        }
+        .buttonStyle(.plain)
+        .help("Put a space between words. Text that is already spaced is left alone.")
+    }
+}
+
 struct FuriganaToggle: View {
     @Binding var isOn: Bool
     @Environment(\.palette) private var palette

@@ -148,3 +148,43 @@ private func words(_ text: String, knowing known: Set<String>) -> [String] {
                 "offset \(offset) resolves to no word")
     }
 }
+
+// Spacing the text out. Japanese is written without spaces, which is most of
+// what makes a wall of it hard: finding where a word starts comes before
+// reading it.
+
+@Test func separatorsGoBetweenWordsThatNothingAlreadySeparates() {
+    let spaced = JapaneseText.separated("切符を2枚ください", knownWords: [])
+    #expect(spaced.contains(" "))
+    // The words themselves are untouched, and nothing is lost.
+    #expect(spaced.replacingOccurrences(of: " ", with: "") == "切符を2枚ください")
+}
+
+@Test func textThatArrivesSpacedIsLeftAlone() {
+    // A textbook's spaced Japanese, or a line with Latin in it. A second space
+    // beside an existing one is how a reading aid starts looking broken.
+    for source in ["わたし は がくせい です", "I went to 東京駅 yesterday"] {
+        let spaced = JapaneseText.separated(source, knownWords: [])
+        #expect(!spaced.contains("  "), "doubled a space in \(source)")
+    }
+}
+
+@Test func punctuationAndLineBreaksSurviveSeparation() {
+    let source = "きょうは\nいい てんきです。"
+    let spaced = JapaneseText.separated(source, knownWords: [])
+    #expect(spaced.contains("\n"))
+    #expect(spaced.hasSuffix("。"))
+    #expect(!spaced.contains("  "))
+}
+
+@Test func separatingNothingReturnsItUnchanged() {
+    #expect(JapaneseText.separated("", knownWords: []) == "")
+    #expect(JapaneseText.separated("。、「」", knownWords: []) == "。、「」")
+}
+
+@Test func separationRespectsTheDictionarySoItDoesNotSplitAWord() {
+    let known: Set<String> = ["まどぐち", "まど", "ぐち"]
+    let spaced = JapaneseText.separated("まどぐちは三番です", knownWords: known)
+    #expect(spaced.contains("まどぐち "))
+    #expect(!spaced.contains("まど ぐち"))
+}

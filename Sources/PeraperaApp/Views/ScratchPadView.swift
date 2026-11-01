@@ -31,18 +31,15 @@ struct ScratchPadView: View {
                 .onChange(of: model.scratchText) { annotated = nil }
 
             HStack(spacing: 12) {
-                Button {
-                    annotated = JapaneseReadings.annotate(
-                        model.scratchText, knownWords: model.dictionary.knownWords)
-                } label: {
+                Button { read() } label: {
                     Label("Read it", systemImage: "text.magnifyingglass")
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(palette.accent)
-                .disabled(model.scratchText.trimmingCharacters(in: .whitespacesAndNewlines)
-                    .isEmpty)
+                .disabled(isBlank)
 
                 FuriganaToggle(isOn: $model.showFurigana)
+                SeparatorToggle(isOn: $model.showWordSeparators)
 
                 Spacer()
 
@@ -52,6 +49,11 @@ struct ScratchPadView: View {
                 }
                 .disabled(model.scratchText.isEmpty)
             }
+            // The spacing is part of the rendering, so flipping it re-renders
+            // what is on screen rather than waiting to be asked again.
+            .onChange(of: model.showWordSeparators) { if annotated != nil { render() } }
+
+            if !model.scratchHistory.entries.isEmpty { history }
 
             if let annotated {
                 reading(annotated)
@@ -67,6 +69,89 @@ struct ScratchPadView: View {
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
         .onDisappear { model.persistScratch() }
+    }
+
+    private var isBlank: Bool {
+        model.scratchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// Renders what is in the editor. Separate from `read()` because flipping a
+    /// display switch is not reading the text again.
+    private func render() {
+        let known = model.dictionary.knownWords
+        let source = model.showWordSeparators
+            ? JapaneseText.separated(model.scratchText, knownWords: known)
+            : model.scratchText
+        annotated = JapaneseReadings.annotate(source, knownWords: known)
+    }
+
+    private func read() {
+        render()
+        model.recordScratchRead(model.scratchText)
+    }
+
+    /// What the pad has read before.
+    ///
+    /// The pad held one text and overwrote it, so a menu read last week was
+    /// gone the moment the next one was pasted. These are the learner's own
+    /// materials, which is the one thing a lesson cannot supply.
+    private var history: some View {
+        CollapsibleSection(
+            title: "Read before",
+            summary: "^[\(model.scratchHistory.entries.count) text](inflect: true)",
+            storageKey: "scratch.history",
+            expandedByDefault: false
+        ) {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(model.scratchHistory.entries) { entry in
+                    row(entry)
+                    if entry.id != model.scratchHistory.entries.last?.id {
+                        Divider()
+                    }
+                }
+            }
+            .frame(maxWidth: scale.prose(720), alignment: .leading)
+            .background(palette.surface, in: .rect(cornerRadius: 8))
+        }
+    }
+
+    private func row(_ entry: ScratchEntry) -> some View {
+        HStack(spacing: 10) {
+            Button { open(entry) } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(entry.summary)
+                        .font(.system(size: scale.size(14)))
+                        .foregroundStyle(palette.emphasizedText)
+                        .lineLimit(1)
+                    Text("^[\(entry.characterCount) character](inflect: true) · "
+                         + "\(entry.readAt.formatted(.relative(presentation: .named)))")
+                        .font(.caption2)
+                        .foregroundStyle(palette.secondaryText)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .help("Put this back in the pad")
+
+            Button { model.forgetScratch(id: entry.id) } label: {
+                Image(systemName: "xmark")
+                    .font(.caption)
+                    .foregroundStyle(palette.secondaryText)
+            }
+            .buttonStyle(.plain)
+            .help("Forget this text")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+
+    /// Puts a text back in the pad, already read: it was read once, and asking
+    /// for it again would be asking for work the app has already done.
+    private func open(_ entry: ScratchEntry) {
+        model.scratchText = entry.text
+        model.persistScratch()
+        render()
     }
 
     private var header: some View {

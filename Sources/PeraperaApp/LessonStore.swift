@@ -240,6 +240,30 @@ final class LessonStore {
         try Data(text.utf8).write(to: scratchURL, options: .atomic)
     }
 
+    // The texts read so far. JSON rather than the plain file above, because a
+    // list of texts with the dates they were read has structure that prose
+    // does not; `scratch.txt` stays plain so the draft is still a file anyone
+    // can open.
+
+    private var scratchHistoryURL: URL {
+        directory.deletingLastPathComponent().appending(path: "scratch-history.json")
+    }
+
+    func loadScratchHistory() -> ScratchHistory {
+        guard let data = try? Data(contentsOf: scratchHistoryURL),
+              let history = try? decoder.decode(ScratchHistory.self, from: data)
+        else { return ScratchHistory() }
+        return history
+    }
+
+    func saveScratchHistory(_ history: ScratchHistory) throws {
+        try prepare()
+        let data = try encoder.encode(history)
+        let temp = scratchHistoryURL.appendingPathExtension("tmp")
+        try data.write(to: temp, options: .atomic)
+        _ = try FileManager.default.replaceItemAt(scratchHistoryURL, withItemAt: temp)
+    }
+
     func delete(id: String) throws {
         deleteAssets(for: id)
         try FileManager.default.removeItem(at: url(for: id))

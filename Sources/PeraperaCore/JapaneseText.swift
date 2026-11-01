@@ -78,6 +78,37 @@ public enum JapaneseText {
         return tokens(in: text, knownWords: knownWords).first { $0.range.contains(index) }
     }
 
+    /// The text with `separator` between words that nothing already separates.
+    ///
+    /// Japanese is written without spaces, which is most of what makes a wall
+    /// of it hard for a beginner: before you can read a word you have to find
+    /// where it starts. Spacing it out is a crutch, and the right kind — it
+    /// can be switched off once the eye does the job itself.
+    ///
+    /// Text that arrives already spaced is left as it is. A learner pastes
+    /// what they found, and what they found may be a textbook's spaced
+    /// Japanese, a line of Latin, or a mixture; inserting a second space
+    /// beside an existing one is how a reading aid starts looking broken.
+    public static func separated(
+        _ text: String, knownWords: Set<String>, separator: String = " "
+    ) -> String {
+        let words = tokens(in: text, knownWords: knownWords)
+        guard let first = words.first else { return text }
+
+        var out = String(text[text.startIndex..<first.range.lowerBound])
+        var previous: Range<String.Index>?
+        for word in words {
+            if let previous {
+                let gap = text[previous.upperBound..<word.range.lowerBound]
+                out += gap.isEmpty ? separator : String(gap)
+            }
+            out += word.text
+            previous = word.range
+        }
+        out += text[(previous?.upperBound ?? text.startIndex)...]
+        return out
+    }
+
     public static func role(of token: String) -> Role {
         if particles.contains(token) { return .particle }
         let kana = token.unicodeScalars.allSatisfy { (0x3040...0x30FF).contains($0.value) }

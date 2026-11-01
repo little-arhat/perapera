@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 @testable import PeraperaApp
+@testable import PeraperaCore
 
 // This is the code that moves data nobody can regenerate. Every case here is a
 // way it could quietly lose or corrupt a learner's history.
@@ -185,4 +186,26 @@ private struct Tree {
     }
     #expect(FileManager.default.fileExists(
         atPath: tree.profiles.appending(path: "roma-japanese/lessons/one.json").path))
+}
+
+// The scratch pad's history. Learner-owned text, so it has to survive a quit
+// and belong to the profile rather than to the Mac.
+
+@Test @MainActor func theScratchHistoryIsKeptWithTheProfile() throws {
+    let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "scratch-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+
+    let store = LessonStore(dataDirectory: directory)
+    #expect(store.loadScratchHistory().entries.isEmpty, "nothing read yet")
+
+    var history = ScratchHistory()
+    // A whole second: the store writes ISO-8601, which carries no fraction, so
+    // comparing a `Date()` here would be testing the clock rather than the file.
+    history.record("まどぐちは三番です", at: Date(timeIntervalSince1970: 1_700_000_000))
+    try store.saveScratchHistory(history)
+
+    // A fresh store, as the next launch builds.
+    #expect(LessonStore(dataDirectory: directory).loadScratchHistory() == history)
 }

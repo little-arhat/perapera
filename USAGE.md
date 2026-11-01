@@ -172,9 +172,19 @@ Click a word for its meaning, to save it, or to look it up, the same as in a les
 A lesson is text the app chose; this is a menu you photographed, a line from a manga,
 a sign you could not read.
 
-Readings come from the system tokenizer, so this costs nothing and works offline. It
-occasionally splits a compound in the wrong place (新幹線 comes back as 新 + 幹線), so
-the readings are right more often than the word boundaries are. The pane says so.
+Readings come from the system tokenizer, so this costs nothing and works offline. Words
+are found against the bundled dictionary, which is what tells it that まどぐち is one word
+and not まど plus ぐち; it still splits the occasional compound it has never heard of.
+
+**Space words** puts a gap between the words, since Japanese writes none and finding where
+a word starts comes before reading it. Text you paste that is already spaced is left as it
+is, so pasting a textbook line or a sentence with English in it does not double anything.
+Switch it off when the eye does the job itself.
+
+**Read before** keeps every text you have read, newest first — fifty of them. Click one to
+put it back in the pad. Re-reading a text moves it up rather than listing it twice, and the
+× forgets it. The pad used to hold one text and overwrite it, so the menu you read last
+week was gone the moment you pasted the next one.
 
 What you paste is kept with the profile, not with the Mac, so it follows you when you
 switch profiles.

@@ -115,11 +115,22 @@ final class AppModel {
         didSet { UserDefaults.standard.set(showFurigana, forKey: "showFurigana") }
     }
 
+    /// Spaces between words in the scratch pad.
+    ///
+    /// Japanese has none, and finding where a word starts comes before reading
+    /// it. A crutch worth having and worth putting down, so it is a switch and
+    /// it is remembered.
+    var showWordSeparators: Bool {
+        didSet { UserDefaults.standard.set(showWordSeparators, forKey: "showWordSeparators") }
+    }
+
     /// A focus handed over from another screen, consumed by Practice.
     var pendingFocus: String?
     var savedItems = SavedItems()
     /// Whatever the learner pasted into the scratch pad, kept with the profile.
     var scratchText = ""
+    /// Every text the pad has read, newest first.
+    var scratchHistory = ScratchHistory()
     /// Per-character letterform accuracy, for the script drill.
     var scriptProgress = LessonStore.ScriptProgress()
     /// Per-word schedule for the reading drill.
@@ -274,6 +285,7 @@ final class AppModel {
         self.generationModel = defaults.string(forKey: "generationModel") ?? "sonnet"
         self.gradingModel = defaults.string(forKey: "gradingModel") ?? legacyModel ?? "opus"
         self.showFurigana = defaults.bool(forKey: "showFurigana")
+        self.showWordSeparators = defaults.bool(forKey: "showWordSeparators")
         let stored = defaults.double(forKey: "textSizeFactor")
         self.textSizeFactor = stored > 0 ? stored : 1.0
         self.textSelectable = defaults.bool(forKey: "textSelectable")
@@ -465,6 +477,7 @@ final class AppModel {
         records = []
         savedItems = SavedItems()
         scratchText = ""
+        scratchHistory = ScratchHistory()
         scriptProgress = LessonStore.ScriptProgress()
         readingProgress = [:]
         pictures = []
@@ -482,6 +495,7 @@ final class AppModel {
         guard let lessonStore else { return }
         savedItems = (try? lessonStore.loadSavedItems()) ?? SavedItems()
         scratchText = lessonStore.loadScratch()
+        scratchHistory = lessonStore.loadScratchHistory()
         scriptProgress = lessonStore.loadScriptProgress()
         readingProgress = lessonStore.loadReadingProgress()
         pictures = (try? lessonStore.loadPictures()) ?? []
@@ -599,6 +613,19 @@ final class AppModel {
     /// Written on leaving the scratch pad rather than on every keystroke: this
     /// is a text file, and a learner pasting a page should not cause a write per
     /// character.
+    /// Remembers a text as read. Called when the learner asks for the reading,
+    /// which is the deliberate act -- recording every keystroke would fill the
+    /// list with half-typed fragments.
+    func recordScratchRead(_ text: String) {
+        scratchHistory.record(text, at: Date())
+        try? lessonStore?.saveScratchHistory(scratchHistory)
+    }
+
+    func forgetScratch(id: String) {
+        scratchHistory.remove(id: id)
+        try? lessonStore?.saveScratchHistory(scratchHistory)
+    }
+
     func persistScratch() {
         try? lessonStore?.saveScratch(scratchText)
     }
