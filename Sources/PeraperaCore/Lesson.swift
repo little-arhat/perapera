@@ -150,6 +150,20 @@ public struct Exercise: Codable, Sendable, Identifiable {
 
     public let id: String
     public let skill: Skill
+    /// The grammar or vocabulary point this exercise drills, as a snake_case
+    /// id shared with `mistakes-db`'s `pattern_id`.
+    ///
+    /// It is what makes a right answer countable. Fluent has always recorded
+    /// what went wrong, pattern by pattern; nothing recorded what went right,
+    /// so a point the learner has quietly fixed stayed on the error list and
+    /// kept being re-taught. Tagging the exercise closes that loop: the
+    /// session report tallies attempts and successes per pattern, and the
+    /// next brief carries both.
+    ///
+    /// Optional because not every exercise drills one nameable point — a
+    /// comprehension question about a passage drills reading, and inventing
+    /// an id for it would make the tally meaningless.
+    public let pattern: String?
     public let prompt: String
     public let instruction: String?
     public let explanation: String?
@@ -251,7 +265,7 @@ public struct Exercise: Codable, Sendable, Identifiable {
     /// can take an exercise without a second entry point that would drift.
     public static func placeholder(id: String) -> Exercise {
         Exercise(
-            id: id, skill: .reading, prompt: "", instruction: nil,
+            id: id, skill: .reading, pattern: nil, prompt: "", instruction: nil,
             explanation: nil, audioText: nil, passage: nil, reviewItemIds: [],
             content: .recognition(
                 image: ImageSpec(scene: "", targets: [], question: nil),
@@ -259,12 +273,13 @@ public struct Exercise: Codable, Sendable, Identifiable {
     }
 
     init(
-        id: String, skill: Skill, prompt: String, instruction: String?,
-        explanation: String?, audioText: String?, passage: String?,
-        reviewItemIds: [String], content: Content
+        id: String, skill: Skill, pattern: String?, prompt: String,
+        instruction: String?, explanation: String?, audioText: String?,
+        passage: String?, reviewItemIds: [String], content: Content
     ) {
         self.id = id
         self.skill = skill
+        self.pattern = pattern
         self.prompt = prompt
         self.instruction = instruction
         self.explanation = explanation
@@ -317,7 +332,7 @@ public struct Exercise: Codable, Sendable, Identifiable {
 
 extension Exercise {
     private enum CodingKeys: String, CodingKey {
-        case id, kind, skill, prompt, instruction, explanation, audioText
+        case id, kind, skill, pattern, prompt, instruction, explanation, audioText
         case passage, reviewItemIds
         case options, correctIndex, acceptedAnswers, tokens, correctOrder, pairs
         case front, back, referenceAnswer, items, image
@@ -332,6 +347,8 @@ extension Exercise {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
         skill = try c.decode(Skill.self, forKey: .skill)
+        pattern = try c.decodeIfPresent(String.self, forKey: .pattern)
+            .flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
         prompt = try c.decode(String.self, forKey: .prompt)
         instruction = try c.decodeIfPresent(String.self, forKey: .instruction)
         explanation = try c.decodeIfPresent(String.self, forKey: .explanation)
@@ -470,6 +487,7 @@ extension Exercise {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(id, forKey: .id)
         try c.encode(skill, forKey: .skill)
+        try c.encodeIfPresent(pattern, forKey: .pattern)
         try c.encode(prompt, forKey: .prompt)
         try c.encodeIfPresent(instruction, forKey: .instruction)
         try c.encodeIfPresent(explanation, forKey: .explanation)

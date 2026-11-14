@@ -35,6 +35,7 @@ private func sampleReport() -> SessionReport {
                   initial_quality: 3, priority: "medium")
         ],
         review_results: [.init(item_id: "vocab_kippu", quality: 4)],
+        pattern_results: [.init(pattern_id: "counter_placement", attempts: 9, correct: 6)],
         topics_covered: ["counters"],
         breakthroughs: [],
         focus_next_session: ["を placement"],
@@ -51,7 +52,7 @@ private func sampleReport() -> SessionReport {
     // Optional but consumed -- these are the keys documented in DB_SCRIPTS.md.
     for key in ["duration_minutes", "command_used", "skills_practiced",
                 "skill_scores", "errors", "new_vocabulary", "review_results",
-                "topics_covered", "breakthroughs", "focus_next_session",
+                "pattern_results", "topics_covered", "breakthroughs", "focus_next_session",
                 "session_notes", "milestones"] {
         #expect(json[key] != nil, "missing top-level key '\(key)'")
     }
@@ -80,6 +81,13 @@ private func sampleReport() -> SessionReport {
     let review = (json["review_results"] as! [[String: Any]])[0]
     #expect(review["item_id"] as? String == "vocab_kippu")
     #expect(review["quality"] as? Int == 4)
+
+    // Same id as the error above, deliberately: one point, counted from both
+    // sides. update-db.py keys mastery-db.patterns on it.
+    let pattern = (json["pattern_results"] as! [[String: Any]])[0]
+    #expect(pattern["pattern_id"] as? String == "counter_placement")
+    #expect(pattern["attempts"] as? Int == 9)
+    #expect(pattern["correct"] as? Int == 6)
 }
 
 @Test func reviewQualityStaysInSM2Range() throws {
@@ -98,7 +106,8 @@ private func sampleReport() -> SessionReport {
         duration_minutes: report.duration_minutes, command_used: report.command_used,
         skills_practiced: report.skills_practiced, skill_scores: report.skill_scores,
         errors: report.errors, new_vocabulary: report.new_vocabulary,
-        review_results: report.review_results, topics_covered: report.topics_covered,
+        review_results: report.review_results, pattern_results: report.pattern_results,
+        topics_covered: report.topics_covered,
         breakthroughs: report.breakthroughs, focus_next_session: report.focus_next_session,
         session_notes: report.session_notes, milestones: ["First lesson in the app"])
 
@@ -106,4 +115,90 @@ private func sampleReport() -> SessionReport {
     // The script accepts strings or objects; strings are the simpler half of
     // that contract and the one the app uses.
     #expect(json["milestones"] as? [String] == ["First lesson in the app"])
+}
+
+// MARK: - The grammar point an exercise drills
+
+@Test func anExerciseCarriesThePointItDrills() throws {
+    let ex = try decodeExercise([
+        "kind": "cloze", "pattern": "particle_de_location",
+        "acceptedAnswers": ["で"],
+    ])
+    #expect(ex.pattern == "particle_de_location")
+}
+
+@Test func anUntaggedExerciseHasNoPoint() throws {
+    // Archived lessons predate the field, and a comprehension question about
+    // a passage has no single point to name. Both must decode.
+    let ex = try decodeExercise(["kind": "cloze", "acceptedAnswers": ["で"]])
+    #expect(ex.pattern == nil)
+}
+
+@Test func aBlankPointIsNoPoint() throws {
+    // A tally keyed on "" or " " would merge unrelated exercises under one
+    // meaningless id and poison the mastery it feeds.
+    for blank in ["", "   "] {
+        let ex = try decodeExercise([
+            "kind": "cloze", "pattern": blank, "acceptedAnswers": ["で"],
+        ])
+        #expect(ex.pattern == nil)
+    }
+}
+
+@Test func thePointSurvivesTheArchive() throws {
+    let ex = try decodeExercise([
+        "kind": "cloze", "pattern": "counter_mai", "acceptedAnswers": ["三枚"],
+    ])
+    let round = try JSONDecoder().decode(
+        Exercise.self, from: try JSONEncoder().encode(ex))
+    #expect(round.pattern == "counter_mai")
+}
+
+// MARK: - Tallying a point
+
+private func drill(_ pattern: String?, items: Int) throws -> Exercise {
+    var fields: [String: Any] = ["kind": "set", "items": (1...items).map {
+        ["prompt": "q\($0)", "acceptedAnswers": ["a\($0)"]]
+    }]
+    if let pattern { fields["pattern"] = pattern }
+    return try decodeExercise(fields)
+}
+
+@Test func aDrillCountsOnceForEveryAnswerInIt() throws {
+    // Seven of nine right in one set is seven answers on that point, not one
+    // exercise "passed" -- the repetition is the signal.
+    let results = SessionReport.patternResults(of: [try drill("counter_mai", items: 9)]) { _ in 8 }
+    #expect(results.count == 1)
+    #expect(results[0].pattern_id == "counter_mai")
+    #expect(results[0].attempts == 9)
+    #expect(results[0].correct == 7)
+}
+
+@Test func drillsOnTheSamePointAddUp() throws {
+    let exercises = [try drill("particle_de", items: 5), try drill("particle_de", items: 3)]
+    let results = SessionReport.patternResults(of: exercises) { $0.itemCount == 5 ? 10 : 0 }
+    #expect(results.count == 1)
+    #expect(results[0].attempts == 8)
+    #expect(results[0].correct == 5)
+}
+
+@Test func anUnansweredExerciseIsNotCountedEitherWay() throws {
+    // Abandoning a lesson halfway must not read as failing its last points.
+    let results = SessionReport.patternResults(of: [try drill("te_form", items: 5)]) { _ in nil }
+    #expect(results.isEmpty)
+}
+
+@Test func anUntaggedExerciseTalliesNothing() throws {
+    let results = SessionReport.patternResults(of: [try drill(nil, items: 5)]) { _ in 10 }
+    #expect(results.isEmpty)
+}
+
+@Test func aTeacherScoreOutsideTheScaleCannotInventAnswers() throws {
+    // Grading is the one score the app does not compute; a model that returns
+    // 12 out of 10 must not produce more correct answers than there were items.
+    let exercise = try drill("kanji_reading", items: 4)
+    let high = SessionReport.patternResults(of: [exercise]) { _ in 12 }
+    #expect(high[0].correct == 4)
+    let low = SessionReport.patternResults(of: [exercise]) { _ in -3 }
+    #expect(low[0].correct == 0)
 }

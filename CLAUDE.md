@@ -19,7 +19,7 @@ and [USAGE.md](USAGE.md).
 | `Tests/PeraperaAppTests/` | The migration and the teacher-context assembly. |
 | `Sources/PeraperaApp/Resources/Words/` | A slice of JMdict for the reading drill and dictionary pictures, built by `tools/words/build.py`. **CC BY-SA 4.0**, not MIT — see the LICENCE beside it. |
 | `tools/imgbench/` | Image-model benchmark. Its own `uv` project, 32 tests. |
-| `fluent/` | Fluent: skills, hooks, six databases, methodology, 22 Python tests. |
+| `fluent/` | Fluent: skills, hooks, six databases, methodology, 40 Python tests. |
 
 ## Rules that hold the design together
 
@@ -30,6 +30,11 @@ and [USAGE.md](USAGE.md).
   `fluent/.claude/hooks/update-db.py`, the single writer. Nothing here reimplements them.
 - **Fluent owns the pedagogy.** `fluent/docs/METHODOLOGY.md` states how Fluent teaches,
   independent of surface. Do not paraphrase teaching rules into Swift.
+- **Right answers are recorded too.** Every exercise names the point it drills
+  (`Exercise.pattern`), the app tallies answers under it (`pattern_results`),
+  and `update-db.py` keeps mastery per point in `mastery-db.patterns`, keyed on
+  the same id as an error pattern. Without the denominator the generator sees
+  only failures and re-teaches what the learner has already fixed.
 - **Grading splits by what each side can know.** The app supplies what it measures; the
   teacher supplies judgement. Neither is asked for the other's half.
 - **Target language is Japanese.** Kana input, furigana, ruby and voice selection assume it.
@@ -89,8 +94,8 @@ committing one.
 ## Testing
 
 ```bash
-swift test                                        # 268, no network
-cd fluent && python3 -m unittest discover -s tests # 29, stdlib only
+swift test                                        # 277, no network
+cd fluent && python3 -m unittest discover -s tests # 40, stdlib only
 cd tools/imgbench && uv run pytest                # 32
 ```
 

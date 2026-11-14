@@ -71,6 +71,11 @@
             ],
             "description": "Maps to Fluent's skill_scores keys."
           },
+          "pattern": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "description": "The single grammar or vocabulary point this exercise drills, as a snake_case id: 'particle_de_location', 'counter_mai', 'te_form_request'. Reuse the id an error pattern already uses when it is the same point -- the app tallies attempts and successes under it, and Fluent tracks mastery per point from both sides. Omit only where no single point is tested, e.g. a comprehension question about a passage."
+          },
           "prompt": {
             "type": "string",
             "minLength": 1,

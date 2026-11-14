@@ -226,6 +226,7 @@ struct LessonService {
             .replacingOccurrences(of: "{{TEACHER_PLAN}}", with: teacherPlan(snapshot))
             .replacingOccurrences(of: "{{RECENT_NOTES}}", with: recentNotes(snapshot))
             .replacingOccurrences(of: "{{SKILL_MASTERY}}", with: skillMastery(snapshot))
+            .replacingOccurrences(of: "{{PATTERN_MASTERY}}", with: patternMastery(snapshot))
             .replacingOccurrences(of: "{{IMAGE_BUDGET}}", with: imageBudget(spec))
             .replacingOccurrences(of: "{{RECENT_LESSONS}}", with: recentSummary(recent))
     }
@@ -290,6 +291,31 @@ struct LessonService {
             .sorted { ($0.value.mastery_level ?? 0) < ($1.value.mastery_level ?? 0) }
             .map { "\($0.key) \($0.value.mastery_level ?? 0)/5" }
             .joined(separator: " · ")
+    }
+
+    /// How each grammar point is actually going, weakest first.
+    ///
+    /// The error list above is one-sided: it says a point was got wrong twelve
+    /// times, never out of how many. A pattern missed twelve times in sixty
+    /// attempts is being learned; missed twelve times in fourteen is not, and
+    /// the two want different lessons. This is the denominator.
+    ///
+    /// Worth saying plainly to the generator, because the obvious reading of a
+    /// high success rate is "drop it" when it is usually "space it out".
+    private func patternMastery(_ snapshot: FluentStore.Snapshot) -> String {
+        let patterns = (snapshot.databases.mastery_db.patterns ?? [:])
+            .filter { ($0.value.times_practiced ?? 0) > 0 }
+            .sorted {
+                ($0.value.success_rate ?? 0, $0.key) < ($1.value.success_rate ?? 0, $1.key)
+            }
+            .prefix(12)
+        guard !patterns.isEmpty else { return "(nothing practised yet)" }
+        return patterns.map { id, value in
+            let rate = Int((value.success_rate ?? 0) * 100)
+            let when = value.last_practiced.map { ", last \($0)" } ?? ""
+            return "- \(id): \(rate)% of \(value.times_practiced ?? 0) answers"
+                + " [\(value.mastery_level ?? 0)/5\(when)]"
+        }.joined(separator: "\n")
     }
 
     /// The last few lessons, so the generator can avoid repeating them.
@@ -547,6 +573,9 @@ struct LessonService {
             },
             review_results: bestQuality.map { .init(item_id: $0.key, quality: $0.value) }
                 .sorted { $0.item_id < $1.item_id },
+            pattern_results: SessionReport.patternResults(
+                of: record.lesson.exercises,
+                score: { record.verdicts[$0.id]?.score ?? teacherScores[$0.id] }),
             topics_covered: [record.lesson.focus],
             breakthroughs: feedback.breakthroughs ?? [],
             focus_next_session: feedback.focusNextSession ?? [],

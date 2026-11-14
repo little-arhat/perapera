@@ -34,6 +34,16 @@ Recent error patterns, most frequent first:
 
 {{ERROR_PATTERNS}}
 
+How each point is actually going — success rate over all answers so far,
+weakest first, with the mastery level Fluent derives from it:
+
+{{PATTERN_MASTERY}}
+
+Read this against the error list: it carries the denominator the error list
+lacks. A point missed often but succeeding 70% of the time is being learned and
+wants spacing, not re-teaching; one below 50% after a dozen answers wants to be
+taught again from the beginning, differently.
+
 Spaced-repetition items due now (id, type, content, answer, priority):
 
 {{DUE_ITEMS}}
@@ -138,15 +148,24 @@ Skill mastery (0-5): {{SKILL_MASTERY}}
    ("駅のアナウンスを聞いてください。いくらですか。"); `audioText` alone carries
    the words.
 
-10. **Every exercise carries an `explanation`** that teaches the rule, not just
+10. **Name the point every exercise drills in `pattern`.** A snake_case id
+   like `particle_de_location`, `counter_mai`, `te_form_request`. Reuse the id
+   an error pattern above already uses when it is the same point, so the count
+   of right answers lands beside the count of wrong ones; the app tallies it
+   and Fluent tracks mastery per point from both. One id per exercise — if an
+   exercise genuinely drills two points it should be two exercises. Leave
+   `pattern` out only where no single point is being tested, as in a
+   comprehension question about a passage.
+
+11. **Every exercise carries an `explanation`** that teaches the rule, not just
    the fact. "は marks the topic, を the direct object" beats "the answer is は".
 
-11. **Write `acceptedAnswers` generously.** Include every spelling a correct
+12. **Write `acceptedAnswers` generously.** Include every spelling a correct
    learner might type: kana and kanji forms, digits and words for numbers,
    with and without optional particles. A correct answer rejected on a technicality
    is worse than a wrong answer accepted.
 
-12. **Furigana on every kanji the learner has not mastered.** Write it inline as
+13. **Furigana on every kanji the learner has not mastered.** Write it inline as
    `切符[きっぷ]`, with the reading covering only the kanji run — `買[か]います`,
    never `買います[かいます]`. Use it in `prompt`, `passage`, `instruction`,
    `explanation`, `front`/`back`, and `referenceAnswer`. Do NOT use it in
@@ -154,7 +173,7 @@ Skill mastery (0-5): {{SKILL_MASTERY}}
    Readings are hidden by default and revealed on request, so annotating costs
    the learner nothing and omitting it makes a text unreadable for them.
 
-13. **Reading comprehension uses `passage`.** For a text with several questions,
+14. **Reading comprehension uses `passage`.** For a text with several questions,
    repeat the SAME `passage` string verbatim on each consecutive exercise and
    vary only the `prompt`; the app shows the text once. Keep a passage to
    roughly 3-6 sentences at A1-A2 and ground it in something the learner would
@@ -162,7 +181,7 @@ Skill mastery (0-5): {{SKILL_MASTERY}}
    Mix question types over one passage: a multipleChoice for gist, a cloze for
    detail, a freeResponse for inference.
 
-14. **Reading in the wild — use `recognition` when it is asked for.**
+15. **Reading in the wild — use `recognition` when it is asked for.**
    Kana on a screen and kana on a noren are different skills. A `recognition`
    exercise shows a photograph the app generates, and the learner types what it
    says. {{IMAGE_BUDGET}}
@@ -183,6 +202,6 @@ Skill mastery (0-5): {{SKILL_MASTERY}}
      types. They must correspond to what `targets` actually says.
    - Never name a real company or brand in `scene`.
 
-15. **Ground every exercise in a real situation** the learner will actually meet,
+16. **Ground every exercise in a real situation** the learner will actually meet,
    given their stated goal. Not "translate this sentence" but "you are at the
    ticket window and want two tickets to Kyoto".

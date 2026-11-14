@@ -91,10 +91,20 @@ final class FluentStore {
 
         struct MasteryDB: Decodable {
             let skills: [String: Skill]?
+            /// Per grammar point, keyed by the same id as an error pattern.
+            let patterns: [String: Pattern]?
 
             struct Skill: Decodable {
                 let mastery_level: Int?
                 let avg_accuracy: Double?
+            }
+
+            struct Pattern: Decodable {
+                let mastery_level: Int?
+                let times_practiced: Int?
+                let times_correct: Int?
+                let success_rate: Double?
+                let last_practiced: String?
             }
         }
 

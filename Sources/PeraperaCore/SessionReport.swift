@@ -76,6 +76,28 @@ public struct SessionReport: Encodable {
         }
     }
 
+    /// How one grammar point went this session.
+    ///
+    /// The counterpart of `TrackedError`: that one says what the learner got
+    /// wrong, this one says how often they got it right. `pattern_id` shares a
+    /// namespace with `TrackedError.pattern_id` deliberately, so one id names
+    /// the same point on both sides and `mastery-db.patterns` can be read
+    /// beside `mistakes-db.error_patterns`.
+    ///
+    /// Measured, not judged, so the app supplies it: it is a count of answers,
+    /// which is the app's half of the split.
+    public struct PatternResult: Encodable {
+        public let pattern_id: String
+        public let attempts: Int
+        public let correct: Int
+
+        public init(pattern_id: String, attempts: Int, correct: Int) {
+            self.pattern_id = pattern_id
+            self.attempts = attempts
+            self.correct = correct
+        }
+    }
+
     public struct ReviewResult: Encodable {
         public let item_id: String
         public let quality: Int
@@ -95,6 +117,7 @@ public struct SessionReport: Encodable {
     public let errors: [TrackedError]
     public let new_vocabulary: [NewVocabulary]
     public let review_results: [ReviewResult]
+    public let pattern_results: [PatternResult]
     public let topics_covered: [String]
     public let breakthroughs: [String]
     public let focus_next_session: [String]
@@ -111,6 +134,7 @@ public struct SessionReport: Encodable {
         errors: [TrackedError],
         new_vocabulary: [NewVocabulary],
         review_results: [ReviewResult],
+        pattern_results: [PatternResult],
         topics_covered: [String],
         breakthroughs: [String],
         focus_next_session: [String],
@@ -126,10 +150,43 @@ public struct SessionReport: Encodable {
         self.errors = errors
         self.new_vocabulary = new_vocabulary
         self.review_results = review_results
+        self.pattern_results = pattern_results
         self.topics_covered = topics_covered
         self.breakthroughs = breakthroughs
         self.focus_next_session = focus_next_session
         self.session_notes = session_notes
         self.milestones = milestones
+    }
+}
+
+extension SessionReport {
+    /// Tallies answers per grammar point.
+    ///
+    /// Counted in items with partial credit, where `skill_scores` counts
+    /// exercises passed. The two granularities differ on purpose: a set of
+    /// nine is nine answers on one point, and scoring it as a single pass
+    /// throws away the repetition the set exists for.
+    ///
+    /// `score` returns nil for an exercise the learner never answered, which
+    /// is not the same as answering it wrongly and must not be counted as
+    /// either.
+    public static func patternResults(
+        of exercises: [Exercise], score: (Exercise) -> Int?
+    ) -> [PatternResult] {
+        var tallies: [String: (attempts: Int, correct: Int)] = [:]
+        for exercise in exercises {
+            guard let pattern = exercise.pattern, let score = score(exercise) else {
+                continue
+            }
+            let items = exercise.itemCount
+            let previous = tallies[pattern] ?? (0, 0)
+            tallies[pattern] = (
+                previous.attempts + items,
+                previous.correct + (max(0, min(10, score)) * items + 5) / 10)
+        }
+        return tallies
+            .map { PatternResult(pattern_id: $0.key, attempts: $0.value.attempts,
+                                 correct: $0.value.correct) }
+            .sorted { $0.pattern_id < $1.pattern_id }
     }
 }
