@@ -14,7 +14,27 @@ struct ScratchPadView: View {
     @Environment(\.palette) private var palette
     @Environment(\.textScale) private var scale
 
-    @State private var annotated: String?
+    /// The last text read, with its annotation.
+    ///
+    /// Held as a pair and shown only while `source` still matches the editor,
+    /// so editing hides a stale reading by itself.
+    ///
+    /// It was a lone `annotated` string cleared from `onChange(of: scratchText)`,
+    /// which left putting a remembered text back dependent on an ordering
+    /// nothing guarantees: that action sets the text *and* renders it, and a
+    /// change handler running afterwards would wipe what it just rendered.
+    /// Deriving what to show from the two values cannot go wrong in either
+    /// order.
+    private struct Rendering: Equatable {
+        let source: String
+        let annotated: String
+    }
+
+    @State private var rendered: Rendering?
+
+    private var shown: Rendering? {
+        rendered.flatMap { $0.source == model.scratchText ? $0 : nil }
+    }
 
     var body: some View {
         @Bindable var model = model
@@ -28,7 +48,6 @@ struct ScratchPadView: View {
                 .padding(8)
                 .background(palette.surface, in: .rect(cornerRadius: 8))
                 .frame(minHeight: 120, maxHeight: 200)
-                .onChange(of: model.scratchText) { annotated = nil }
 
             HStack(spacing: 12) {
                 Button { read() } label: {
@@ -45,18 +64,18 @@ struct ScratchPadView: View {
 
                 Button("Clear") {
                     model.scratchText = ""
-                    annotated = nil
+                    rendered = nil
                 }
                 .disabled(model.scratchText.isEmpty)
             }
             // The spacing is part of the rendering, so flipping it re-renders
             // what is on screen rather than waiting to be asked again.
-            .onChange(of: model.showWordSeparators) { if annotated != nil { render() } }
+            .onChange(of: model.showWordSeparators) { if shown != nil { render() } }
 
             if !model.scratchHistory.entries.isEmpty { history }
 
-            if let annotated {
-                reading(annotated)
+            if let shown {
+                reading(shown.annotated)
             } else {
                 Text("Paste Japanese above and press Read it. Readings are computed on "
                      + "this Mac, so it works offline and costs nothing.")
@@ -79,10 +98,13 @@ struct ScratchPadView: View {
     /// display switch is not reading the text again.
     private func render() {
         let known = model.dictionary.knownWords
-        let source = model.showWordSeparators
-            ? JapaneseText.separated(model.scratchText, knownWords: known)
-            : model.scratchText
-        annotated = JapaneseReadings.annotate(source, knownWords: known)
+        let text = model.scratchText
+        let spaced = model.showWordSeparators
+            ? JapaneseText.separated(text, knownWords: known)
+            : text
+        rendered = Rendering(
+            source: text,
+            annotated: JapaneseReadings.annotate(spaced, knownWords: known))
     }
 
     private func read() {
