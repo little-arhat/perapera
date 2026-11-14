@@ -64,3 +64,32 @@ import Testing
         "Fill the gap {{kanji}} with {{WORD}}.", with: ["WORD": "駅"], named: "t")
     #expect(filled == "Fill the gap {{kanji}} with 駅.")
 }
+
+// MARK: - What the shipped prompts still ask for
+
+// The loop these guard is quiet when it breaks: drop the tag from the schema
+// and lessons still generate, still grade and still record — only the counts
+// per point stop growing, which nothing fails over.
+
+@Test func theSchemaStillAsksEachExerciseToNameItsPoint() throws {
+    let schema = try ResourceLoader().text("Schemas/lesson.schema.json")
+    let json = try JSONSerialization.jsonObject(with: Data(schema.utf8)) as! [String: Any]
+    let exercises = (json["properties"] as! [String: Any])["exercises"] as! [String: Any]
+    let fields = ((exercises["items"] as! [String: Any])["properties"] as! [String: Any])
+    let pattern = try #require(fields["pattern"] as? [String: Any])
+    #expect(pattern["type"] as? String == "string")
+    // snake_case is the shared namespace with mistakes-db's pattern_id.
+    #expect(pattern["pattern"] as? String == "^[a-z0-9_]+$")
+}
+
+@Test func bothPromptsSpeakOfTheSameIds() throws {
+    let generation = try ResourceLoader().text("Prompts/generate-lesson.md")
+    #expect(generation.contains("{{PATTERN_MASTERY}}"))
+    #expect(generation.contains("`pattern`"))
+
+    // Grading files the errors; generation files the answers. If the grader is
+    // not told which id a question is already filed under, it coins a synonym
+    // and one point is tracked twice.
+    let grading = try ResourceLoader().text("Prompts/grade-lesson.md")
+    #expect(grading.contains("Point:"))
+}

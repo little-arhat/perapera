@@ -466,6 +466,14 @@ struct LessonService {
         for exercise in record.lesson.exercises {
             let answer = record.answers[exercise.id]
             lines.append("### \(exercise.id) — \(exercise.skill.rawValue)")
+            // The id the lesson already filed this question under. Naming it
+            // here is what keeps one point from accruing under two ids: the
+            // app counts answers under the exercise's tag, and the teacher
+            // files the errors, and both have to agree or neither number means
+            // anything.
+            if let pattern = exercise.pattern {
+                lines.append("Point: \(pattern)")
+            }
             lines.append("Prompt: \(exercise.prompt)")
             if let instruction = exercise.instruction {
                 lines.append("Instruction: \(instruction)")

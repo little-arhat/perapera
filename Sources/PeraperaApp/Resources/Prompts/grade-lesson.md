@@ -43,7 +43,10 @@ Exercises marked `needsGrading` are yours to score.
 4. **Mine errors from the whole lesson**, auto-graded exercises included.
    Collapse duplicates into one `errors` entry per pattern. Reuse the
    `patternId` of an existing pattern when it is the same mistake, so frequency
-   accumulates instead of fragmenting.
+   accumulates instead of fragmenting. An exercise that names a `Point:` is
+   already filed under that id and the app is counting its answers there —
+   use it rather than coining a synonym, or the same point ends up tracked
+   twice under two names and neither count is true.
 
 5. **Severity means consequence.** `critical` breaks communication or blocks
    comprehension; `moderate` is noticeable but survivable; `minor` is a typo or
