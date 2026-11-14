@@ -81,7 +81,18 @@ private func scratchProfile() throws -> URL {
     for exercise in reloaded.lesson.exercises {
         #expect(!exercise.prompt.isEmpty, "exercise \(exercise.id) has no prompt")
     }
+    // The point tags are what Fluent's per-point mastery rests on, and a
+    // prompt rule the model ignores records nothing while everything still
+    // looks fine. A lesson about counters and prices has a nameable point in
+    // every exercise, so most of them should carry one.
+    let tagged = reloaded.lesson.exercises.compactMap(\.pattern)
+    #expect(tagged.count * 2 >= reloaded.lesson.exercises.count,
+            "only \(tagged.count) of \(reloaded.lesson.exercises.count) exercises named a point")
+    #expect(tagged.allSatisfy { $0 == $0.lowercased() && !$0.contains(" ") },
+            "ids are not snake_case: \(tagged)")
+
     print("live: \(record.lesson.exercises.count) exercises — \(record.lesson.title)")
+    print("live: points — \(tagged.joined(separator: ", "))")
 }
 
 /// One surface, three letterings. Spends about $0.21 and needs an OpenRouter
