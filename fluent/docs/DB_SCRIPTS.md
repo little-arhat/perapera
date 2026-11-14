@@ -87,6 +87,9 @@ python3 "${CLAUDE_PLUGIN_ROOT:-${CLAUDE_PROJECT_DIR:-.}}/.claude/hooks/update-db
   "review_results": [
     { "item_id": "vocab_dag", "quality": 4 }
   ],
+  "pattern_results": [
+    { "pattern_id": "verb_conjugation_3rd_person", "attempts": 9, "correct": 6 }
+  ],
   "topics_covered": ["articles", "house_vocabulary"],
   "breakthroughs": ["First correct use of 'het' vs 'de'"],
   "focus_next_session": ["Drill de/het article gender"],
@@ -121,6 +124,13 @@ Everything else is optional; omitted fields do not update.
 
 ## Data model notes
 
+- `mastery-db.json` keeps two levels that look alike and are not. `skills.*`
+  measures a broad skill and only ever rises: one bad session does not unlearn
+  reading. `patterns.*` measures one grammar point from `pattern_results[]`,
+  and falls when the success rate falls — a point the learner has lost is the
+  one thing the next lesson most needs to know. `errors[]` says what went
+  wrong, `pattern_results[]` says out of how many; both key on the same
+  `pattern_id`, so a point can be read from either side.
 - `learner-profile.json` stores `confidence` per skill as an integer 0–100.
 - `learner-profile.json` keeps two dates that are easy to confuse:
   `last_updated` is when the profile file last changed, `last_session_date` is

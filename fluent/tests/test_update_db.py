@@ -506,6 +506,72 @@ class UpdateDbSmokeTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, msg=proc.stderr)
         self.assertEqual(self._load("learner-profile.json")["current_streak_days"], 8)
 
+    # --- Mastery per grammar point ---
+
+    def _practise(self, session_id, pattern_id, attempts, correct,
+                  date="2026-04-24"):
+        payload = dict(SESSION_PAYLOAD)
+        payload["session_id"] = session_id
+        payload["date"] = date
+        payload["pattern_results"] = [{"pattern_id": pattern_id,
+                                       "attempts": attempts,
+                                       "correct": correct}]
+        proc = self._run(payload)
+        self.assertEqual(proc.returncode, 0, msg=proc.stderr)
+        return self._load("mastery-db.json")["patterns"][pattern_id]
+
+    def test_a_practised_pattern_is_recorded(self):
+        pat = self._practise("session-200", "de_het_article", 9, 6)
+        self.assertEqual(pat["times_practiced"], 9)
+        self.assertEqual(pat["times_correct"], 6)
+        self.assertEqual(pat["success_rate"], 0.667)
+        self.assertEqual(pat["last_practiced"], "2026-04-24")
+        self.assertEqual(pat["mastery_level"], 2)  # 9 answers, 67%
+
+    def test_practice_accumulates_across_sessions(self):
+        self._practise("session-200", "de_het_article", 9, 6)
+        pat = self._practise("session-201", "de_het_article", 11, 11,
+                             date="2026-04-25")
+        self.assertEqual(pat["times_practiced"], 20)
+        self.assertEqual(pat["times_correct"], 17)
+        self.assertEqual(pat["success_rate"], 0.85)
+        self.assertEqual(pat["mastery_level"], 4)
+
+    def test_a_pattern_that_is_lost_loses_its_level(self):
+        """Not a ratchet, unlike skills.
+
+        A point whose success rate collapses is the single thing the next
+        lesson needs to know; holding the level it once reached would hide it.
+        The rate is cumulative, so one bad set among many good ones moves it a
+        little and a sustained collapse moves it a lot -- which is the right
+        way round.
+        """
+        self._practise("session-200", "de_het_article", 20, 19)
+        before = self._load("mastery-db.json")["patterns"]["de_het_article"]
+        self.assertEqual(before["mastery_level"], 4)
+
+        after = self._practise("session-201", "de_het_article", 20, 0,
+                               date="2026-04-25")
+        self.assertEqual(after["success_rate"], 0.475)
+        self.assertEqual(after["mastery_level"], 1)
+
+    def test_a_pattern_without_answers_is_not_recorded(self):
+        payload = dict(SESSION_PAYLOAD)
+        payload["session_id"] = "session-202"
+        payload["pattern_results"] = [
+            {"pattern_id": "never_answered", "attempts": 0, "correct": 0},
+            {"attempts": 3, "correct": 3},
+        ]
+        proc = self._run(payload)
+        self.assertEqual(proc.returncode, 0, msg=proc.stderr)
+        self.assertEqual(self._load("mastery-db.json")["patterns"], {})
+
+    def test_a_session_without_pattern_results_still_writes(self):
+        """The field is optional: a terminal session never sends it."""
+        proc = self._run(SESSION_PAYLOAD)
+        self.assertEqual(proc.returncode, 0, msg=proc.stderr)
+        self.assertEqual(self._load("mastery-db.json")["patterns"], {})
+
 
 if __name__ == "__main__":
     unittest.main()

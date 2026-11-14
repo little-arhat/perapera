@@ -40,6 +40,7 @@
       "mastery_level": 0,
       "last_practiced": null,
       "times_practiced": 0,
+      "times_correct": 0,
       "success_rate": 0.0
     }
   },

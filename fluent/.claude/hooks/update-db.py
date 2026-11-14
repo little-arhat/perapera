@@ -354,6 +354,28 @@ def update_mistakes_db(mistakes: dict, session: dict):
     mistakes["metadata"]["total_patterns_tracked"] = len(patterns)
 
 
+def pattern_mastery_level(practiced: int, rate: float) -> int:
+    """Mastery of one grammar point, from how often it has been answered right.
+
+    Unlike a skill's level this one is not a ratchet. A skill is broad, and a
+    bad day does not unlearn it; a grammar point is narrow, and a success rate
+    that falls back below half means the learner has lost it. Holding the old
+    level would hide exactly what the next lesson needs to know, which is the
+    only reason this number is recorded at all.
+    """
+    if practiced == 0:
+        return 0
+    if practiced < 5 or rate < 0.5:
+        return 1
+    if practiced < 10 or rate < 0.65:
+        return 2
+    if practiced < 20 or rate < 0.8:
+        return 3
+    if practiced < 40 or rate < 0.9:
+        return 4
+    return 5
+
+
 def update_mastery_db(mastery: dict, session: dict, progress: dict):
     today = session["date"]
 
@@ -385,6 +407,25 @@ def update_mastery_db(mastery: dict, session: dict, progress: dict):
             s["mastery_level"] = max(s.get("mastery_level", 0), 4)
         else:
             s["mastery_level"] = 5
+
+    for result in session.get("pattern_results", []):
+        pattern_id = result.get("pattern_id")
+        attempts = result.get("attempts", 0)
+        if not pattern_id or attempts <= 0:
+            continue
+
+        pat = mastery.setdefault("patterns", {}).setdefault(pattern_id, {
+            "mastery_level": 0, "last_practiced": None,
+            "times_practiced": 0, "times_correct": 0, "success_rate": 0.0,
+        })
+        pat["last_practiced"] = today
+        pat["times_practiced"] = pat.get("times_practiced", 0) + attempts
+        pat["times_correct"] = pat.get("times_correct", 0) + result.get("correct", 0)
+
+        practiced = pat["times_practiced"]
+        rate = pat["times_correct"] / practiced
+        pat["success_rate"] = round(rate, 3)
+        pat["mastery_level"] = pattern_mastery_level(practiced, rate)
 
     mastery.setdefault("metadata", {})["last_updated"] = today
 
