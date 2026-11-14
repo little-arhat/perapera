@@ -321,9 +321,7 @@ public struct PictureRequest: Equatable, Sendable {
     public static func from(
         _ item: SavedItem, surface: Surface, scripts: Scripts = .all
     ) -> PictureRequest? {
-        let written = Furigana.stripped(item.content)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !written.isEmpty else { return nil }
+        guard let written = writable(item.content) else { return nil }
 
         let available = forms(written: written, reading: item.reading, scripts: scripts)
         guard let shown = available.randomElement() else { return nil }
@@ -425,13 +423,38 @@ public struct PictureRequest: Equatable, Sendable {
         return out
     }
 
+    /// Free text reduced to what can go on a sign, or nil.
+    ///
+    /// Long strings are where image models start inventing characters, and an
+    /// image whose writing is wrong is discarded at our expense.
+    private static func writable(_ text: String) -> String? {
+        let written = Furigana.stripped(text)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !written.isEmpty, written.count <= 12 else { return nil }
+        return written
+    }
+
+    /// Whether a picture of this word can be made at all with these scripts.
+    ///
+    /// Asked by a caller deciding whether to offer the word, which has no
+    /// surface in mind yet; the surface only rolls a hand and never decides
+    /// whether there is anything to write. Shares its rules with `from`, so
+    /// the offer and the attempt cannot disagree.
+    public static func canDraw(text: String, scripts: Scripts) -> Bool {
+        guard let written = writable(text) else { return false }
+        return !forms(written: written, reading: nil, scripts: scripts).isEmpty
+    }
+
+    public static func canDraw(_ item: SavedItem, scripts: Scripts) -> Bool {
+        guard let written = writable(item.content) else { return false }
+        return !forms(written: written, reading: item.reading, scripts: scripts).isEmpty
+    }
+
     /// Builds one from free text the learner typed.
     public static func from(
         text: String, surface: Surface, scripts: Scripts = .all
     ) -> PictureRequest? {
-        let written = Furigana.stripped(text)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !written.isEmpty, written.count <= 12 else { return nil }
+        guard let written = writable(text) else { return nil }
 
         let available = forms(written: written, reading: nil, scripts: scripts)
         // Typed kanji with kanji switched off leaves nothing to show: the

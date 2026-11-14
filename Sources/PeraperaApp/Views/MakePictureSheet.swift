@@ -52,13 +52,10 @@ struct MakePictureSheet: View {
         case .dictionary:
             return min(batch.rawValue, dictionaryPool.count)
         case .saved:
-            let usable = savedCandidates.filter {
-                PictureRequest.from($0, surface: .stationSign, scripts: scripts) != nil
-            }
+            let usable = savedCandidates.filter { PictureRequest.canDraw($0, scripts: scripts) }
             return min(batch.rawValue, usable.count)
         case .custom:
-            return PictureRequest.from(text: custom, surface: .stationSign, scripts: scripts) == nil
-                ? 0 : 1
+            return PictureRequest.canDraw(text: custom, scripts: scripts) ? 1 : 0
         }
     }
 

@@ -240,3 +240,45 @@ private let kudasai = ReadingDrill.Word(w: "ください", g: "please", s: "h", 
     #expect(PictureRequest.reading(among: ["コーヒー", "こーひー"]) == "コーヒー")
     #expect(PictureRequest.reading(among: ["駐車場"]) == nil)
 }
+
+// MARK: - What can go on a sign at all
+
+// A caller deciding whether to offer a word has no surface in mind, and the
+// surface never decides whether there is anything to write. These must agree
+// with `from`, or the app offers a picture it then cannot make.
+
+@Test func whatCanBeDrawnIsWhatGetsDrawn() {
+    let cases: [(String, PictureRequest.Scripts)] = [
+        ("出口", .all), ("出口", .kanji), ("出口", .katakana),
+        ("でぐち", .hiragana), ("でぐち", .katakana), ("でぐち", .kanji),
+        ("", .all), ("   ", .all),
+        ("これはとてもながいぶんしょうです", .all),
+    ]
+    for (text, scripts) in cases {
+        let built = PictureRequest.from(text: text, surface: .stationSign, scripts: scripts)
+        #expect(PictureRequest.canDraw(text: text, scripts: scripts) == (built != nil),
+                "disagreed on '\(text)' with \(scripts)")
+    }
+}
+
+@Test func aSavedWordWithoutAReadingNeedsItsKanjiAllowed() {
+    let item = SavedItem(content: "切符", gloss: "ticket", kind: .word,
+                         sourceLessonId: nil, reading: nil)
+    #expect(PictureRequest.canDraw(item, scripts: .kanji))
+    // No reading to fall back on, so kana cannot be rendered.
+    #expect(!PictureRequest.canDraw(item, scripts: .hiragana))
+
+    let withReading = SavedItem(content: "切符", gloss: "ticket", kind: .word,
+                                sourceLessonId: nil, reading: "きっぷ")
+    #expect(PictureRequest.canDraw(withReading, scripts: .hiragana))
+}
+
+@Test func aSavedSentenceIsTooLongForASign() {
+    // Pictures of long text come back with invented characters and are thrown
+    // away at our expense, so the limit is the same one typed text gets.
+    let phrase = SavedItem(content: "すみません、切符はどこで買えますか",
+                           gloss: "excuse me, where can I buy a ticket",
+                           kind: .phrase, sourceLessonId: nil, reading: nil)
+    #expect(!PictureRequest.canDraw(phrase, scripts: .all))
+    #expect(PictureRequest.from(phrase, surface: .stationSign, scripts: .all) == nil)
+}
