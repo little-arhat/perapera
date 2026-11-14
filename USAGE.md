@@ -32,6 +32,21 @@ The app grades locally and offline wherever it can. There are three outcomes, no
 Finishing sends only the open questions to Claude, along with what the app already decided.
 One lesson becomes one Fluent session, written through `update-db.py`.
 
+## What gets tracked
+
+Each exercise names the one point it drills, and finishing a lesson records how many
+answers that point got and how many were right. Fluent keeps a level per point from
+those counts, and the next lesson is briefed with it, weakest first.
+
+That is the number the generator was missing. The error list says a point was got wrong
+twelve times; it never said out of how many. Twelve misses in sixty answers is a point
+being learned and wants spacing; twelve in fourteen wants teaching again from the
+beginning, differently.
+
+**Progress → Points, weakest first** shows the same list. Unlike the six skills above it,
+a point's level falls again if the rate falls — a thing you have lost is the thing worth
+seeing. Clicking one practises it.
+
 ## Working offline
 
 Generation and grading need the network. Everything between them does not. Generate several

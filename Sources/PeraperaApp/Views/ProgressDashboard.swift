@@ -26,6 +26,7 @@ struct ProgressDashboard: View {
                     headline(snapshot)
                     trend(snapshot)
                     skills(snapshot)
+                    points(snapshot)
                     topics
                 } else {
                     ContentUnavailableView("No progress yet",
@@ -203,6 +204,71 @@ struct ProgressDashboard: View {
         }
         .frame(width: 60, alignment: .leading)
         .help("Mastery \(level) of 5")
+    }
+
+    // MARK: - Per grammar point
+
+    /// The same numbers the generator is given, weakest first.
+    ///
+    /// Skills above are six broad buckets and move slowly; this is where a
+    /// lesson actually lands. Nothing here is computed in Swift either --
+    /// `update-db.py` derives the level from answers the app counted.
+    ///
+    /// Absent until a lesson has tagged something, rather than showing an
+    /// empty frame: a learner who has never seen it does not need to be told
+    /// it exists.
+    @ViewBuilder
+    private func points(_ snapshot: FluentStore.Snapshot) -> some View {
+        let all = (snapshot.databases.mastery_db.patterns ?? [:])
+            .filter { ($0.value.times_practiced ?? 0) > 0 }
+            .sorted {
+                ($0.value.success_rate ?? 0, $0.key) < ($1.value.success_rate ?? 0, $1.key)
+            }
+        if !all.isEmpty {
+            let shown = all.prefix(12)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Points, weakest first")
+                    .font(.headline)
+                    .foregroundStyle(palette.emphasizedText)
+
+                ForEach(shown, id: \.key) { id, point in
+                    // Picking one practises it, the way a topic does.
+                    Button {
+                        model.show(.practice)
+                        model.pendingFocus = id.replacingOccurrences(of: "_", with: " ")
+                    } label: {
+                        HStack(spacing: 12) {
+                            Text(id.replacingOccurrences(of: "_", with: " "))
+                                .frame(width: 200, alignment: .leading)
+                                .foregroundStyle(palette.bodyText)
+                            masteryMarks(point.mastery_level ?? 0)
+                            Text(point.success_rate.map { "\(Int($0 * 100))%" } ?? "—")
+                                .font(.caption.monospacedDigit())
+                                .frame(width: 44, alignment: .trailing)
+                                .foregroundStyle(palette.bodyText)
+                            Text("of \(point.times_practiced ?? 0)")
+                                .font(.caption)
+                                .frame(width: 70, alignment: .trailing)
+                                .foregroundStyle(palette.secondaryText)
+                            Text(point.last_practiced ?? "never")
+                                .font(.caption)
+                                .foregroundStyle(palette.secondaryText)
+                            Spacer()
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                if all.count > shown.count {
+                    Text("\(all.count - shown.count) more above these.")
+                        .font(.caption2)
+                        .foregroundStyle(palette.secondaryText)
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(palette.surface, in: .rect(cornerRadius: 12))
+        }
     }
 
     // MARK: - Topics
