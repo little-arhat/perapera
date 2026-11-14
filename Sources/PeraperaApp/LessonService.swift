@@ -31,6 +31,66 @@ struct ResourceLoader {
         }
         return try String(contentsOf: url, encoding: .utf8)
     }
+
+    /// Loads a prompt and fills every `{{PLACEHOLDER}}` in it.
+    ///
+    /// Refuses to produce a prompt where the two sides disagree: a placeholder
+    /// nobody filled, or a value nothing asked for. Both are the same bug seen
+    /// from either end, and both are invisible once sent -- the model answers
+    /// a prompt that still reads `{{TEACHER_PLAN}}` as readily as a complete
+    /// one, and the lesson comes back plausible with the context missing. That
+    /// is not hypothetical: the teacher's brief was substituted with the
+    /// literal string "(see error patterns above)" for weeks, and every lesson
+    /// looked fine.
+    func prompt(_ relativePath: String, filling values: [String: String]) throws -> String {
+        try ResourceLoader.fill(text(relativePath), with: values, named: relativePath)
+    }
+
+    static func fill(
+        _ template: String, with values: [String: String], named: String
+    ) throws -> String {
+        let wanted = placeholders(in: template)
+        let given = Set(values.keys)
+        guard wanted == given else {
+            throw TemplateError.mismatched(
+                template: named,
+                unfilled: wanted.subtracting(given).sorted(),
+                unused: given.subtracting(wanted).sorted())
+        }
+        // One pass over the template, so a value that happens to contain
+        // `{{WORD}}` stays text and the result does not depend on the order a
+        // dictionary happens to iterate in.
+        return template.replacing(placeholderPattern()) { match in
+            values[String(match.1)] ?? String(match.0)
+        }
+    }
+
+    /// Built per call rather than held as a constant: a `Regex` is not
+    /// `Sendable`, and this runs twice per lesson.
+    private static func placeholderPattern() -> Regex<(Substring, Substring)> {
+        /\{\{([A-Z0-9_]+)\}\}/
+    }
+
+    private static func placeholders(in template: String) -> Set<String> {
+        Set(template.matches(of: placeholderPattern()).map { String($0.1) })
+    }
+
+    enum TemplateError: LocalizedError {
+        case mismatched(template: String, unfilled: [String], unused: [String])
+
+        var errorDescription: String? {
+            guard case let .mismatched(template, unfilled, unused) = self else { return nil }
+            var parts: [String] = []
+            if !unfilled.isEmpty {
+                parts.append("nothing filled " + unfilled.map { "{{\($0)}}" }
+                    .joined(separator: ", "))
+            }
+            if !unused.isEmpty {
+                parts.append("no place for " + unused.joined(separator: ", "))
+            }
+            return "\(template): " + parts.joined(separator: "; ")
+        }
+    }
 }
 
 /// Turns Fluent's state into a prompt, and a finished lesson into a session
@@ -205,30 +265,31 @@ struct LessonService {
                 + ($0.value.notes.map { n in ": \(n)" } ?? "")
         }.joined(separator: "\n")
 
-        return try resources.text("Prompts/generate-lesson.md")
-            .replacingOccurrences(of: "{{NAME}}", with: learner.name)
-            .replacingOccurrences(of: "{{TARGET_LANGUAGE}}", with: learner.target_language)
-            .replacingOccurrences(of: "{{NATIVE_LANGUAGE}}", with: learner.native_language ?? "unknown")
-            .replacingOccurrences(of: "{{OTHER_LANGUAGES}}", with: (learner.other_languages ?? []).joined(separator: ", "))
-            .replacingOccurrences(of: "{{EXPLANATION_LANGUAGE}}", with: learner.explanation_language ?? "English")
-            .replacingOccurrences(of: "{{CURRENT_LEVEL}}", with: learner.current_level)
-            .replacingOccurrences(of: "{{TARGET_LEVEL}}", with: learner.target_level)
-            .replacingOccurrences(of: "{{MOTIVATION}}", with: learner.motivation ?? "general fluency")
-            .replacingOccurrences(of: "{{LEARNING_STYLE}}", with: learner.learning_style ?? "balanced")
-            .replacingOccurrences(of: "{{MODE}}", with: spec.mode.rawValue)
-            .replacingOccurrences(of: "{{SIZE}}", with: spec.size.rawValue)
-            .replacingOccurrences(of: "{{TARGET_EXERCISES}}", with: String(target.exercises))
-            .replacingOccurrences(of: "{{ITEMS_PER_SET}}", with: String(target.itemsPerSet))
-            .replacingOccurrences(of: "{{TARGET_MINUTES}}", with: String(target.minutes))
-            .replacingOccurrences(of: "{{FOCUS}}", with: spec.focus.isEmpty ? "(no specific focus — choose what serves the learner most)" : spec.focus)
-            .replacingOccurrences(of: "{{ERROR_PATTERNS}}", with: patternText)
-            .replacingOccurrences(of: "{{DUE_ITEMS}}", with: dueText)
-            .replacingOccurrences(of: "{{TEACHER_PLAN}}", with: teacherPlan(snapshot))
-            .replacingOccurrences(of: "{{RECENT_NOTES}}", with: recentNotes(snapshot))
-            .replacingOccurrences(of: "{{SKILL_MASTERY}}", with: skillMastery(snapshot))
-            .replacingOccurrences(of: "{{PATTERN_MASTERY}}", with: patternMastery(snapshot))
-            .replacingOccurrences(of: "{{IMAGE_BUDGET}}", with: imageBudget(spec))
-            .replacingOccurrences(of: "{{RECENT_LESSONS}}", with: recentSummary(recent))
+        return try resources.prompt("Prompts/generate-lesson.md", filling: [
+            "NAME": learner.name,
+            "TARGET_LANGUAGE": learner.target_language,
+            "NATIVE_LANGUAGE": learner.native_language ?? "unknown",
+            "OTHER_LANGUAGES": (learner.other_languages ?? []).joined(separator: ", "),
+            "EXPLANATION_LANGUAGE": learner.explanation_language ?? "English",
+            "CURRENT_LEVEL": learner.current_level,
+            "TARGET_LEVEL": learner.target_level,
+            "MOTIVATION": learner.motivation ?? "general fluency",
+            "LEARNING_STYLE": learner.learning_style ?? "balanced",
+            "MODE": spec.mode.rawValue,
+            "TARGET_EXERCISES": String(target.exercises),
+            "ITEMS_PER_SET": String(target.itemsPerSet),
+            "TARGET_MINUTES": String(target.minutes),
+            "FOCUS":
+                spec.focus.isEmpty ? "(no specific focus — choose what serves the learner most)" : spec.focus,
+            "ERROR_PATTERNS": patternText,
+            "DUE_ITEMS": dueText,
+            "TEACHER_PLAN": teacherPlan(snapshot),
+            "RECENT_NOTES": recentNotes(snapshot),
+            "SKILL_MASTERY": skillMastery(snapshot),
+            "PATTERN_MASTERY": patternMastery(snapshot),
+            "IMAGE_BUDGET": imageBudget(spec),
+            "RECENT_LESSONS": recentSummary(recent),
+        ])
     }
 
     /// Delegates to `LessonPlan` so the prompt and the on-screen preview cannot
@@ -425,16 +486,17 @@ struct LessonService {
             .map { "- \($0.key) [\($0.value.category ?? "?"), seen \($0.value.frequency ?? 0)×]" }
             .joined(separator: "\n")
 
-        return try resources.text("Prompts/grade-lesson.md")
-            .replacingOccurrences(of: "{{NAME}}", with: learner.name)
-            .replacingOccurrences(of: "{{TARGET_LANGUAGE}}", with: learner.target_language)
-            .replacingOccurrences(of: "{{NATIVE_LANGUAGE}}", with: learner.native_language ?? "unknown")
-            .replacingOccurrences(of: "{{OTHER_LANGUAGES}}", with: (learner.other_languages ?? []).joined(separator: ", "))
-            .replacingOccurrences(of: "{{EXPLANATION_LANGUAGE}}", with: learner.explanation_language ?? "English")
-            .replacingOccurrences(of: "{{CURRENT_LEVEL}}", with: learner.current_level)
-            .replacingOccurrences(of: "{{TARGET_LEVEL}}", with: learner.target_level)
-            .replacingOccurrences(of: "{{ERROR_PATTERNS}}", with: patterns.isEmpty ? "(none recorded yet)" : patterns)
-            .replacingOccurrences(of: "{{ATTEMPT}}", with: lines.joined(separator: "\n"))
+        return try resources.prompt("Prompts/grade-lesson.md", filling: [
+            "NAME": learner.name,
+            "TARGET_LANGUAGE": learner.target_language,
+            "NATIVE_LANGUAGE": learner.native_language ?? "unknown",
+            "OTHER_LANGUAGES": (learner.other_languages ?? []).joined(separator: ", "),
+            "EXPLANATION_LANGUAGE": learner.explanation_language ?? "English",
+            "CURRENT_LEVEL": learner.current_level,
+            "TARGET_LEVEL": learner.target_level,
+            "ERROR_PATTERNS": patterns.isEmpty ? "(none recorded yet)" : patterns,
+            "ATTEMPT": lines.joined(separator: "\n"),
+        ])
     }
 
     private func describe(_ answer: Answer?, for exercise: Exercise) -> String {
