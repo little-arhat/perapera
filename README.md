@@ -8,6 +8,8 @@ lessons are written back through Fluent's database scripts.
 - [USAGE.md](USAGE.md) — the daily loop
 - [CLAUDE.md](CLAUDE.md) — how the code is organised
 
+![Start](./images/start.jpg)
+
 ## Why it exists
 
 The terminal is a poor exercise surface. It has no audio, no lesson archive and no
