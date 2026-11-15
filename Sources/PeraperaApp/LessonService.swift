@@ -423,18 +423,8 @@ struct LessonService {
             // return a different one, which is worse than useless.
             feedback = existing
         } else {
-            // Built here, not above: `submit` is called again after a crash
-            // between grading and the write, and that path makes no model call.
-            // Assembling the brief outside this branch would turn a missing
-            // Fluent document into a failure on a path that needs neither.
-            feedback = try await grader.request(
-                Feedback.self,
-                prompt: try buildGradingPrompt(record: record, snapshot: snapshot),
-                systemPrompt: try TeacherContext.systemPrompt(
-                    fluentRoot: fluentRoot, call: .grading),
-                schema: try resources.text("Schemas/feedback.schema.json"),
-                progress: progress,
-                onSpend: { cost, model in onSpend?("Grading", cost, model) })
+            feedback = try await grade(
+                record, snapshot: snapshot, progress: progress, onSpend: onSpend)
             // Persist before writing to Fluent: grading is the expensive half,
             // and a crash between the two must not throw it away.
             updated.feedback = feedback
@@ -455,6 +445,28 @@ struct LessonService {
         updated.state = .submitted
         try lessons.save(updated)
         return updated
+    }
+
+    /// Asks the teacher to judge what the app could not.
+    ///
+    /// Its own step because it is its own job, and the only paid one: `submit`
+    /// is called again after a crash between grading and the write, and that
+    /// path makes no model call. The brief is assembled here rather than by the
+    /// caller for the same reason -- a missing Fluent document must not fail a
+    /// path that needs neither.
+    func grade(
+        _ record: LessonRecord, snapshot: FluentStore.Snapshot,
+        progress: (@Sendable (ClaudeClient.Progress) -> Void)? = nil,
+        onSpend: (@Sendable (String, Double, String) -> Void)? = nil
+    ) async throws -> Feedback {
+        try await grader.request(
+            Feedback.self,
+            prompt: try buildGradingPrompt(record: record, snapshot: snapshot),
+            systemPrompt: try TeacherContext.systemPrompt(
+                fluentRoot: fluentRoot, call: .grading),
+            schema: try resources.text("Schemas/feedback.schema.json"),
+            progress: progress,
+            onSpend: { cost, model in onSpend?("Grading", cost, model) })
     }
 
     private func buildGradingPrompt(

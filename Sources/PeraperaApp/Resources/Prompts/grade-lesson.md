@@ -13,6 +13,11 @@ Output nothing but JSON matching the supplied schema.
 
 ## Known error patterns
 
+This is the id vocabulary. Every id below already carries a frequency count, a
+history and, where the lesson tagged it, a success rate — all of it keyed on the
+exact string. Spell one differently and you start an empty second record for a
+point already being tracked.
+
 {{ERROR_PATTERNS}}
 
 ## The completed lesson
@@ -47,6 +52,15 @@ Exercises marked `needsGrading` are yours to score.
    already filed under that id and the app is counting its answers there —
    use it rather than coining a synonym, or the same point ends up tracked
    twice under two names and neither count is true.
+
+   **A new id is a last resort, not a default.** Measured on one re-grading of
+   an archived lesson: four of seven ids returned were fresh spellings of ids
+   already in the list above — `te_form_with_de_particle` for
+   `te_form_means_with_de`, `kanji_yuubinkyoku_misspelled` for
+   `vocab_yuubinkyoku_kanji`, `comma_after_time_expression` for
+   `time_phrase_comma_omitted`, and so on. Each one silently reset a count that
+   had been accruing for weeks. Before writing an id, read the list; coin one
+   only when the mistake is genuinely absent from it.
 
 5. **Severity means consequence.** `critical` breaks communication or blocks
    comprehension; `moderate` is noticeable but survivable; `minor` is a typo or

@@ -137,3 +137,127 @@ private final class Tally: @unchecked Sendable {
     func add(_ amount: Double) { lock.withLock { value += amount } }
     var total: Double { lock.withLock { value } }
 }
+
+// The other half of FL-3, parked because generating a lesson and grading one
+// are different purchases: grading needs a lesson someone has already answered.
+// There are eight in the archive, so the harness re-grades one rather than
+// paying to produce an attempt first.
+//
+//     PERAPERA_BENCH=1 swift test --filter benchGrading
+//     PERAPERA_BENCH_LESSON=lesson-2026-09-22-002105-lesson   # pick one
+//
+// Cost scales with the lesson, so it names what it is about to re-grade.
+//
+// Quality is read, not scored — the feedback lands beside the model's own
+// numbers. One thing is checked mechanically, because it is the rule a grader
+// can break silently: an exercise the app already decided must not be
+// re-decided. `grade-lesson.md` says the verdict is final; a grader that
+// marks a locally-correct answer wrong is telling the learner they failed
+// something they passed.
+@MainActor
+@Test func benchGradingCostAndAgreement() async throws {
+    guard ProcessInfo.processInfo.environment["PERAPERA_BENCH"] == "1" else { return }
+    guard let fluentRoot = Locations.fluentRoot(),
+          let claude = Subprocess.which("claude", extraPaths: Locations.toolSearchPaths)
+    else { Issue.record("need Fluent and claude"); return }
+    guard let active = ProfileStore().active else { Issue.record("no profile"); return }
+
+    // Graded in a copy. Grading alone writes nothing, but a bench must not be
+    // one edit away from touching a learner's archive.
+    let out = FileManager.default.homeDirectoryForCurrentUser
+        .appending(path: "perapera-bench/grading-\(Int(Date().timeIntervalSince1970))")
+    try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+    let scratch = out.appending(path: "profile")
+    try FileManager.default.copyItem(at: active.directory, to: scratch)
+
+    let archive = LessonStore(dataDirectory: scratch)
+    let answered = try archive.loadAll().records
+        .filter { !$0.answers.isEmpty }
+        .sorted { $0.lesson.generatedAt > $1.lesson.generatedAt }
+    let chosen: LessonRecord?
+    if let id = ProcessInfo.processInfo.environment["PERAPERA_BENCH_LESSON"] {
+        chosen = answered.first { $0.id == id }
+    } else {
+        chosen = answered.first
+    }
+    guard var record = chosen else {
+        Issue.record("no answered lesson in the archive to re-grade"); return
+    }
+    // The stored feedback is the baseline to read against, and its presence
+    // would short-circuit `grade`.
+    let baseline = record.feedback
+    record.feedback = nil
+
+    let needsTeacher = record.lesson.exercises.filter { record.verdicts[$0.id] == nil }
+    print("  re-grading \(record.id): \(record.lesson.exercises.count) exercises, "
+          + "\(needsTeacher.count) needing the teacher — \(record.lesson.title)")
+
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .withoutEscapingSlashes, .sortedKeys]
+    if let baseline {
+        try encoder.encode(baseline).write(to: out.appending(path: "baseline.json"))
+    }
+
+    var summary = ["config,cost_usd,seconds,graded,uncovered,contradicted,errors,new_ids,notes_words"]
+    let only = ProcessInfo.processInfo.environment["PERAPERA_BENCH_ONLY"]
+    for model in ["opus", "sonnet"] where only == nil || only == model {
+        let spent = Tally()
+        let began = Date()
+        let service = LessonService(
+            claude: ClaudeClient(config: .init(executable: claude, model: model,
+                                               maxBudgetUSD: 2.0, workingDirectory: scratch)),
+            grader: ClaudeClient(config: .init(executable: claude, model: model,
+                                               maxBudgetUSD: 2.0, workingDirectory: scratch)),
+            store: FluentStore(config: .init(fluentRoot: fluentRoot, dataDirectory: scratch)),
+            lessons: archive,
+            resources: ResourceLoader(),
+            fluentRoot: fluentRoot,
+            images: nil)
+
+        do {
+            let snapshot = try await service.store.load()
+            let feedback = try await service.grade(
+                record, snapshot: snapshot,
+                onSpend: { _, cost, _ in spent.add(cost) })
+            let elapsed = Int(Date().timeIntervalSince(began))
+
+            let scores = Dictionary(feedback.graded.map { ($0.exerciseId, $0.score) },
+                                    uniquingKeysWith: { first, _ in first })
+            // An exercise the teacher was asked about and did not answer: the
+            // app has no score for it and the learner is told nothing.
+            let uncovered = needsTeacher.filter { scores[$0.id] == nil }.map(\.id)
+            // An exercise the app already decided, re-decided the other way.
+            let contradicted = record.verdicts.filter { id, verdict in
+                guard let score = scores[id] else { return false }
+                return verdict.isCorrect != (score >= 6)
+            }.keys.sorted()
+
+            let known = Set(snapshot.databases.mistakes_db.error_patterns.keys)
+            let ids = (feedback.errors ?? []).map(\.patternId)
+            let fresh = ids.filter { !known.contains($0) }
+
+            summary.append("\(model),\(String(format: "%.4f", spent.total)),\(elapsed),"
+                           + "\(feedback.graded.count),\(uncovered.count),"
+                           + "\(contradicted.count),\(ids.count),\(fresh.count),"
+                           + "\(feedback.sessionNotes.split(separator: " ").count)")
+            try encoder.encode(feedback).write(to: out.appending(path: "\(model).json"))
+            print("  \(model): $\(String(format: "%.4f", spent.total)), \(elapsed)s, "
+                  + "\(feedback.graded.count) graded, \(uncovered.count) uncovered, "
+                  + "\(contradicted.count) contradicted, \(ids.count) errors "
+                  + "(\(fresh.count) new ids)")
+            if !uncovered.isEmpty { print("    uncovered: \(uncovered.joined(separator: ", "))") }
+            if !contradicted.isEmpty {
+                print("    contradicted: \(contradicted.joined(separator: ", "))")
+            }
+        } catch {
+            summary.append("\(model),\(String(format: "%.4f", spent.total)),"
+                           + "\(Int(Date().timeIntervalSince(began))),FAILED,,,,,")
+            try "\(error)".write(to: out.appending(path: "\(model).failure.txt"),
+                                 atomically: true, encoding: .utf8)
+            print("  \(model): FAILED — \(error)")
+        }
+        try summary.joined(separator: "\n").write(to: out.appending(path: "summary.csv"),
+                                                  atomically: true, encoding: .utf8)
+    }
+    print("  written to \(out.path)")
+}
